@@ -22,8 +22,8 @@ const Query = queryType({
 const schema = makeSchema({
   types: [Post, Query],
   outputs: {
-    schema: `${__dirname}/generated/schema.graphql`,
-    typegen: `${__dirname}/generated/types.ts`,
+    schema: `${__dirname}/../generated/schema.graphql`,
+    typegen: `${__dirname}/../generated/types.ts`,
   },
   contextType: {
     module: require.resolve('./context'),

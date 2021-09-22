@@ -2,9 +2,8 @@
   "name": "nexus-prisma-typescript-combined",
   "version": "1.0.0",
   "description": "Boilerplate project for Graphql backend with Prisma, Nexus, ESLint, Prettier, Husky, and Lint-Staged",
-  "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --no-notify --respawn --transpile-only server",
+    "dev": "ts-node-dev --no-notify --respawn --transpile-only src/server",
     "start": "node dist/server",
     "clean": "rm -rf dist",
     "build": "npm -s run clean && npm -s run generate && tsc",
