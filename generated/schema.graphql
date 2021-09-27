@@ -2,12 +2,73 @@
 ### Do not make changes to this file directly
 
 
-type Post {
-  body: String
-  id: ID
-  title: String
+input AddDepotInput {
+  name: String!
+}
+
+input AddFuelCardInput {
+  cardNumber: String!
+}
+
+input AddTollTagInput {
+  tollTagNumber: String!
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type Defect {
+  dateCompleted: DateTime
+  dateReported: DateTime!
+  description: String!
+  id: ID!
+  status: String
+}
+
+type Depot {
+  id: ID!
+  name: String!
+  vehicles: [Vehicle!]!
+}
+
+type FuelCard {
+  cardNumber: String!
+  id: ID!
+}
+
+type Mutation {
+  addDepot(data: AddDepotInput!): Depot!
+  addFuelCard(data: AddFuelCardInput!): FuelCard!
+  addTollTag(data: AddTollTagInput!): TollTag!
 }
 
 type Query {
-  posts: [Post]
+  defectsForVehicle(vehicleId: ID!): [Defect]
+  depots: [Depot]
+  fuelCards: [FuelCard]
+  tollTags: [TollTag]
+  vehicles: [Vehicle]
+  vehiclesInDepot(depotId: ID!): [Vehicle]
+}
+
+type TollTag {
+  id: ID!
+  tollTagNumber: String!
+}
+
+type Vehicle {
+  cvrtDueDate: DateTime!
+  defects: [Defect!]!
+  depot: Depot
+  fuelCard: FuelCard
+  id: ID!
+  make: String!
+  model: String!
+  owner: String!
+  registration: String!
+  tachoCalibrationDueDate: DateTime!
+  thirteenWeekInspectionDueDate: DateTime!
+  tollTag: TollTag
 }

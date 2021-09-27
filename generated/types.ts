@@ -3,77 +3,230 @@
  * Do not make changes to this file directly
  */
 
-import type { Context } from './../src/context';
+
+import type { Context } from "./../src/context"
+import type { core } from "nexus"
+declare global {
+  interface NexusGenCustomInputMethods<TypeName extends string> {
+    /**
+     * A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+     */
+    date<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "DateTime";
+  }
+}
+declare global {
+  interface NexusGenCustomOutputMethods<TypeName extends string> {
+    /**
+     * A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+     */
+    date<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "DateTime";
+  }
+}
+
 
 declare global {
   interface NexusGen extends NexusGenTypes {}
 }
 
-export interface NexusGenInputs {}
+export interface NexusGenInputs {
+  AddDepotInput: { // input type
+    name: string; // String!
+  }
+  AddFuelCardInput: { // input type
+    cardNumber: string; // String!
+  }
+  AddTollTagInput: { // input type
+    tollTagNumber: string; // String!
+  }
+}
 
-export interface NexusGenEnums {}
+export interface NexusGenEnums {
+}
 
 export interface NexusGenScalars {
-  String: string;
-  Int: number;
-  Float: number;
-  Boolean: boolean;
-  ID: string;
+  String: string
+  Int: number
+  Float: number
+  Boolean: boolean
+  ID: string
+  DateTime: any
 }
 
 export interface NexusGenObjects {
-  Post: {
-    // root type
-    body?: string | null; // String
-    id?: string | null; // ID
-    title?: string | null; // String
-  };
+  Defect: { // root type
+    dateCompleted?: NexusGenScalars['DateTime'] | null; // DateTime
+    dateReported: NexusGenScalars['DateTime']; // DateTime!
+    description: string; // String!
+    id: string; // ID!
+    status?: string | null; // String
+  }
+  Depot: { // root type
+    id: string; // ID!
+    name: string; // String!
+  }
+  FuelCard: { // root type
+    cardNumber: string; // String!
+    id: string; // ID!
+  }
+  Mutation: {};
   Query: {};
+  TollTag: { // root type
+    id: string; // ID!
+    tollTagNumber: string; // String!
+  }
+  Vehicle: { // root type
+    cvrtDueDate: NexusGenScalars['DateTime']; // DateTime!
+    id: string; // ID!
+    make: string; // String!
+    model: string; // String!
+    owner: string; // String!
+    registration: string; // String!
+    tachoCalibrationDueDate: NexusGenScalars['DateTime']; // DateTime!
+    thirteenWeekInspectionDueDate: NexusGenScalars['DateTime']; // DateTime!
+  }
 }
 
-export interface NexusGenInterfaces {}
+export interface NexusGenInterfaces {
+}
 
-export interface NexusGenUnions {}
+export interface NexusGenUnions {
+}
 
-export type NexusGenRootTypes = NexusGenObjects;
+export type NexusGenRootTypes = NexusGenObjects
 
-export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars;
+export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars
 
 export interface NexusGenFieldTypes {
-  Post: {
-    // field return type
-    body: string | null; // String
-    id: string | null; // ID
-    title: string | null; // String
-  };
-  Query: {
-    // field return type
-    posts: Array<NexusGenRootTypes['Post'] | null> | null; // [Post]
-  };
+  Defect: { // field return type
+    dateCompleted: NexusGenScalars['DateTime'] | null; // DateTime
+    dateReported: NexusGenScalars['DateTime']; // DateTime!
+    description: string; // String!
+    id: string; // ID!
+    status: string | null; // String
+  }
+  Depot: { // field return type
+    id: string; // ID!
+    name: string; // String!
+    vehicles: NexusGenRootTypes['Vehicle'][]; // [Vehicle!]!
+  }
+  FuelCard: { // field return type
+    cardNumber: string; // String!
+    id: string; // ID!
+  }
+  Mutation: { // field return type
+    addDepot: NexusGenRootTypes['Depot']; // Depot!
+    addFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
+    addTollTag: NexusGenRootTypes['TollTag']; // TollTag!
+  }
+  Query: { // field return type
+    defectsForVehicle: Array<NexusGenRootTypes['Defect'] | null> | null; // [Defect]
+    depots: Array<NexusGenRootTypes['Depot'] | null> | null; // [Depot]
+    fuelCards: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
+    tollTags: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
+    vehicles: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
+    vehiclesInDepot: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
+  }
+  TollTag: { // field return type
+    id: string; // ID!
+    tollTagNumber: string; // String!
+  }
+  Vehicle: { // field return type
+    cvrtDueDate: NexusGenScalars['DateTime']; // DateTime!
+    defects: NexusGenRootTypes['Defect'][]; // [Defect!]!
+    depot: NexusGenRootTypes['Depot'] | null; // Depot
+    fuelCard: NexusGenRootTypes['FuelCard'] | null; // FuelCard
+    id: string; // ID!
+    make: string; // String!
+    model: string; // String!
+    owner: string; // String!
+    registration: string; // String!
+    tachoCalibrationDueDate: NexusGenScalars['DateTime']; // DateTime!
+    thirteenWeekInspectionDueDate: NexusGenScalars['DateTime']; // DateTime!
+    tollTag: NexusGenRootTypes['TollTag'] | null; // TollTag
+  }
 }
 
 export interface NexusGenFieldTypeNames {
-  Post: {
-    // field return type name
-    body: 'String';
-    id: 'ID';
-    title: 'String';
-  };
-  Query: {
-    // field return type name
-    posts: 'Post';
-  };
+  Defect: { // field return type name
+    dateCompleted: 'DateTime'
+    dateReported: 'DateTime'
+    description: 'String'
+    id: 'ID'
+    status: 'String'
+  }
+  Depot: { // field return type name
+    id: 'ID'
+    name: 'String'
+    vehicles: 'Vehicle'
+  }
+  FuelCard: { // field return type name
+    cardNumber: 'String'
+    id: 'ID'
+  }
+  Mutation: { // field return type name
+    addDepot: 'Depot'
+    addFuelCard: 'FuelCard'
+    addTollTag: 'TollTag'
+  }
+  Query: { // field return type name
+    defectsForVehicle: 'Defect'
+    depots: 'Depot'
+    fuelCards: 'FuelCard'
+    tollTags: 'TollTag'
+    vehicles: 'Vehicle'
+    vehiclesInDepot: 'Vehicle'
+  }
+  TollTag: { // field return type name
+    id: 'ID'
+    tollTagNumber: 'String'
+  }
+  Vehicle: { // field return type name
+    cvrtDueDate: 'DateTime'
+    defects: 'Defect'
+    depot: 'Depot'
+    fuelCard: 'FuelCard'
+    id: 'ID'
+    make: 'String'
+    model: 'String'
+    owner: 'String'
+    registration: 'String'
+    tachoCalibrationDueDate: 'DateTime'
+    thirteenWeekInspectionDueDate: 'DateTime'
+    tollTag: 'TollTag'
+  }
 }
 
-export interface NexusGenArgTypes {}
+export interface NexusGenArgTypes {
+  Mutation: {
+    addDepot: { // args
+      data: NexusGenInputs['AddDepotInput']; // AddDepotInput!
+    }
+    addFuelCard: { // args
+      data: NexusGenInputs['AddFuelCardInput']; // AddFuelCardInput!
+    }
+    addTollTag: { // args
+      data: NexusGenInputs['AddTollTagInput']; // AddTollTagInput!
+    }
+  }
+  Query: {
+    defectsForVehicle: { // args
+      vehicleId: string; // ID!
+    }
+    vehiclesInDepot: { // args
+      depotId: string; // ID!
+    }
+  }
+}
 
-export interface NexusGenAbstractTypeMembers {}
+export interface NexusGenAbstractTypeMembers {
+}
 
-export interface NexusGenTypeInterfaces {}
+export interface NexusGenTypeInterfaces {
+}
 
 export type NexusGenObjectNames = keyof NexusGenObjects;
 
-export type NexusGenInputNames = never;
+export type NexusGenInputNames = keyof NexusGenInputs;
 
 export type NexusGenEnumNames = never;
 
@@ -89,11 +242,11 @@ export type NexusGenAbstractsUsingStrategyResolveType = never;
 
 export type NexusGenFeaturesConfig = {
   abstractTypeStrategies: {
-    isTypeOf: false;
-    resolveType: true;
-    __typename: false;
-  };
-};
+    isTypeOf: false
+    resolveType: true
+    __typename: false
+  }
+}
 
 export interface NexusGenTypes {
   context: Context;
@@ -111,19 +264,9 @@ export interface NexusGenTypes {
   interfaceNames: NexusGenInterfaceNames;
   scalarNames: NexusGenScalarNames;
   unionNames: NexusGenUnionNames;
-  allInputTypes:
-    | NexusGenTypes['inputNames']
-    | NexusGenTypes['enumNames']
-    | NexusGenTypes['scalarNames'];
-  allOutputTypes:
-    | NexusGenTypes['objectNames']
-    | NexusGenTypes['enumNames']
-    | NexusGenTypes['unionNames']
-    | NexusGenTypes['interfaceNames']
-    | NexusGenTypes['scalarNames'];
-  allNamedTypes:
-    | NexusGenTypes['allInputTypes']
-    | NexusGenTypes['allOutputTypes'];
+  allInputTypes: NexusGenTypes['inputNames'] | NexusGenTypes['enumNames'] | NexusGenTypes['scalarNames'];
+  allOutputTypes: NexusGenTypes['objectNames'] | NexusGenTypes['enumNames'] | NexusGenTypes['unionNames'] | NexusGenTypes['interfaceNames'] | NexusGenTypes['scalarNames'];
+  allNamedTypes: NexusGenTypes['allInputTypes'] | NexusGenTypes['allOutputTypes']
   abstractTypes: NexusGenTypes['interfaceNames'] | NexusGenTypes['unionNames'];
   abstractTypeMembers: NexusGenAbstractTypeMembers;
   objectsUsingAbstractStrategyIsTypeOf: NexusGenObjectsUsingAbstractStrategyIsTypeOf;
@@ -131,17 +274,18 @@ export interface NexusGenTypes {
   features: NexusGenFeaturesConfig;
 }
 
+
 declare global {
-  interface NexusGenPluginTypeConfig<TypeName extends string> {}
-  interface NexusGenPluginInputTypeConfig<TypeName extends string> {}
-  interface NexusGenPluginFieldConfig<
-    TypeName extends string,
-    FieldName extends string
-  > {}
-  interface NexusGenPluginInputFieldConfig<
-    TypeName extends string,
-    FieldName extends string
-  > {}
-  interface NexusGenPluginSchemaConfig {}
-  interface NexusGenPluginArgConfig {}
+  interface NexusGenPluginTypeConfig<TypeName extends string> {
+  }
+  interface NexusGenPluginInputTypeConfig<TypeName extends string> {
+  }
+  interface NexusGenPluginFieldConfig<TypeName extends string, FieldName extends string> {
+  }
+  interface NexusGenPluginInputFieldConfig<TypeName extends string, FieldName extends string> {
+  }
+  interface NexusGenPluginSchemaConfig {
+  }
+  interface NexusGenPluginArgConfig {
+  }
 }

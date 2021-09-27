@@ -7,8 +7,48 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Post {
-  id    String @id @default(cuid())
-  title String
-  body  String
+model Vehicle {
+  id                            String    @id @default(cuid())
+  registration                  String    @unique
+  make                          String
+  model                         String
+  owner                         String    @default("Dennehy's")
+  cvrtDueDate                   DateTime
+  thirteenWeekInspectionDueDate DateTime
+  tachoCalibrationDueDate       DateTime
+  depot                         Depot     @relation(fields: [depotId], references: [id])
+  depotId                       String
+  fuelCard                      FuelCard?
+  tollTag                       TollTag?
+  defects                       Defect[]
+}
+
+model Depot {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  vehicles Vehicle[]
+}
+
+model FuelCard {
+  id         String   @id @default(cuid())
+  cardNumber String   @unique
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
+  vehicleId  String?
+}
+
+model TollTag {
+  id            String   @id @default(cuid())
+  tollTagNumber String   @unique
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id])
+  vehicleId     String?
+}
+
+model Defect {
+  id            String    @id @default(cuid())
+  description   String
+  dateReported  DateTime
+  dateCompleted DateTime?
+  status        String
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
+  vehicleId     String
 }
