@@ -29,13 +29,52 @@ declare global {
 }
 
 export interface NexusGenInputs {
+  AddDefectInput: { // input type
+    dateReported: NexusGenScalars['DateTime']; // DateTime!
+    description: string; // String!
+    status?: string | null; // String
+    vehicleId: string; // ID!
+  }
   AddDepotInput: { // input type
     name: string; // String!
   }
   AddFuelCardInput: { // input type
     cardNumber: string; // String!
+    cardProvider: string; // String!
+    depotId: string; // String!
   }
   AddTollTagInput: { // input type
+    depotId: string; // String!
+    tollTagNumber: string; // String!
+    tollTagProvider: string; // String!
+  }
+  AddVehicleInput: { // input type
+    cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
+    depotId: string; // String!
+    fuelCardId?: string | null; // String
+    make: string; // String!
+    model: string; // String!
+    owner: string; // String!
+    registration: string; // String!
+    tachoCalibrationDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
+    thirteenWeekInspectionDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
+    tollTagId?: string | null; // String
+  }
+  DeleteFuelCardInput: { // input type
+    id: string; // ID!
+  }
+  DeleteTollTagInput: { // input type
+    id: string; // ID!
+  }
+  DeleteVehicleInput: { // input type
+    id: string; // ID!
+  }
+  UpdateFuelCardNumberInput: { // input type
+    fuelCardNumber: string; // String!
+    id: string; // ID!
+  }
+  UpdateTollTagNumberInput: { // input type
+    id: string; // ID!
     tollTagNumber: string; // String!
   }
 }
@@ -66,6 +105,7 @@ export interface NexusGenObjects {
   }
   FuelCard: { // root type
     cardNumber: string; // String!
+    cardProvider: string; // String!
     id: string; // ID!
   }
   Mutation: {};
@@ -73,16 +113,17 @@ export interface NexusGenObjects {
   TollTag: { // root type
     id: string; // ID!
     tollTagNumber: string; // String!
+    tollTagProvider: string; // String!
   }
   Vehicle: { // root type
-    cvrtDueDate: NexusGenScalars['DateTime']; // DateTime!
+    cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     id: string; // ID!
     make: string; // String!
     model: string; // String!
     owner: string; // String!
     registration: string; // String!
-    tachoCalibrationDueDate: NexusGenScalars['DateTime']; // DateTime!
-    thirteenWeekInspectionDueDate: NexusGenScalars['DateTime']; // DateTime!
+    tachoCalibrationDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
+    thirteenWeekInspectionDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
   }
 }
 
@@ -105,34 +146,51 @@ export interface NexusGenFieldTypes {
     status: string | null; // String
   }
   Depot: { // field return type
+    fuelCards: Array<NexusGenRootTypes['FuelCard'] | null>; // [FuelCard]!
     id: string; // ID!
     name: string; // String!
-    vehicles: NexusGenRootTypes['Vehicle'][]; // [Vehicle!]!
+    tollTags: Array<NexusGenRootTypes['TollTag'] | null>; // [TollTag]!
+    vehicles: Array<NexusGenRootTypes['Vehicle'] | null>; // [Vehicle]!
   }
   FuelCard: { // field return type
     cardNumber: string; // String!
+    cardProvider: string; // String!
+    depot: NexusGenRootTypes['Depot'] | null; // Depot
     id: string; // ID!
+    vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   Mutation: { // field return type
+    addDefect: NexusGenRootTypes['Defect']; // Defect!
     addDepot: NexusGenRootTypes['Depot']; // Depot!
     addFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     addTollTag: NexusGenRootTypes['TollTag']; // TollTag!
+    addVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
+    deleteFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
+    deleteTollTag: NexusGenRootTypes['TollTag']; // TollTag!
+    deleteVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
+    updateFuelCardNumber: NexusGenRootTypes['FuelCard']; // FuelCard!
+    updateTollTagNumber: NexusGenRootTypes['TollTag']; // TollTag!
   }
   Query: { // field return type
     defectsForVehicle: Array<NexusGenRootTypes['Defect'] | null> | null; // [Defect]
     depots: Array<NexusGenRootTypes['Depot'] | null> | null; // [Depot]
     fuelCards: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
+    fuelCardsNotAssigned: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     tollTags: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
+    tollTagsNotAssigned: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
     vehicles: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
     vehiclesInDepot: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
   }
   TollTag: { // field return type
+    depot: NexusGenRootTypes['Depot'] | null; // Depot
     id: string; // ID!
     tollTagNumber: string; // String!
+    tollTagProvider: string; // String!
+    vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   Vehicle: { // field return type
-    cvrtDueDate: NexusGenScalars['DateTime']; // DateTime!
-    defects: NexusGenRootTypes['Defect'][]; // [Defect!]!
+    cvrtDueDate: NexusGenScalars['DateTime'] | null; // DateTime
+    defects: Array<NexusGenRootTypes['Defect'] | null>; // [Defect]!
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     fuelCard: NexusGenRootTypes['FuelCard'] | null; // FuelCard
     id: string; // ID!
@@ -140,8 +198,8 @@ export interface NexusGenFieldTypes {
     model: string; // String!
     owner: string; // String!
     registration: string; // String!
-    tachoCalibrationDueDate: NexusGenScalars['DateTime']; // DateTime!
-    thirteenWeekInspectionDueDate: NexusGenScalars['DateTime']; // DateTime!
+    tachoCalibrationDueDate: NexusGenScalars['DateTime'] | null; // DateTime
+    thirteenWeekInspectionDueDate: NexusGenScalars['DateTime'] | null; // DateTime
     tollTag: NexusGenRootTypes['TollTag'] | null; // TollTag
   }
 }
@@ -155,30 +213,47 @@ export interface NexusGenFieldTypeNames {
     status: 'String'
   }
   Depot: { // field return type name
+    fuelCards: 'FuelCard'
     id: 'ID'
     name: 'String'
+    tollTags: 'TollTag'
     vehicles: 'Vehicle'
   }
   FuelCard: { // field return type name
     cardNumber: 'String'
+    cardProvider: 'String'
+    depot: 'Depot'
     id: 'ID'
+    vehicle: 'Vehicle'
   }
   Mutation: { // field return type name
+    addDefect: 'Defect'
     addDepot: 'Depot'
     addFuelCard: 'FuelCard'
     addTollTag: 'TollTag'
+    addVehicle: 'Vehicle'
+    deleteFuelCard: 'FuelCard'
+    deleteTollTag: 'TollTag'
+    deleteVehicle: 'Vehicle'
+    updateFuelCardNumber: 'FuelCard'
+    updateTollTagNumber: 'TollTag'
   }
   Query: { // field return type name
     defectsForVehicle: 'Defect'
     depots: 'Depot'
     fuelCards: 'FuelCard'
+    fuelCardsNotAssigned: 'FuelCard'
     tollTags: 'TollTag'
+    tollTagsNotAssigned: 'TollTag'
     vehicles: 'Vehicle'
     vehiclesInDepot: 'Vehicle'
   }
   TollTag: { // field return type name
+    depot: 'Depot'
     id: 'ID'
     tollTagNumber: 'String'
+    tollTagProvider: 'String'
+    vehicle: 'Vehicle'
   }
   Vehicle: { // field return type name
     cvrtDueDate: 'DateTime'
@@ -198,6 +273,9 @@ export interface NexusGenFieldTypeNames {
 
 export interface NexusGenArgTypes {
   Mutation: {
+    addDefect: { // args
+      data: NexusGenInputs['AddDefectInput']; // AddDefectInput!
+    }
     addDepot: { // args
       data: NexusGenInputs['AddDepotInput']; // AddDepotInput!
     }
@@ -206,6 +284,24 @@ export interface NexusGenArgTypes {
     }
     addTollTag: { // args
       data: NexusGenInputs['AddTollTagInput']; // AddTollTagInput!
+    }
+    addVehicle: { // args
+      data: NexusGenInputs['AddVehicleInput']; // AddVehicleInput!
+    }
+    deleteFuelCard: { // args
+      data: NexusGenInputs['DeleteFuelCardInput']; // DeleteFuelCardInput!
+    }
+    deleteTollTag: { // args
+      data: NexusGenInputs['DeleteTollTagInput']; // DeleteTollTagInput!
+    }
+    deleteVehicle: { // args
+      data: NexusGenInputs['DeleteVehicleInput']; // DeleteVehicleInput!
+    }
+    updateFuelCardNumber: { // args
+      data: NexusGenInputs['UpdateFuelCardNumberInput']; // UpdateFuelCardNumberInput!
+    }
+    updateTollTagNumber: { // args
+      data: NexusGenInputs['UpdateTollTagNumberInput']; // UpdateTollTagNumberInput!
     }
   }
   Query: {

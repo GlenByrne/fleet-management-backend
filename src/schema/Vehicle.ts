@@ -1,4 +1,11 @@
-import { objectType, idArg, nonNull, extendType } from 'nexus';
+import {
+  objectType,
+  idArg,
+  nonNull,
+  extendType,
+  arg,
+  inputObjectType,
+} from 'nexus';
 import { Context } from '../context';
 import { Defect } from './Defect';
 import { Depot } from './Depot';
@@ -13,9 +20,9 @@ export const Vehicle = objectType({
     t.nonNull.string('make');
     t.nonNull.string('model');
     t.nonNull.string('owner');
-    t.nonNull.date('cvrtDueDate');
-    t.nonNull.date('thirteenWeekInspectionDueDate');
-    t.nonNull.date('tachoCalibrationDueDate');
+    t.date('cvrtDueDate');
+    t.date('thirteenWeekInspectionDueDate');
+    t.date('tachoCalibrationDueDate');
     t.field('depot', {
       type: Depot,
       resolve(parent, _, context: Context) {
@@ -26,7 +33,7 @@ export const Vehicle = objectType({
           .depot();
       },
     });
-    t.nonNull.list.nonNull.field('defects', {
+    t.nonNull.list.field('defects', {
       type: Defect,
       resolve(parent, _, context: Context) {
         return context.prisma.vehicle
@@ -79,6 +86,90 @@ export const VehicleQuery = extendType({
             },
           })
           .defects(),
+    });
+  },
+});
+
+const AddVehicleInput = inputObjectType({
+  name: 'AddVehicleInput',
+  definition(t) {
+    t.nonNull.string('registration');
+    t.nonNull.string('make');
+    t.nonNull.string('model');
+    t.nonNull.string('owner');
+    t.date('cvrtDueDate');
+    t.date('thirteenWeekInspectionDueDate');
+    t.date('tachoCalibrationDueDate');
+    t.nonNull.string('depotId');
+    t.string('fuelCardId');
+    t.string('tollTagId');
+  },
+});
+
+const DeleteVehicleInput = inputObjectType({
+  name: 'DeleteVehicleInput',
+  definition(t) {
+    t.nonNull.id('id');
+  },
+});
+
+export const VehicleMutation = extendType({
+  type: 'Mutation',
+  definition(t) {
+    t.nonNull.field('addVehicle', {
+      type: Vehicle,
+      args: {
+        data: nonNull(
+          arg({
+            type: AddVehicleInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) =>
+        context.prisma.vehicle.create({
+          data: {
+            registration: args.data.registration,
+            make: args.data.make,
+            model: args.data.model,
+            owner: args.data.owner,
+            cvrtDueDate: args.data.cvrtDueDate,
+            thirteenWeekInspectionDueDate:
+              args.data.thirteenWeekInspectionDueDate,
+            tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+            depot: {
+              connect: {
+                id: args.data.depotId,
+              },
+            },
+            fuelCard: {
+              connect: {
+                id: args.data.fuelCardId || undefined,
+              },
+            },
+            tollTag: {
+              connect: {
+                id: args.data.tollTagId || undefined,
+              },
+            },
+          },
+        }),
+    });
+
+    t.nonNull.field('deleteVehicle', {
+      type: Vehicle,
+      args: {
+        data: nonNull(
+          arg({
+            type: DeleteVehicleInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) =>
+        context.prisma.vehicle.delete({
+          where: {
+            id: args.data.id,
+          },
+        }),
     });
   },
 });

@@ -2,16 +2,40 @@
 ### Do not make changes to this file directly
 
 
+input AddDefectInput {
+  dateReported: DateTime!
+  description: String!
+  status: String
+  vehicleId: ID!
+}
+
 input AddDepotInput {
   name: String!
 }
 
 input AddFuelCardInput {
   cardNumber: String!
+  cardProvider: String!
+  depotId: String!
 }
 
 input AddTollTagInput {
+  depotId: String!
   tollTagNumber: String!
+  tollTagProvider: String!
+}
+
+input AddVehicleInput {
+  cvrtDueDate: DateTime
+  depotId: String!
+  fuelCardId: String
+  make: String!
+  model: String!
+  owner: String!
+  registration: String!
+  tachoCalibrationDueDate: DateTime
+  thirteenWeekInspectionDueDate: DateTime
+  tollTagId: String
 }
 
 """
@@ -27,40 +51,79 @@ type Defect {
   status: String
 }
 
+input DeleteFuelCardInput {
+  id: ID!
+}
+
+input DeleteTollTagInput {
+  id: ID!
+}
+
+input DeleteVehicleInput {
+  id: ID!
+}
+
 type Depot {
+  fuelCards: [FuelCard]!
   id: ID!
   name: String!
-  vehicles: [Vehicle!]!
+  tollTags: [TollTag]!
+  vehicles: [Vehicle]!
 }
 
 type FuelCard {
   cardNumber: String!
+  cardProvider: String!
+  depot: Depot
   id: ID!
+  vehicle: Vehicle
 }
 
 type Mutation {
+  addDefect(data: AddDefectInput!): Defect!
   addDepot(data: AddDepotInput!): Depot!
   addFuelCard(data: AddFuelCardInput!): FuelCard!
   addTollTag(data: AddTollTagInput!): TollTag!
+  addVehicle(data: AddVehicleInput!): Vehicle!
+  deleteFuelCard(data: DeleteFuelCardInput!): FuelCard!
+  deleteTollTag(data: DeleteTollTagInput!): TollTag!
+  deleteVehicle(data: DeleteVehicleInput!): Vehicle!
+  updateFuelCardNumber(data: UpdateFuelCardNumberInput!): FuelCard!
+  updateTollTagNumber(data: UpdateTollTagNumberInput!): TollTag!
 }
 
 type Query {
   defectsForVehicle(vehicleId: ID!): [Defect]
   depots: [Depot]
   fuelCards: [FuelCard]
+  fuelCardsNotAssigned: [FuelCard]
   tollTags: [TollTag]
+  tollTagsNotAssigned: [TollTag]
   vehicles: [Vehicle]
   vehiclesInDepot(depotId: ID!): [Vehicle]
 }
 
 type TollTag {
+  depot: Depot
+  id: ID!
+  tollTagNumber: String!
+  tollTagProvider: String!
+  vehicle: Vehicle
+}
+
+input UpdateFuelCardNumberInput {
+  fuelCardNumber: String!
+  id: ID!
+}
+
+input UpdateTollTagNumberInput {
   id: ID!
   tollTagNumber: String!
 }
 
 type Vehicle {
-  cvrtDueDate: DateTime!
-  defects: [Defect!]!
+  cvrtDueDate: DateTime
+  defects: [Defect]!
   depot: Depot
   fuelCard: FuelCard
   id: ID!
@@ -68,7 +131,7 @@ type Vehicle {
   model: String!
   owner: String!
   registration: String!
-  tachoCalibrationDueDate: DateTime!
-  thirteenWeekInspectionDueDate: DateTime!
+  tachoCalibrationDueDate: DateTime
+  thirteenWeekInspectionDueDate: DateTime
   tollTag: TollTag
 }

@@ -7,6 +7,8 @@ import {
   extendType,
 } from 'nexus';
 import { Context } from '../context';
+import { FuelCard } from './FuelCard';
+import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
 
 export const Depot = objectType({
@@ -14,7 +16,7 @@ export const Depot = objectType({
   definition(t) {
     t.nonNull.id('id');
     t.nonNull.string('name');
-    t.nonNull.list.nonNull.field('vehicles', {
+    t.nonNull.list.field('vehicles', {
       type: Vehicle,
       resolve(parent, _, context: Context) {
         return context.prisma.depot
@@ -22,6 +24,26 @@ export const Depot = objectType({
             where: { id: parent.id },
           })
           .vehicles();
+      },
+    });
+    t.nonNull.list.field('fuelCards', {
+      type: FuelCard,
+      resolve(parent, _, context: Context) {
+        return context.prisma.depot
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .fuelCards();
+      },
+    });
+    t.nonNull.list.field('tollTags', {
+      type: TollTag,
+      resolve(parent, _, context: Context) {
+        return context.prisma.depot
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .tollTags();
       },
     });
   },
