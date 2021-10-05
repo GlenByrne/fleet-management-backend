@@ -88,7 +88,7 @@ type Mutation {
   deleteFuelCard(data: DeleteFuelCardInput!): FuelCard!
   deleteTollTag(data: DeleteTollTagInput!): TollTag!
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
-  updateFuelCardNumber(data: UpdateFuelCardNumberInput!): FuelCard!
+  updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
   updateTollTagNumber(data: UpdateTollTagNumberInput!): TollTag!
 }
 
@@ -111,8 +111,10 @@ type TollTag {
   vehicle: Vehicle
 }
 
-input UpdateFuelCardNumberInput {
-  fuelCardNumber: String!
+input UpdateFuelCardInput {
+  cardNumber: String!
+  cardProvider: String!
+  depotId: String!
   id: ID!
 }
 

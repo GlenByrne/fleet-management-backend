@@ -69,8 +69,10 @@ export interface NexusGenInputs {
   DeleteVehicleInput: { // input type
     id: string; // ID!
   }
-  UpdateFuelCardNumberInput: { // input type
-    fuelCardNumber: string; // String!
+  UpdateFuelCardInput: { // input type
+    cardNumber: string; // String!
+    cardProvider: string; // String!
+    depotId: string; // String!
     id: string; // ID!
   }
   UpdateTollTagNumberInput: { // input type
@@ -168,7 +170,7 @@ export interface NexusGenFieldTypes {
     deleteFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     deleteTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     deleteVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
-    updateFuelCardNumber: NexusGenRootTypes['FuelCard']; // FuelCard!
+    updateFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     updateTollTagNumber: NexusGenRootTypes['TollTag']; // TollTag!
   }
   Query: { // field return type
@@ -235,7 +237,7 @@ export interface NexusGenFieldTypeNames {
     deleteFuelCard: 'FuelCard'
     deleteTollTag: 'TollTag'
     deleteVehicle: 'Vehicle'
-    updateFuelCardNumber: 'FuelCard'
+    updateFuelCard: 'FuelCard'
     updateTollTagNumber: 'TollTag'
   }
   Query: { // field return type name
@@ -297,8 +299,8 @@ export interface NexusGenArgTypes {
     deleteVehicle: { // args
       data: NexusGenInputs['DeleteVehicleInput']; // DeleteVehicleInput!
     }
-    updateFuelCardNumber: { // args
-      data: NexusGenInputs['UpdateFuelCardNumberInput']; // UpdateFuelCardNumberInput!
+    updateFuelCard: { // args
+      data: NexusGenInputs['UpdateFuelCardInput']; // UpdateFuelCardInput!
     }
     updateTollTagNumber: { // args
       data: NexusGenInputs['UpdateTollTagNumberInput']; // UpdateTollTagNumberInput!

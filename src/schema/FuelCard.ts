@@ -61,11 +61,13 @@ const AddFuelCardInput = inputObjectType({
   },
 });
 
-const UpdateFuelCardNumberInput = inputObjectType({
-  name: 'UpdateFuelCardNumberInput',
+const UpdateFuelCardInput = inputObjectType({
+  name: 'UpdateFuelCardInput',
   definition(t) {
     t.nonNull.id('id');
-    t.nonNull.string('fuelCardNumber');
+    t.nonNull.string('cardNumber');
+    t.nonNull.string('cardProvider');
+    t.nonNull.string('depotId');
   },
 });
 
@@ -102,12 +104,12 @@ export const FuelCardMutation = extendType({
         }),
     });
 
-    t.nonNull.field('updateFuelCardNumber', {
+    t.nonNull.field('updateFuelCard', {
       type: FuelCard,
       args: {
         data: nonNull(
           arg({
-            type: UpdateFuelCardNumberInput,
+            type: UpdateFuelCardInput,
           })
         ),
       },
@@ -117,7 +119,13 @@ export const FuelCardMutation = extendType({
             id: args.data.id,
           },
           data: {
-            cardNumber: args.data.fuelCardNumber,
+            cardNumber: args.data.cardNumber,
+            cardProvider: args.data.cardProvider,
+            depot: {
+              connect: {
+                id: args.data.depotId,
+              },
+            },
           },
         }),
     });
