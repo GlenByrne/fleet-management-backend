@@ -61,11 +61,13 @@ const AddTollTagInput = inputObjectType({
   },
 });
 
-const UpdateTollTagNumberInput = inputObjectType({
-  name: 'UpdateTollTagNumberInput',
+const UpdateTollTagInput = inputObjectType({
+  name: 'UpdateTollTagInput',
   definition(t) {
     t.nonNull.id('id');
     t.nonNull.string('tollTagNumber');
+    t.nonNull.string('tollTagProvider');
+    t.nonNull.string('depotId');
   },
 });
 
@@ -102,12 +104,12 @@ export const TollTagMutation = extendType({
         }),
     });
 
-    t.nonNull.field('updateTollTagNumber', {
+    t.nonNull.field('updateTollTag', {
       type: TollTag,
       args: {
         data: nonNull(
           arg({
-            type: UpdateTollTagNumberInput,
+            type: UpdateTollTagInput,
           })
         ),
       },
@@ -118,6 +120,12 @@ export const TollTagMutation = extendType({
           },
           data: {
             tollTagNumber: args.data.tollTagNumber,
+            tollTagProvider: args.data.tollTagProvider,
+            depot: {
+              connect: {
+                id: args.data.depotId,
+              },
+            },
           },
         }),
     });
