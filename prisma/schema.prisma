@@ -42,13 +42,13 @@ model FuelCard {
 }
 
 model TollTag {
-  id              String   @id @default(cuid())
-  tollTagNumber   String   @unique
-  tollTagProvider String
-  vehicle         Vehicle? @relation(fields: [vehicleId], references: [id])
-  vehicleId       String?  @unique
-  depot           Depot    @relation(fields: [depotId], references: [id])
-  depotId         String
+  id          String   @id @default(cuid())
+  tagNumber   String   @unique
+  tagProvider String
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
+  vehicleId   String?  @unique
+  depot       Depot    @relation(fields: [depotId], references: [id])
+  depotId     String
 }
 
 model Defect {

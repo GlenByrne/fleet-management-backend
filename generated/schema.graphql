@@ -21,8 +21,8 @@ input AddFuelCardInput {
 
 input AddTollTagInput {
   depotId: String!
-  tollTagNumber: String!
-  tollTagProvider: String!
+  tagNumber: String!
+  tagProvider: String!
 }
 
 input AddVehicleInput {
@@ -89,7 +89,7 @@ type Mutation {
   deleteTollTag(data: DeleteTollTagInput!): TollTag!
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
   updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
-  updateTollTagNumber(data: UpdateTollTagNumberInput!): TollTag!
+  updateTollTag(data: UpdateTollTagInput!): TollTag!
 }
 
 type Query {
@@ -106,8 +106,8 @@ type Query {
 type TollTag {
   depot: Depot
   id: ID!
-  tollTagNumber: String!
-  tollTagProvider: String!
+  tagNumber: String!
+  tagProvider: String!
   vehicle: Vehicle
 }
 
@@ -118,9 +118,11 @@ input UpdateFuelCardInput {
   id: ID!
 }
 
-input UpdateTollTagNumberInput {
+input UpdateTollTagInput {
+  depotId: String!
   id: ID!
-  tollTagNumber: String!
+  tagNumber: String!
+  tagProvider: String!
 }
 
 type Vehicle {

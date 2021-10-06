@@ -7,8 +7,8 @@ export const TollTag = objectType({
   name: 'TollTag',
   definition(t) {
     t.nonNull.id('id');
-    t.nonNull.string('tollTagNumber');
-    t.nonNull.string('tollTagProvider');
+    t.nonNull.string('tagNumber');
+    t.nonNull.string('tagProvider');
     t.field('vehicle', {
       type: Vehicle,
       resolve(parent, _, context: Context) {
@@ -55,8 +55,8 @@ export const TollTagQuery = extendType({
 const AddTollTagInput = inputObjectType({
   name: 'AddTollTagInput',
   definition(t) {
-    t.nonNull.string('tollTagNumber');
-    t.nonNull.string('tollTagProvider');
+    t.nonNull.string('tagNumber');
+    t.nonNull.string('tagProvider');
     t.nonNull.string('depotId');
   },
 });
@@ -65,8 +65,8 @@ const UpdateTollTagInput = inputObjectType({
   name: 'UpdateTollTagInput',
   definition(t) {
     t.nonNull.id('id');
-    t.nonNull.string('tollTagNumber');
-    t.nonNull.string('tollTagProvider');
+    t.nonNull.string('tagNumber');
+    t.nonNull.string('tagProvider');
     t.nonNull.string('depotId');
   },
 });
@@ -93,8 +93,8 @@ export const TollTagMutation = extendType({
       resolve: (_, args, context: Context) =>
         context.prisma.tollTag.create({
           data: {
-            tollTagNumber: args.data.tollTagNumber,
-            tollTagProvider: args.data.tollTagProvider,
+            tagNumber: args.data.tagNumber,
+            tagProvider: args.data.tagProvider,
             depot: {
               connect: {
                 id: args.data.depotId,
@@ -119,8 +119,8 @@ export const TollTagMutation = extendType({
             id: args.data.id,
           },
           data: {
-            tollTagNumber: args.data.tollTagNumber,
-            tollTagProvider: args.data.tollTagProvider,
+            tagNumber: args.data.tagNumber,
+            tagProvider: args.data.tagProvider,
             depot: {
               connect: {
                 id: args.data.depotId,

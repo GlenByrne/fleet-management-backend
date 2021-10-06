@@ -45,8 +45,8 @@ export interface NexusGenInputs {
   }
   AddTollTagInput: { // input type
     depotId: string; // String!
-    tollTagNumber: string; // String!
-    tollTagProvider: string; // String!
+    tagNumber: string; // String!
+    tagProvider: string; // String!
   }
   AddVehicleInput: { // input type
     cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
@@ -75,9 +75,11 @@ export interface NexusGenInputs {
     depotId: string; // String!
     id: string; // ID!
   }
-  UpdateTollTagNumberInput: { // input type
+  UpdateTollTagInput: { // input type
+    depotId: string; // String!
     id: string; // ID!
-    tollTagNumber: string; // String!
+    tagNumber: string; // String!
+    tagProvider: string; // String!
   }
 }
 
@@ -114,8 +116,8 @@ export interface NexusGenObjects {
   Query: {};
   TollTag: { // root type
     id: string; // ID!
-    tollTagNumber: string; // String!
-    tollTagProvider: string; // String!
+    tagNumber: string; // String!
+    tagProvider: string; // String!
   }
   Vehicle: { // root type
     cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
@@ -171,7 +173,7 @@ export interface NexusGenFieldTypes {
     deleteTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     deleteVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
     updateFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
-    updateTollTagNumber: NexusGenRootTypes['TollTag']; // TollTag!
+    updateTollTag: NexusGenRootTypes['TollTag']; // TollTag!
   }
   Query: { // field return type
     defectsForVehicle: Array<NexusGenRootTypes['Defect'] | null> | null; // [Defect]
@@ -186,8 +188,8 @@ export interface NexusGenFieldTypes {
   TollTag: { // field return type
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     id: string; // ID!
-    tollTagNumber: string; // String!
-    tollTagProvider: string; // String!
+    tagNumber: string; // String!
+    tagProvider: string; // String!
     vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   Vehicle: { // field return type
@@ -238,7 +240,7 @@ export interface NexusGenFieldTypeNames {
     deleteTollTag: 'TollTag'
     deleteVehicle: 'Vehicle'
     updateFuelCard: 'FuelCard'
-    updateTollTagNumber: 'TollTag'
+    updateTollTag: 'TollTag'
   }
   Query: { // field return type name
     defectsForVehicle: 'Defect'
@@ -253,8 +255,8 @@ export interface NexusGenFieldTypeNames {
   TollTag: { // field return type name
     depot: 'Depot'
     id: 'ID'
-    tollTagNumber: 'String'
-    tollTagProvider: 'String'
+    tagNumber: 'String'
+    tagProvider: 'String'
     vehicle: 'Vehicle'
   }
   Vehicle: { // field return type name
@@ -302,8 +304,8 @@ export interface NexusGenArgTypes {
     updateFuelCard: { // args
       data: NexusGenInputs['UpdateFuelCardInput']; // UpdateFuelCardInput!
     }
-    updateTollTagNumber: { // args
-      data: NexusGenInputs['UpdateTollTagNumberInput']; // UpdateTollTagNumberInput!
+    updateTollTag: { // args
+      data: NexusGenInputs['UpdateTollTagInput']; // UpdateTollTagInput!
     }
   }
   Query: {
