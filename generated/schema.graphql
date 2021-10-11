@@ -90,6 +90,7 @@ type Mutation {
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
   updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
   updateTollTag(data: UpdateTollTagInput!): TollTag!
+  updateVehicle(data: UpdateVehicleInput!): Vehicle!
 }
 
 type Query {
@@ -123,6 +124,20 @@ input UpdateTollTagInput {
   id: ID!
   tagNumber: String!
   tagProvider: String!
+}
+
+input UpdateVehicleInput {
+  cvrtDueDate: DateTime
+  depotId: String!
+  fuelCardId: String
+  id: String!
+  make: String!
+  model: String!
+  owner: String!
+  registration: String!
+  tachoCalibrationDueDate: DateTime
+  thirteenWeekInspectionDueDate: DateTime
+  tollTagId: String
 }
 
 type Vehicle {

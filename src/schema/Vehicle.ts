@@ -106,6 +106,23 @@ const AddVehicleInput = inputObjectType({
   },
 });
 
+const UpdateVehicleInput = inputObjectType({
+  name: 'UpdateVehicleInput',
+  definition(t) {
+    t.nonNull.string('id');
+    t.nonNull.string('registration');
+    t.nonNull.string('make');
+    t.nonNull.string('model');
+    t.nonNull.string('owner');
+    t.date('cvrtDueDate');
+    t.date('thirteenWeekInspectionDueDate');
+    t.date('tachoCalibrationDueDate');
+    t.nonNull.string('depotId');
+    t.string('fuelCardId');
+    t.string('tollTagId');
+  },
+});
+
 const DeleteVehicleInput = inputObjectType({
   name: 'DeleteVehicleInput',
   definition(t) {
@@ -168,6 +185,48 @@ export const VehicleMutation = extendType({
         context.prisma.vehicle.delete({
           where: {
             id: args.data.id,
+          },
+        }),
+    });
+
+    t.nonNull.field('updateVehicle', {
+      type: Vehicle,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateVehicleInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) =>
+        context.prisma.vehicle.update({
+          where: {
+            id: args.data.id,
+          },
+          data: {
+            registration: args.data.registration,
+            make: args.data.make,
+            model: args.data.model,
+            owner: args.data.owner,
+            cvrtDueDate: args.data.cvrtDueDate,
+            thirteenWeekInspectionDueDate:
+              args.data.thirteenWeekInspectionDueDate,
+            tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+            depot: {
+              connect: {
+                id: args.data.depotId,
+              },
+            },
+            fuelCard: {
+              connect: {
+                id: args.data.fuelCardId || undefined,
+              },
+            },
+            tollTag: {
+              connect: {
+                id: args.data.tollTagId || undefined,
+              },
+            },
           },
         }),
     });
