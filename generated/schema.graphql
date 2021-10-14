@@ -94,12 +94,14 @@ type Mutation {
 }
 
 type Query {
+  currentFuelCardAndUnassigned(vehicleId: ID!): [FuelCard]
   defectsForVehicle(vehicleId: ID!): [Defect]
   depots: [Depot]
   fuelCards: [FuelCard]
   fuelCardsNotAssigned: [FuelCard]
   tollTags: [TollTag]
   tollTagsNotAssigned: [TollTag]
+  vehicle(vehicleId: ID!): Vehicle
   vehicles: [Vehicle]
   vehiclesInDepot(depotId: ID!): [Vehicle]
 }

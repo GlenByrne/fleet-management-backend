@@ -190,12 +190,14 @@ export interface NexusGenFieldTypes {
     updateVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
   }
   Query: { // field return type
+    currentFuelCardAndUnassigned: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     defectsForVehicle: Array<NexusGenRootTypes['Defect'] | null> | null; // [Defect]
     depots: Array<NexusGenRootTypes['Depot'] | null> | null; // [Depot]
     fuelCards: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     fuelCardsNotAssigned: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     tollTags: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
     tollTagsNotAssigned: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
+    vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
     vehicles: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
     vehiclesInDepot: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
   }
@@ -258,12 +260,14 @@ export interface NexusGenFieldTypeNames {
     updateVehicle: 'Vehicle'
   }
   Query: { // field return type name
+    currentFuelCardAndUnassigned: 'FuelCard'
     defectsForVehicle: 'Defect'
     depots: 'Depot'
     fuelCards: 'FuelCard'
     fuelCardsNotAssigned: 'FuelCard'
     tollTags: 'TollTag'
     tollTagsNotAssigned: 'TollTag'
+    vehicle: 'Vehicle'
     vehicles: 'Vehicle'
     vehiclesInDepot: 'Vehicle'
   }
@@ -327,7 +331,13 @@ export interface NexusGenArgTypes {
     }
   }
   Query: {
+    currentFuelCardAndUnassigned: { // args
+      vehicleId: string; // ID!
+    }
     defectsForVehicle: { // args
+      vehicleId: string; // ID!
+    }
+    vehicle: { // args
       vehicleId: string; // ID!
     }
     vehiclesInDepot: { // args

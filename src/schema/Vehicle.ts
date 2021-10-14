@@ -69,6 +69,18 @@ export const Vehicle = objectType({
 export const VehicleQuery = extendType({
   type: 'Query',
   definition(t) {
+    t.field('vehicle', {
+      type: Vehicle,
+      args: {
+        vehicleId: nonNull(idArg()),
+      },
+      resolve: (_, { vehicleId }, context: Context) =>
+        context.prisma.vehicle.findUnique({
+          where: {
+            id: vehicleId,
+          },
+        }),
+    });
     t.list.field('vehicles', {
       type: Vehicle,
       resolve: (_, __, context: Context) => context.prisma.vehicle.findMany(),
