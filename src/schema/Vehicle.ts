@@ -12,6 +12,22 @@ import { Depot } from './Depot';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
 
+export function upsertConnection<TName extends string>(
+  name: TName,
+  oldValue: string | undefined | null,
+  newValue: string | undefined | null
+): false | Record<TName, { connect: { id: string } } | { disconnect: true }> {
+  // we need to mutate if we're changing the value or if going from set -> unset or unset -> set
+  // NOTE: coerce to boolean because db is null and args are undefined
+  const shouldModify = oldValue !== newValue || !!oldValue !== !!newValue;
+  return (
+    shouldModify &&
+    ({
+      [name]: newValue ? { connect: { id: newValue } } : { disconnect: true },
+    } as never)
+  );
+}
+
 export const Vehicle = objectType({
   name: 'Vehicle',
   definition(t) {
@@ -172,12 +188,16 @@ export const VehicleMutation = extendType({
             },
             fuelCard: {
               connect: {
-                id: args.data.fuelCardId || undefined,
+                id:
+                  args.data.fuelCardId != null
+                    ? args.data.fuelCardId
+                    : undefined,
               },
             },
             tollTag: {
               connect: {
-                id: args.data.tollTagId || undefined,
+                id:
+                  args.data.tollTagId != null ? args.data.tollTagId : undefined,
               },
             },
           },
@@ -210,8 +230,26 @@ export const VehicleMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.vehicle.update({
+      resolve: async (_, args, context: Context) => {
+        const oldVehicle = await context.prisma.vehicle.findUnique({
+          where: {
+            id: args.data.id,
+          },
+          include: {
+            fuelCard: {
+              select: {
+                id: true,
+              },
+            },
+            tollTag: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        });
+
+        const vehicle = context.prisma.vehicle.update({
           where: {
             id: args.data.id,
           },
@@ -229,18 +267,20 @@ export const VehicleMutation = extendType({
                 id: args.data.depotId,
               },
             },
-            fuelCard: {
-              connect: {
-                id: args.data.fuelCardId || undefined,
-              },
-            },
-            tollTag: {
-              connect: {
-                id: args.data.tollTagId || undefined,
-              },
-            },
+            ...upsertConnection(
+              'fuelCard',
+              oldVehicle?.fuelCard?.id,
+              args.data.fuelCardId
+            ),
+            ...upsertConnection(
+              'tollTag',
+              oldVehicle?.tollTag?.id,
+              args.data.tollTagId
+            ),
           },
-        }),
+        });
+        return vehicle;
+      },
     });
   },
 });

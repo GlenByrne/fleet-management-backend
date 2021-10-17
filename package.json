@@ -1,7 +1,7 @@
 {
-  "name": "nexus-prisma-typescript-combined",
+  "name": "fleet-management-backend",
   "version": "1.0.0",
-  "description": "Boilerplate project for Graphql backend with Prisma, Nexus, ESLint, Prettier, Husky, and Lint-Staged",
+  "description": "Fleet Management Backend",
   "scripts": {
     "dev": "ts-node-dev --no-notify --respawn --transpile-only src/server",
     "start": "node dist/server",
