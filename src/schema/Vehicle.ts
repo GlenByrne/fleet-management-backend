@@ -12,6 +12,19 @@ import { Depot } from './Depot';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
 
+export function createConnection<TName extends string>(
+  name: TName,
+  value: string | undefined | null
+): false | Record<TName, { connect: { id: string } } | undefined> {
+  const shouldModify = value !== null;
+  return (
+    shouldModify &&
+    ({
+      [name]: value ? { connect: { id: value } } : undefined,
+    } as never)
+  );
+}
+
 export function upsertConnection<TName extends string>(
   name: TName,
   oldValue: string | undefined | null,
@@ -186,20 +199,8 @@ export const VehicleMutation = extendType({
                 id: args.data.depotId,
               },
             },
-            fuelCard: {
-              connect: {
-                id:
-                  args.data.fuelCardId != null
-                    ? args.data.fuelCardId
-                    : undefined,
-              },
-            },
-            tollTag: {
-              connect: {
-                id:
-                  args.data.tollTagId != null ? args.data.tollTagId : undefined,
-              },
-            },
+            ...createConnection('fuelCard', args.data.fuelCardId),
+            ...createConnection('tollTag', args.data.tollTagId),
           },
         }),
     });
