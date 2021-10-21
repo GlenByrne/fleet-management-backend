@@ -59,6 +59,7 @@ export interface NexusGenInputs {
     tachoCalibrationDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     thirteenWeekInspectionDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     tollTagId?: string | null; // String
+    type: NexusGenEnums['VehicleType']; // VehicleType!
   }
   DeleteFuelCardInput: { // input type
     id: string; // ID!
@@ -93,10 +94,12 @@ export interface NexusGenInputs {
     tachoCalibrationDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     thirteenWeekInspectionDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     tollTagId?: string | null; // String
+    type: NexusGenEnums['VehicleType']; // VehicleType!
   }
 }
 
 export interface NexusGenEnums {
+  VehicleType: "TRAILER" | "TRUCK" | "VAN"
 }
 
 export interface NexusGenScalars {
@@ -141,6 +144,7 @@ export interface NexusGenObjects {
     registration: string; // String!
     tachoCalibrationDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     thirteenWeekInspectionDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
+    type: NexusGenEnums['VehicleType']; // VehicleType!
   }
 }
 
@@ -152,7 +156,7 @@ export interface NexusGenUnions {
 
 export type NexusGenRootTypes = NexusGenObjects
 
-export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars
+export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
   Defect: { // field return type
@@ -221,6 +225,7 @@ export interface NexusGenFieldTypes {
     tachoCalibrationDueDate: NexusGenScalars['DateTime'] | null; // DateTime
     thirteenWeekInspectionDueDate: NexusGenScalars['DateTime'] | null; // DateTime
     tollTag: NexusGenRootTypes['TollTag'] | null; // TollTag
+    type: NexusGenEnums['VehicleType']; // VehicleType!
   }
 }
 
@@ -291,6 +296,7 @@ export interface NexusGenFieldTypeNames {
     tachoCalibrationDueDate: 'DateTime'
     thirteenWeekInspectionDueDate: 'DateTime'
     tollTag: 'TollTag'
+    type: 'VehicleType'
   }
 }
 
@@ -356,7 +362,7 @@ export type NexusGenObjectNames = keyof NexusGenObjects;
 
 export type NexusGenInputNames = keyof NexusGenInputs;
 
-export type NexusGenEnumNames = never;
+export type NexusGenEnumNames = keyof NexusGenEnums;
 
 export type NexusGenInterfaceNames = never;
 

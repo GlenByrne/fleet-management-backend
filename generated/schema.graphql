@@ -36,6 +36,7 @@ input AddVehicleInput {
   tachoCalibrationDueDate: DateTime
   thirteenWeekInspectionDueDate: DateTime
   tollTagId: String
+  type: VehicleType!
 }
 
 """
@@ -140,6 +141,7 @@ input UpdateVehicleInput {
   tachoCalibrationDueDate: DateTime
   thirteenWeekInspectionDueDate: DateTime
   tollTagId: String
+  type: VehicleType!
 }
 
 type Vehicle {
@@ -155,4 +157,11 @@ type Vehicle {
   tachoCalibrationDueDate: DateTime
   thirteenWeekInspectionDueDate: DateTime
   tollTag: TollTag
+  type: VehicleType!
+}
+
+enum VehicleType {
+  Trailer
+  Truck
+  Van
 }

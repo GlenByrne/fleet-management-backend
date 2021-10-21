@@ -1,6 +1,6 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = "postgres://ngkrtbylzcryjh:0f06d528b4b492d6fe6a4f59c1d576e3a19077f8dfe8d823491c030baabc0bd4@ec2-176-34-116-203.eu-west-1.compute.amazonaws.com:5432/ddt8nlq9uijdkn"
 }
 
 generator client {
@@ -8,15 +8,16 @@ generator client {
 }
 
 model Vehicle {
-  id                            String    @id @default(cuid())
-  registration                  String    @unique
+  id                            String      @id @default(cuid())
+  type                          VehicleType
+  registration                  String      @unique
   make                          String
   model                         String
-  owner                         String    @default("Dennehy's")
+  owner                         String      @default("Dennehy's")
   cvrtDueDate                   DateTime?
   thirteenWeekInspectionDueDate DateTime?
   tachoCalibrationDueDate       DateTime?
-  depot                         Depot     @relation(fields: [depotId], references: [id])
+  depot                         Depot       @relation(fields: [depotId], references: [id])
   depotId                       String
   fuelCard                      FuelCard?
   tollTag                       TollTag?
@@ -59,4 +60,10 @@ model Defect {
   status        String
   vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
   vehicleId     String    @unique
+}
+
+enum VehicleType {
+  VAN
+  TRUCK
+  TRAILER
 }

@@ -5,6 +5,7 @@ import {
   extendType,
   arg,
   inputObjectType,
+  enumType,
 } from 'nexus';
 import { Context } from '../context';
 import { Defect } from './Defect';
@@ -41,10 +42,22 @@ export function upsertConnection<TName extends string>(
   );
 }
 
+export const VehicleType = enumType({
+  name: 'VehicleType',
+  members: {
+    Van: 'VAN',
+    Truck: 'TRUCK',
+    Trailer: 'TRAILER',
+  },
+});
+
 export const Vehicle = objectType({
   name: 'Vehicle',
   definition(t) {
     t.nonNull.id('id');
+    t.nonNull.field('type', {
+      type: VehicleType,
+    });
     t.nonNull.string('registration');
     t.nonNull.string('make');
     t.nonNull.string('model');
@@ -134,6 +147,7 @@ export const VehicleQuery = extendType({
 const AddVehicleInput = inputObjectType({
   name: 'AddVehicleInput',
   definition(t) {
+    t.nonNull.field('type', { type: VehicleType });
     t.nonNull.string('registration');
     t.nonNull.string('make');
     t.nonNull.string('model');
@@ -151,6 +165,7 @@ const UpdateVehicleInput = inputObjectType({
   name: 'UpdateVehicleInput',
   definition(t) {
     t.nonNull.string('id');
+    t.nonNull.field('type', { type: VehicleType });
     t.nonNull.string('registration');
     t.nonNull.string('make');
     t.nonNull.string('model');
@@ -186,6 +201,7 @@ export const VehicleMutation = extendType({
       resolve: (_, args, context: Context) =>
         context.prisma.vehicle.create({
           data: {
+            type: args.data.type,
             registration: args.data.registration,
             make: args.data.make,
             model: args.data.model,
@@ -255,6 +271,7 @@ export const VehicleMutation = extendType({
             id: args.data.id,
           },
           data: {
+            type: args.data.type,
             registration: args.data.registration,
             make: args.data.make,
             model: args.data.model,
