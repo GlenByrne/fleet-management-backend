@@ -16,18 +16,18 @@ input AddDepotInput {
 input AddFuelCardInput {
   cardNumber: String!
   cardProvider: String!
-  depotId: String!
+  depotId: String
 }
 
 input AddTollTagInput {
-  depotId: String!
+  depotId: String
   tagNumber: String!
   tagProvider: String!
 }
 
 input AddVehicleInput {
   cvrtDueDate: DateTime
-  depotId: String!
+  depotId: String
   fuelCardId: String
   make: String!
   model: String!
@@ -118,12 +118,12 @@ type TollTag {
 input UpdateFuelCardInput {
   cardNumber: String!
   cardProvider: String!
-  depotId: String!
+  depotId: String
   id: ID!
 }
 
 input UpdateTollTagInput {
-  depotId: String!
+  depotId: String
   id: ID!
   tagNumber: String!
   tagProvider: String!
@@ -131,7 +131,7 @@ input UpdateTollTagInput {
 
 input UpdateVehicleInput {
   cvrtDueDate: DateTime
-  depotId: String!
+  depotId: String
   fuelCardId: String
   id: String!
   make: String!

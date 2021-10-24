@@ -7,6 +7,8 @@ import {
   idArg,
 } from 'nexus';
 import { Context } from '../context';
+import createConnection from '../utilities/createConnection';
+import upsertConnection from '../utilities/upsertConnection';
 import { Depot } from './Depot';
 import { Vehicle } from './Vehicle';
 
@@ -84,7 +86,7 @@ const AddFuelCardInput = inputObjectType({
   definition(t) {
     t.nonNull.string('cardNumber');
     t.nonNull.string('cardProvider');
-    t.nonNull.string('depotId');
+    t.string('depotId');
   },
 });
 
@@ -94,7 +96,7 @@ const UpdateFuelCardInput = inputObjectType({
     t.nonNull.id('id');
     t.nonNull.string('cardNumber');
     t.nonNull.string('cardProvider');
-    t.nonNull.string('depotId');
+    t.string('depotId');
   },
 });
 
@@ -122,11 +124,7 @@ export const FuelCardMutation = extendType({
           data: {
             cardNumber: args.data.cardNumber,
             cardProvider: args.data.cardProvider,
-            depot: {
-              connect: {
-                id: args.data.depotId,
-              },
-            },
+            ...createConnection('depot', args.data.depotId),
           },
         }),
     });
@@ -140,21 +138,36 @@ export const FuelCardMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.fuelCard.update({
+      resolve: async (_, args, context: Context) => {
+        const oldFuelCard = await context.prisma.fuelCard.findUnique({
+          where: {
+            id: args.data.id,
+          },
+          include: {
+            depot: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        });
+
+        const fuelCard = context.prisma.fuelCard.update({
           where: {
             id: args.data.id,
           },
           data: {
             cardNumber: args.data.cardNumber,
             cardProvider: args.data.cardProvider,
-            depot: {
-              connect: {
-                id: args.data.depotId,
-              },
-            },
+            ...upsertConnection(
+              'depot',
+              oldFuelCard?.depot?.id,
+              args.data.depotId
+            ),
           },
-        }),
+        });
+        return fuelCard;
+      },
     });
 
     t.nonNull.field('deleteFuelCard', {

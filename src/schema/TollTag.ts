@@ -1,5 +1,7 @@
 import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
 import { Context } from '../context';
+import createConnection from '../utilities/createConnection';
+import upsertConnection from '../utilities/upsertConnection';
 import { Depot } from './Depot';
 import { Vehicle } from './Vehicle';
 
@@ -57,7 +59,7 @@ const AddTollTagInput = inputObjectType({
   definition(t) {
     t.nonNull.string('tagNumber');
     t.nonNull.string('tagProvider');
-    t.nonNull.string('depotId');
+    t.string('depotId');
   },
 });
 
@@ -67,7 +69,7 @@ const UpdateTollTagInput = inputObjectType({
     t.nonNull.id('id');
     t.nonNull.string('tagNumber');
     t.nonNull.string('tagProvider');
-    t.nonNull.string('depotId');
+    t.string('depotId');
   },
 });
 
@@ -95,11 +97,7 @@ export const TollTagMutation = extendType({
           data: {
             tagNumber: args.data.tagNumber,
             tagProvider: args.data.tagProvider,
-            depot: {
-              connect: {
-                id: args.data.depotId,
-              },
-            },
+            ...createConnection('depot', args.data.depotId),
           },
         }),
     });
@@ -113,21 +111,36 @@ export const TollTagMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.tollTag.update({
+      resolve: async (_, args, context: Context) => {
+        const oldTollTag = await context.prisma.tollTag.findUnique({
+          where: {
+            id: args.data.id,
+          },
+          include: {
+            depot: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        });
+
+        const tollTag = context.prisma.tollTag.update({
           where: {
             id: args.data.id,
           },
           data: {
             tagNumber: args.data.tagNumber,
             tagProvider: args.data.tagProvider,
-            depot: {
-              connect: {
-                id: args.data.depotId,
-              },
-            },
+            ...upsertConnection(
+              'depot',
+              oldTollTag?.depot?.id,
+              args.data.depotId
+            ),
           },
-        }),
+        });
+        return tollTag;
+      },
     });
 
     t.nonNull.field('deleteTollTag', {

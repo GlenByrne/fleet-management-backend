@@ -17,8 +17,8 @@ model Vehicle {
   cvrtDueDate                   DateTime?
   thirteenWeekInspectionDueDate DateTime?
   tachoCalibrationDueDate       DateTime?
-  depot                         Depot       @relation(fields: [depotId], references: [id])
-  depotId                       String
+  depot                         Depot?      @relation(fields: [depotId], references: [id])
+  depotId                       String?
   fuelCard                      FuelCard?
   tollTag                       TollTag?
   defects                       Defect[]
@@ -38,8 +38,8 @@ model FuelCard {
   cardProvider String
   vehicle      Vehicle? @relation(fields: [vehicleId], references: [id])
   vehicleId    String?  @unique
-  depot        Depot    @relation(fields: [depotId], references: [id])
-  depotId      String
+  depot        Depot?   @relation(fields: [depotId], references: [id])
+  depotId      String?
 }
 
 model TollTag {
@@ -48,8 +48,8 @@ model TollTag {
   tagProvider String
   vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
   vehicleId   String?  @unique
-  depot       Depot    @relation(fields: [depotId], references: [id])
-  depotId     String
+  depot       Depot?   @relation(fields: [depotId], references: [id])
+  depotId     String?
 }
 
 model Defect {

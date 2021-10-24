@@ -41,16 +41,16 @@ export interface NexusGenInputs {
   AddFuelCardInput: { // input type
     cardNumber: string; // String!
     cardProvider: string; // String!
-    depotId: string; // String!
+    depotId?: string | null; // String
   }
   AddTollTagInput: { // input type
-    depotId: string; // String!
+    depotId?: string | null; // String
     tagNumber: string; // String!
     tagProvider: string; // String!
   }
   AddVehicleInput: { // input type
     cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
-    depotId: string; // String!
+    depotId?: string | null; // String
     fuelCardId?: string | null; // String
     make: string; // String!
     model: string; // String!
@@ -73,18 +73,18 @@ export interface NexusGenInputs {
   UpdateFuelCardInput: { // input type
     cardNumber: string; // String!
     cardProvider: string; // String!
-    depotId: string; // String!
+    depotId?: string | null; // String
     id: string; // ID!
   }
   UpdateTollTagInput: { // input type
-    depotId: string; // String!
+    depotId?: string | null; // String
     id: string; // ID!
     tagNumber: string; // String!
     tagProvider: string; // String!
   }
   UpdateVehicleInput: { // input type
     cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
-    depotId: string; // String!
+    depotId?: string | null; // String
     fuelCardId?: string | null; // String
     id: string; // String!
     make: string; // String!

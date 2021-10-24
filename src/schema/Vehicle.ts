@@ -8,39 +8,12 @@ import {
   enumType,
 } from 'nexus';
 import { Context } from '../context';
+import createConnection from '../utilities/createConnection';
+import upsertConnection from '../utilities/upsertConnection';
 import { Defect } from './Defect';
 import { Depot } from './Depot';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
-
-export function createConnection<TName extends string>(
-  name: TName,
-  value: string | undefined | null
-): false | Record<TName, { connect: { id: string } } | undefined> {
-  const shouldModify = value !== null;
-  return (
-    shouldModify &&
-    ({
-      [name]: value ? { connect: { id: value } } : undefined,
-    } as never)
-  );
-}
-
-export function upsertConnection<TName extends string>(
-  name: TName,
-  oldValue: string | undefined | null,
-  newValue: string | undefined | null
-): false | Record<TName, { connect: { id: string } } | { disconnect: true }> {
-  // we need to mutate if we're changing the value or if going from set -> unset or unset -> set
-  // NOTE: coerce to boolean because db is null and args are undefined
-  const shouldModify = oldValue !== newValue || !!oldValue !== !!newValue;
-  return (
-    shouldModify &&
-    ({
-      [name]: newValue ? { connect: { id: newValue } } : { disconnect: true },
-    } as never)
-  );
-}
 
 export const VehicleType = enumType({
   name: 'VehicleType',
@@ -155,7 +128,7 @@ const AddVehicleInput = inputObjectType({
     t.date('cvrtDueDate');
     t.date('thirteenWeekInspectionDueDate');
     t.date('tachoCalibrationDueDate');
-    t.nonNull.string('depotId');
+    t.string('depotId');
     t.string('fuelCardId');
     t.string('tollTagId');
   },
@@ -173,7 +146,7 @@ const UpdateVehicleInput = inputObjectType({
     t.date('cvrtDueDate');
     t.date('thirteenWeekInspectionDueDate');
     t.date('tachoCalibrationDueDate');
-    t.nonNull.string('depotId');
+    t.string('depotId');
     t.string('fuelCardId');
     t.string('tollTagId');
   },
@@ -210,11 +183,7 @@ export const VehicleMutation = extendType({
             thirteenWeekInspectionDueDate:
               args.data.thirteenWeekInspectionDueDate,
             tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
-            depot: {
-              connect: {
-                id: args.data.depotId,
-              },
-            },
+            ...createConnection('depot', args.data.depotId),
             ...createConnection('fuelCard', args.data.fuelCardId),
             ...createConnection('tollTag', args.data.tollTagId),
           },
@@ -263,6 +232,11 @@ export const VehicleMutation = extendType({
                 id: true,
               },
             },
+            depot: {
+              select: {
+                id: true,
+              },
+            },
           },
         });
 
@@ -280,11 +254,11 @@ export const VehicleMutation = extendType({
             thirteenWeekInspectionDueDate:
               args.data.thirteenWeekInspectionDueDate,
             tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
-            depot: {
-              connect: {
-                id: args.data.depotId,
-              },
-            },
+            ...upsertConnection(
+              'depot',
+              oldVehicle?.depot?.id,
+              args.data.depotId
+            ),
             ...upsertConnection(
               'fuelCard',
               oldVehicle?.fuelCard?.id,
