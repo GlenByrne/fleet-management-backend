@@ -80,6 +80,21 @@ const AddDepotInput = inputObjectType({
   },
 });
 
+const UpdateDepotInput = inputObjectType({
+  name: 'UpdateDepotInput',
+  definition(t) {
+    t.nonNull.id('id');
+    t.nonNull.string('name');
+  },
+});
+
+const DeleteDepotInput = inputObjectType({
+  name: 'DeleteDepotInput',
+  definition(t) {
+    t.nonNull.id('id');
+  },
+});
+
 export const DepotMutation = extendType({
   type: 'Mutation',
   definition(t) {
@@ -96,6 +111,43 @@ export const DepotMutation = extendType({
         context.prisma.depot.create({
           data: {
             name: args.data.name,
+          },
+        }),
+    });
+
+    t.nonNull.field('updateDepot', {
+      type: Depot,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateDepotInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) =>
+        context.prisma.depot.update({
+          where: {
+            id: args.data.id,
+          },
+          data: {
+            name: args.data.name,
+          },
+        }),
+    });
+
+    t.nonNull.field('deleteDepot', {
+      type: Depot,
+      args: {
+        data: nonNull(
+          arg({
+            type: DeleteDepotInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) =>
+        context.prisma.depot.delete({
+          where: {
+            id: args.data.id,
           },
         }),
     });

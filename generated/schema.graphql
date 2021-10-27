@@ -52,6 +52,10 @@ type Defect {
   status: String
 }
 
+input DeleteDepotInput {
+  id: ID!
+}
+
 input DeleteFuelCardInput {
   id: ID!
 }
@@ -86,9 +90,11 @@ type Mutation {
   addFuelCard(data: AddFuelCardInput!): FuelCard!
   addTollTag(data: AddTollTagInput!): TollTag!
   addVehicle(data: AddVehicleInput!): Vehicle!
+  deleteDepot(data: DeleteDepotInput!): Depot!
   deleteFuelCard(data: DeleteFuelCardInput!): FuelCard!
   deleteTollTag(data: DeleteTollTagInput!): TollTag!
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
+  updateDepot(data: UpdateDepotInput!): Depot!
   updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
   updateTollTag(data: UpdateTollTagInput!): TollTag!
   updateVehicle(data: UpdateVehicleInput!): Vehicle!
@@ -113,6 +119,11 @@ type TollTag {
   tagNumber: String!
   tagProvider: String!
   vehicle: Vehicle
+}
+
+input UpdateDepotInput {
+  id: ID!
+  name: String!
 }
 
 input UpdateFuelCardInput {

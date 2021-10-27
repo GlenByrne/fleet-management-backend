@@ -61,6 +61,9 @@ export interface NexusGenInputs {
     tollTagId?: string | null; // String
     type: NexusGenEnums['VehicleType']; // VehicleType!
   }
+  DeleteDepotInput: { // input type
+    id: string; // ID!
+  }
   DeleteFuelCardInput: { // input type
     id: string; // ID!
   }
@@ -69,6 +72,10 @@ export interface NexusGenInputs {
   }
   DeleteVehicleInput: { // input type
     id: string; // ID!
+  }
+  UpdateDepotInput: { // input type
+    id: string; // ID!
+    name: string; // String!
   }
   UpdateFuelCardInput: { // input type
     cardNumber: string; // String!
@@ -186,9 +193,11 @@ export interface NexusGenFieldTypes {
     addFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     addTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     addVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
+    deleteDepot: NexusGenRootTypes['Depot']; // Depot!
     deleteFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     deleteTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     deleteVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
+    updateDepot: NexusGenRootTypes['Depot']; // Depot!
     updateFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     updateTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     updateVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
@@ -257,9 +266,11 @@ export interface NexusGenFieldTypeNames {
     addFuelCard: 'FuelCard'
     addTollTag: 'TollTag'
     addVehicle: 'Vehicle'
+    deleteDepot: 'Depot'
     deleteFuelCard: 'FuelCard'
     deleteTollTag: 'TollTag'
     deleteVehicle: 'Vehicle'
+    updateDepot: 'Depot'
     updateFuelCard: 'FuelCard'
     updateTollTag: 'TollTag'
     updateVehicle: 'Vehicle'
@@ -317,6 +328,9 @@ export interface NexusGenArgTypes {
     addVehicle: { // args
       data: NexusGenInputs['AddVehicleInput']; // AddVehicleInput!
     }
+    deleteDepot: { // args
+      data: NexusGenInputs['DeleteDepotInput']; // DeleteDepotInput!
+    }
     deleteFuelCard: { // args
       data: NexusGenInputs['DeleteFuelCardInput']; // DeleteFuelCardInput!
     }
@@ -325,6 +339,9 @@ export interface NexusGenArgTypes {
     }
     deleteVehicle: { // args
       data: NexusGenInputs['DeleteVehicleInput']; // DeleteVehicleInput!
+    }
+    updateDepot: { // args
+      data: NexusGenInputs['UpdateDepotInput']; // UpdateDepotInput!
     }
     updateFuelCard: { // args
       data: NexusGenInputs['UpdateFuelCardInput']; // UpdateFuelCardInput!
