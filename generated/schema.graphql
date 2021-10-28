@@ -84,6 +84,11 @@ type FuelCard {
   vehicle: Vehicle
 }
 
+input LoginInput {
+  email: String!
+  password: String!
+}
+
 type Mutation {
   addDefect(data: AddDefectInput!): Defect!
   addDepot(data: AddDepotInput!): Depot!
@@ -94,6 +99,8 @@ type Mutation {
   deleteFuelCard(data: DeleteFuelCardInput!): FuelCard!
   deleteTollTag(data: DeleteTollTagInput!): TollTag!
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
+  login(data: LoginInput!): UserLoginPayload!
+  register(data: RegisterInput!): UserRegisterPayload!
   updateDepot(data: UpdateDepotInput!): Depot!
   updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
   updateTollTag(data: UpdateTollTagInput!): TollTag!
@@ -111,6 +118,16 @@ type Query {
   vehicle(vehicleId: ID!): Vehicle
   vehicles: [Vehicle]
   vehiclesInDepot(depotId: ID!): [Vehicle]
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+}
+
+enum Role {
+  Admin
+  User
 }
 
 type TollTag {
@@ -153,6 +170,25 @@ input UpdateVehicleInput {
   thirteenWeekInspectionDueDate: DateTime
   tollTagId: String
   type: VehicleType!
+}
+
+type User {
+  depot: Depot
+  email: String!
+  id: ID!
+  name: String!
+  password: String!
+  role: Role!
+}
+
+type UserLoginPayload {
+  token: String
+  user: User
+}
+
+type UserRegisterPayload {
+  token: String
+  user: User
 }
 
 type Vehicle {

@@ -1,11 +1,4 @@
-import {
-  objectType,
-  nonNull,
-  arg,
-  inputObjectType,
-  extendType,
-  idArg,
-} from 'nexus';
+import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
 import upsertConnection from '../utilities/upsertConnection';
@@ -55,26 +48,6 @@ export const FuelCardQuery = extendType({
         context.prisma.fuelCard.findMany({
           where: {
             vehicleId: null,
-          },
-        }),
-    });
-
-    t.list.field('currentFuelCardAndUnassigned', {
-      type: FuelCard,
-      args: {
-        vehicleId: nonNull(idArg()),
-      },
-      resolve: (_, { vehicleId }, context: Context) =>
-        context.prisma.fuelCard.findMany({
-          where: {
-            OR: [
-              {
-                vehicleId: null,
-              },
-              {
-                vehicleId,
-              },
-            ],
           },
         }),
     });

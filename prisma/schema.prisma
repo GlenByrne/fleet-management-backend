@@ -7,8 +7,18 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String
+  role     Role    @default(USER)
+  depot    Depot?  @relation(fields: [depotId], references: [id])
+  depotId  String?
+}
+
 model Vehicle {
-  id                            String      @id @default(cuid())
+  id                            String      @id @default(uuid())
   type                          VehicleType
   registration                  String      @unique
   make                          String
@@ -25,15 +35,16 @@ model Vehicle {
 }
 
 model Depot {
-  id        String     @id @default(cuid())
+  id        String     @id @default(uuid())
   name      String     @unique
   vehicles  Vehicle[]
   fuelCards FuelCard[]
   tollTags  TollTag[]
+  User      User[]
 }
 
 model FuelCard {
-  id           String   @id @default(cuid())
+  id           String   @id @default(uuid())
   cardNumber   String   @unique
   cardProvider String
   vehicle      Vehicle? @relation(fields: [vehicleId], references: [id])
@@ -43,7 +54,7 @@ model FuelCard {
 }
 
 model TollTag {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   tagNumber   String   @unique
   tagProvider String
   vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
@@ -53,7 +64,7 @@ model TollTag {
 }
 
 model Defect {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   description   String
   dateReported  DateTime
   dateCompleted DateTime?
@@ -66,4 +77,9 @@ enum VehicleType {
   VAN
   TRUCK
   TRAILER
+}
+
+enum Role {
+  USER
+  ADMIN
 }
