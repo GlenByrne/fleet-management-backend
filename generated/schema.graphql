@@ -108,7 +108,6 @@ type Mutation {
 }
 
 type Query {
-  currentFuelCardAndUnassigned(vehicleId: ID!): [FuelCard]
   defectsForVehicle(vehicleId: ID!): [Defect]
   depots: [Depot]
   fuelCards: [FuelCard]

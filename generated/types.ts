@@ -229,7 +229,6 @@ export interface NexusGenFieldTypes {
     updateVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
   }
   Query: { // field return type
-    currentFuelCardAndUnassigned: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     defectsForVehicle: Array<NexusGenRootTypes['Defect'] | null> | null; // [Defect]
     depots: Array<NexusGenRootTypes['Depot'] | null> | null; // [Depot]
     fuelCards: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
@@ -320,7 +319,6 @@ export interface NexusGenFieldTypeNames {
     updateVehicle: 'Vehicle'
   }
   Query: { // field return type name
-    currentFuelCardAndUnassigned: 'FuelCard'
     defectsForVehicle: 'Defect'
     depots: 'Depot'
     fuelCards: 'FuelCard'
@@ -420,9 +418,6 @@ export interface NexusGenArgTypes {
     }
   }
   Query: {
-    currentFuelCardAndUnassigned: { // args
-      vehicleId: string; // ID!
-    }
     defectsForVehicle: { // args
       vehicleId: string; // ID!
     }

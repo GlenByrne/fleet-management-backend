@@ -19,7 +19,7 @@ const permissions = shield({
     fuelCards: rules.isAuthenticatedUser,
     fuelCardsNotAssigned: rules.isAuthenticatedUser,
     depots: rules.isAuthenticatedUser,
-    VehiclesInDepot: rules.isAuthenticatedUser,
+    vehiclesInDepot: rules.isAuthenticatedUser,
   },
   Mutation: {
     addVehicle: rules.isAuthenticatedUser,
