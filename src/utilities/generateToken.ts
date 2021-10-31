@@ -8,7 +8,7 @@ const generateToken = (userId: string) => {
     },
     APP_SECRET,
     {
-      expiresIn: '7d',
+      expiresIn: '1h',
     }
   );
   return token;

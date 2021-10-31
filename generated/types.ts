@@ -128,6 +128,10 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
+  AuthPayload: { // root type
+    token?: string | null; // String
+    user?: NexusGenRootTypes['User'] | null; // User
+  }
   Defect: { // root type
     dateCompleted?: NexusGenScalars['DateTime'] | null; // DateTime
     dateReported: NexusGenScalars['DateTime']; // DateTime!
@@ -158,14 +162,6 @@ export interface NexusGenObjects {
     password: string; // String!
     role: NexusGenEnums['Role']; // Role!
   }
-  UserLoginPayload: { // root type
-    token?: string | null; // String
-    user?: NexusGenRootTypes['User'] | null; // User
-  }
-  UserRegisterPayload: { // root type
-    token?: string | null; // String
-    user?: NexusGenRootTypes['User'] | null; // User
-  }
   Vehicle: { // root type
     cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     id: string; // ID!
@@ -190,6 +186,10 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
+  AuthPayload: { // field return type
+    token: string | null; // String
+    user: NexusGenRootTypes['User'] | null; // User
+  }
   Defect: { // field return type
     dateCompleted: NexusGenScalars['DateTime'] | null; // DateTime
     dateReported: NexusGenScalars['DateTime']; // DateTime!
@@ -221,8 +221,8 @@ export interface NexusGenFieldTypes {
     deleteFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     deleteTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     deleteVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
-    login: NexusGenRootTypes['UserLoginPayload']; // UserLoginPayload!
-    register: NexusGenRootTypes['UserRegisterPayload']; // UserRegisterPayload!
+    login: NexusGenRootTypes['AuthPayload']; // AuthPayload!
+    register: NexusGenRootTypes['AuthPayload']; // AuthPayload!
     updateDepot: NexusGenRootTypes['Depot']; // Depot!
     updateFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     updateTollTag: NexusGenRootTypes['TollTag']; // TollTag!
@@ -254,14 +254,6 @@ export interface NexusGenFieldTypes {
     password: string; // String!
     role: NexusGenEnums['Role']; // Role!
   }
-  UserLoginPayload: { // field return type
-    token: string | null; // String
-    user: NexusGenRootTypes['User'] | null; // User
-  }
-  UserRegisterPayload: { // field return type
-    token: string | null; // String
-    user: NexusGenRootTypes['User'] | null; // User
-  }
   Vehicle: { // field return type
     cvrtDueDate: NexusGenScalars['DateTime'] | null; // DateTime
     defects: Array<NexusGenRootTypes['Defect'] | null>; // [Defect]!
@@ -280,6 +272,10 @@ export interface NexusGenFieldTypes {
 }
 
 export interface NexusGenFieldTypeNames {
+  AuthPayload: { // field return type name
+    token: 'String'
+    user: 'User'
+  }
   Defect: { // field return type name
     dateCompleted: 'DateTime'
     dateReported: 'DateTime'
@@ -311,8 +307,8 @@ export interface NexusGenFieldTypeNames {
     deleteFuelCard: 'FuelCard'
     deleteTollTag: 'TollTag'
     deleteVehicle: 'Vehicle'
-    login: 'UserLoginPayload'
-    register: 'UserRegisterPayload'
+    login: 'AuthPayload'
+    register: 'AuthPayload'
     updateDepot: 'Depot'
     updateFuelCard: 'FuelCard'
     updateTollTag: 'TollTag'
@@ -343,14 +339,6 @@ export interface NexusGenFieldTypeNames {
     name: 'String'
     password: 'String'
     role: 'Role'
-  }
-  UserLoginPayload: { // field return type name
-    token: 'String'
-    user: 'User'
-  }
-  UserRegisterPayload: { // field return type name
-    token: 'String'
-    user: 'User'
   }
   Vehicle: { // field return type name
     cvrtDueDate: 'DateTime'

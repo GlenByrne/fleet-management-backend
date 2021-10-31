@@ -6,10 +6,12 @@ import {
   nonNull,
   objectType,
 } from 'nexus';
+import { sign } from 'jsonwebtoken';
 import { compare, hash } from 'bcrypt';
 import { Context } from '../context';
 import { Depot } from './Depot';
 import generateToken from '../utilities/generateToken';
+import { APP_SECRET } from '../utilities/getUserId';
 
 export const Role = enumType({
   name: 'Role',
@@ -42,23 +44,13 @@ export const User = objectType({
   },
 });
 
-export const UserLoginPayload = objectType({
-  name: 'UserLoginPayload',
+export const AuthPayload = objectType({
+  name: 'AuthPayload',
   definition(t) {
+    t.string('token');
     t.field('user', {
       type: User,
     });
-    t.string('token');
-  },
-});
-
-export const UserRegisterPayload = objectType({
-  name: 'UserRegisterPayload',
-  definition(t) {
-    t.field('user', {
-      type: User,
-    });
-    t.string('token');
   },
 });
 
@@ -82,7 +74,7 @@ export const UserMutation = extendType({
   type: 'Mutation',
   definition(t) {
     t.nonNull.field('login', {
-      type: UserLoginPayload,
+      type: AuthPayload,
       args: {
         data: nonNull(
           arg({
@@ -117,7 +109,7 @@ export const UserMutation = extendType({
     });
 
     t.nonNull.field('register', {
-      type: UserRegisterPayload,
+      type: AuthPayload,
       args: {
         data: nonNull(
           arg({
@@ -150,7 +142,6 @@ export const UserMutation = extendType({
           throw new Error('Error');
         }
 
-        // const token = jwt.sign({ userId: user.id }, 'TEST_SECRET');
         const token = generateToken(user.id);
 
         return {

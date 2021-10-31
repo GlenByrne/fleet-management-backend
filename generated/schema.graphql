@@ -39,6 +39,11 @@ input AddVehicleInput {
   type: VehicleType!
 }
 
+type AuthPayload {
+  token: String
+  user: User
+}
+
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -99,8 +104,8 @@ type Mutation {
   deleteFuelCard(data: DeleteFuelCardInput!): FuelCard!
   deleteTollTag(data: DeleteTollTagInput!): TollTag!
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
-  login(data: LoginInput!): UserLoginPayload!
-  register(data: RegisterInput!): UserRegisterPayload!
+  login(data: LoginInput!): AuthPayload!
+  register(data: RegisterInput!): AuthPayload!
   updateDepot(data: UpdateDepotInput!): Depot!
   updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
   updateTollTag(data: UpdateTollTagInput!): TollTag!
@@ -178,16 +183,6 @@ type User {
   name: String!
   password: String!
   role: Role!
-}
-
-type UserLoginPayload {
-  token: String
-  user: User
-}
-
-type UserRegisterPayload {
-  token: String
-  user: User
 }
 
 type Vehicle {
