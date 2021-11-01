@@ -7,14 +7,26 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model Company {
+  id        String     @id @default(uuid())
+  name      String
+  users     User[]
+  vehicles  Vehicle[]
+  depots    Depot[]
+  fuelCards FuelCard[]
+  tollTags  TollTag[]
+}
+
 model User {
-  id       String  @id @default(uuid())
-  name     String
-  email    String  @unique
-  password String
-  role     Role    @default(USER)
-  depot    Depot?  @relation(fields: [depotId], references: [id])
-  depotId  String?
+  id        String  @id @default(uuid())
+  name      String
+  email     String  @unique
+  password  String
+  role      Role    @default(USER)
+  depot     Depot?  @relation(fields: [depotId], references: [id])
+  depotId   String?
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
 }
 
 model Vehicle {
@@ -23,7 +35,7 @@ model Vehicle {
   registration                  String      @unique
   make                          String
   model                         String
-  owner                         String      @default("Dennehy's")
+  owner                         String
   cvrtDueDate                   DateTime?
   thirteenWeekInspectionDueDate DateTime?
   tachoCalibrationDueDate       DateTime?
@@ -32,6 +44,8 @@ model Vehicle {
   fuelCard                      FuelCard?
   tollTag                       TollTag?
   defects                       Defect[]
+  company                       Company     @relation(fields: [companyId], references: [id])
+  companyId                     String
 }
 
 model Depot {
@@ -41,6 +55,8 @@ model Depot {
   fuelCards FuelCard[]
   tollTags  TollTag[]
   User      User[]
+  company   Company    @relation(fields: [companyId], references: [id])
+  companyId String
 }
 
 model FuelCard {
@@ -51,6 +67,8 @@ model FuelCard {
   vehicleId    String?  @unique
   depot        Depot?   @relation(fields: [depotId], references: [id])
   depotId      String?
+  company      Company  @relation(fields: [companyId], references: [id])
+  companyId    String
 }
 
 model TollTag {
@@ -61,6 +79,8 @@ model TollTag {
   vehicleId   String?  @unique
   depot       Depot?   @relation(fields: [depotId], references: [id])
   depotId     String?
+  company     Company  @relation(fields: [companyId], references: [id])
+  companyId   String
 }
 
 model Defect {

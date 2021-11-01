@@ -29,6 +29,12 @@ declare global {
 }
 
 export interface NexusGenInputs {
+  AddCompanyInput: { // input type
+    adminName: string; // String!
+    email: string; // String!
+    name: string; // String!
+    password: string; // String!
+  }
   AddDefectInput: { // input type
     dateReported: NexusGenScalars['DateTime']; // DateTime!
     description: string; // String!
@@ -78,7 +84,9 @@ export interface NexusGenInputs {
     password: string; // String!
   }
   RegisterInput: { // input type
+    companyId: string; // String!
     email: string; // String!
+    name: string; // String!
     password: string; // String!
   }
   UpdateDepotInput: { // input type
@@ -128,9 +136,18 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
+  AddCompanyPayload: { // root type
+    company?: NexusGenRootTypes['Company'] | null; // Company
+    token?: string | null; // String
+    user?: NexusGenRootTypes['User'] | null; // User
+  }
   AuthPayload: { // root type
     token?: string | null; // String
     user?: NexusGenRootTypes['User'] | null; // User
+  }
+  Company: { // root type
+    id: string; // ID!
+    name: string; // String!
   }
   Defect: { // root type
     dateCompleted?: NexusGenScalars['DateTime'] | null; // DateTime
@@ -186,9 +203,23 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
+  AddCompanyPayload: { // field return type
+    company: NexusGenRootTypes['Company'] | null; // Company
+    token: string | null; // String
+    user: NexusGenRootTypes['User'] | null; // User
+  }
   AuthPayload: { // field return type
     token: string | null; // String
     user: NexusGenRootTypes['User'] | null; // User
+  }
+  Company: { // field return type
+    depots: NexusGenRootTypes['Depot'][]; // [Depot!]!
+    fuelCards: NexusGenRootTypes['FuelCard'][]; // [FuelCard!]!
+    id: string; // ID!
+    name: string; // String!
+    tollTags: NexusGenRootTypes['TollTag'][]; // [TollTag!]!
+    users: NexusGenRootTypes['User'][]; // [User!]!
+    vehicles: NexusGenRootTypes['Vehicle'][]; // [Vehicle!]!
   }
   Defect: { // field return type
     dateCompleted: NexusGenScalars['DateTime'] | null; // DateTime
@@ -198,20 +229,23 @@ export interface NexusGenFieldTypes {
     status: string | null; // String
   }
   Depot: { // field return type
-    fuelCards: Array<NexusGenRootTypes['FuelCard'] | null>; // [FuelCard]!
+    company: NexusGenRootTypes['Company']; // Company!
+    fuelCards: NexusGenRootTypes['FuelCard'][]; // [FuelCard!]!
     id: string; // ID!
     name: string; // String!
-    tollTags: Array<NexusGenRootTypes['TollTag'] | null>; // [TollTag]!
-    vehicles: Array<NexusGenRootTypes['Vehicle'] | null>; // [Vehicle]!
+    tollTags: NexusGenRootTypes['TollTag'][]; // [TollTag!]!
+    vehicles: NexusGenRootTypes['Vehicle'][]; // [Vehicle!]!
   }
   FuelCard: { // field return type
     cardNumber: string; // String!
     cardProvider: string; // String!
+    company: NexusGenRootTypes['Company']; // Company!
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     id: string; // ID!
     vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   Mutation: { // field return type
+    addCompany: NexusGenRootTypes['AddCompanyPayload']; // AddCompanyPayload!
     addDefect: NexusGenRootTypes['Defect']; // Defect!
     addDepot: NexusGenRootTypes['Depot']; // Depot!
     addFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
@@ -233,13 +267,17 @@ export interface NexusGenFieldTypes {
     depots: Array<NexusGenRootTypes['Depot'] | null> | null; // [Depot]
     fuelCards: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     fuelCardsNotAssigned: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
+    me: NexusGenRootTypes['User'] | null; // User
     tollTags: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
     tollTagsNotAssigned: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
+    user: NexusGenRootTypes['User'] | null; // User
+    users: Array<NexusGenRootTypes['User'] | null> | null; // [User]
     vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
     vehicles: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
     vehiclesInDepot: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
   }
   TollTag: { // field return type
+    company: NexusGenRootTypes['Company']; // Company!
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     id: string; // ID!
     tagNumber: string; // String!
@@ -247,6 +285,7 @@ export interface NexusGenFieldTypes {
     vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   User: { // field return type
+    company: NexusGenRootTypes['Company']; // Company!
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     email: string; // String!
     id: string; // ID!
@@ -255,8 +294,9 @@ export interface NexusGenFieldTypes {
     role: NexusGenEnums['Role']; // Role!
   }
   Vehicle: { // field return type
+    company: NexusGenRootTypes['Company']; // Company!
     cvrtDueDate: NexusGenScalars['DateTime'] | null; // DateTime
-    defects: Array<NexusGenRootTypes['Defect'] | null>; // [Defect]!
+    defects: NexusGenRootTypes['Defect'][]; // [Defect!]!
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     fuelCard: NexusGenRootTypes['FuelCard'] | null; // FuelCard
     id: string; // ID!
@@ -272,9 +312,23 @@ export interface NexusGenFieldTypes {
 }
 
 export interface NexusGenFieldTypeNames {
+  AddCompanyPayload: { // field return type name
+    company: 'Company'
+    token: 'String'
+    user: 'User'
+  }
   AuthPayload: { // field return type name
     token: 'String'
     user: 'User'
+  }
+  Company: { // field return type name
+    depots: 'Depot'
+    fuelCards: 'FuelCard'
+    id: 'ID'
+    name: 'String'
+    tollTags: 'TollTag'
+    users: 'User'
+    vehicles: 'Vehicle'
   }
   Defect: { // field return type name
     dateCompleted: 'DateTime'
@@ -284,6 +338,7 @@ export interface NexusGenFieldTypeNames {
     status: 'String'
   }
   Depot: { // field return type name
+    company: 'Company'
     fuelCards: 'FuelCard'
     id: 'ID'
     name: 'String'
@@ -293,11 +348,13 @@ export interface NexusGenFieldTypeNames {
   FuelCard: { // field return type name
     cardNumber: 'String'
     cardProvider: 'String'
+    company: 'Company'
     depot: 'Depot'
     id: 'ID'
     vehicle: 'Vehicle'
   }
   Mutation: { // field return type name
+    addCompany: 'AddCompanyPayload'
     addDefect: 'Defect'
     addDepot: 'Depot'
     addFuelCard: 'FuelCard'
@@ -319,13 +376,17 @@ export interface NexusGenFieldTypeNames {
     depots: 'Depot'
     fuelCards: 'FuelCard'
     fuelCardsNotAssigned: 'FuelCard'
+    me: 'User'
     tollTags: 'TollTag'
     tollTagsNotAssigned: 'TollTag'
+    user: 'User'
+    users: 'User'
     vehicle: 'Vehicle'
     vehicles: 'Vehicle'
     vehiclesInDepot: 'Vehicle'
   }
   TollTag: { // field return type name
+    company: 'Company'
     depot: 'Depot'
     id: 'ID'
     tagNumber: 'String'
@@ -333,6 +394,7 @@ export interface NexusGenFieldTypeNames {
     vehicle: 'Vehicle'
   }
   User: { // field return type name
+    company: 'Company'
     depot: 'Depot'
     email: 'String'
     id: 'ID'
@@ -341,6 +403,7 @@ export interface NexusGenFieldTypeNames {
     role: 'Role'
   }
   Vehicle: { // field return type name
+    company: 'Company'
     cvrtDueDate: 'DateTime'
     defects: 'Defect'
     depot: 'Depot'
@@ -359,6 +422,9 @@ export interface NexusGenFieldTypeNames {
 
 export interface NexusGenArgTypes {
   Mutation: {
+    addCompany: { // args
+      data: NexusGenInputs['AddCompanyInput']; // AddCompanyInput!
+    }
     addDefect: { // args
       data: NexusGenInputs['AddDefectInput']; // AddDefectInput!
     }
@@ -408,6 +474,12 @@ export interface NexusGenArgTypes {
   Query: {
     defectsForVehicle: { // args
       vehicleId: string; // ID!
+    }
+    user: { // args
+      userId: string; // ID!
+    }
+    users: { // args
+      companyId: string; // ID!
     }
     vehicle: { // args
       vehicleId: string; // ID!

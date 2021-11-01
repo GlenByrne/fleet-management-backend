@@ -1,7 +1,16 @@
-import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
+import {
+  objectType,
+  nonNull,
+  arg,
+  inputObjectType,
+  extendType,
+  idArg,
+} from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
+import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
+import { Company } from './Company';
 import { Depot } from './Depot';
 import { Vehicle } from './Vehicle';
 
@@ -11,6 +20,22 @@ export const FuelCard = objectType({
     t.nonNull.id('id');
     t.nonNull.string('cardNumber');
     t.nonNull.string('cardProvider');
+    t.nonNull.field('company', {
+      type: Company,
+      resolve: async (parent, _, context: Context) => {
+        const company = await context.prisma.fuelCard
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .company();
+
+        if (!company) {
+          throw new Error('Company not found');
+        }
+
+        return company;
+      },
+    });
     t.field('vehicle', {
       type: Vehicle,
       resolve(parent, _, context: Context) {
@@ -39,17 +64,44 @@ export const FuelCardQuery = extendType({
   definition(t) {
     t.list.field('fuelCards', {
       type: FuelCard,
-      resolve: (_, __, context: Context) => context.prisma.fuelCard.findMany(),
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.fuelCard.findMany({
+          where: {
+            companyId: company?.id,
+          },
+        });
+      },
     });
 
     t.list.field('fuelCardsNotAssigned', {
       type: FuelCard,
-      resolve: (_, __, context: Context) =>
-        context.prisma.fuelCard.findMany({
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.fuelCard.findMany({
           where: {
-            vehicleId: null,
+            AND: [{ vehicleId: null }, { companyId: company?.id }],
           },
-        }),
+        });
+      },
     });
   },
 });
@@ -92,14 +144,30 @@ export const FuelCardMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.fuelCard.create({
+      resolve: async (_, args, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.fuelCard.create({
           data: {
             cardNumber: args.data.cardNumber,
             cardProvider: args.data.cardProvider,
+            company: {
+              connect: {
+                id: company?.id,
+              },
+            },
             ...createConnection('depot', args.data.depotId),
           },
-        }),
+        });
+      },
     });
 
     t.nonNull.field('updateFuelCard', {

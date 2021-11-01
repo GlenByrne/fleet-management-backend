@@ -7,6 +7,8 @@ import {
   extendType,
 } from 'nexus';
 import { Context } from '../context';
+import { getUserId } from '../utilities/getUserId';
+import { Company } from './Company';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
@@ -16,7 +18,23 @@ export const Depot = objectType({
   definition(t) {
     t.nonNull.id('id');
     t.nonNull.string('name');
-    t.nonNull.list.field('vehicles', {
+    t.nonNull.field('company', {
+      type: Company,
+      resolve: async (parent, _, context: Context) => {
+        const company = await context.prisma.depot
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .company();
+
+        if (!company) {
+          throw new Error('Company not found');
+        }
+
+        return company;
+      },
+    });
+    t.nonNull.list.nonNull.field('vehicles', {
       type: Vehicle,
       resolve(parent, _, context: Context) {
         return context.prisma.depot
@@ -26,7 +44,7 @@ export const Depot = objectType({
           .vehicles();
       },
     });
-    t.nonNull.list.field('fuelCards', {
+    t.nonNull.list.nonNull.field('fuelCards', {
       type: FuelCard,
       resolve(parent, _, context: Context) {
         return context.prisma.depot
@@ -36,7 +54,7 @@ export const Depot = objectType({
           .fuelCards();
       },
     });
-    t.nonNull.list.field('tollTags', {
+    t.nonNull.list.nonNull.field('tollTags', {
       type: TollTag,
       resolve(parent, _, context: Context) {
         return context.prisma.depot
@@ -54,8 +72,24 @@ export const DepotQuery = extendType({
   definition(t) {
     t.list.field('depots', {
       type: Depot,
-      resolve: (_, __, context: Context) => context.prisma.depot.findMany(),
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+        return context.prisma.depot.findMany({
+          where: {
+            companyId: company?.id,
+          },
+        });
+      },
     });
+
     t.list.field('vehiclesInDepot', {
       type: Vehicle,
       args: {
@@ -107,12 +141,28 @@ export const DepotMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.depot.create({
+      resolve: async (_, args, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.depot.create({
           data: {
             name: args.data.name,
+            company: {
+              connect: {
+                id: company?.id,
+              },
+            },
           },
-        }),
+        });
+      },
     });
 
     t.nonNull.field('updateDepot', {

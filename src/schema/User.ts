@@ -2,16 +2,17 @@ import {
   arg,
   enumType,
   extendType,
+  idArg,
   inputObjectType,
   nonNull,
   objectType,
 } from 'nexus';
-import { sign } from 'jsonwebtoken';
 import { compare, hash } from 'bcrypt';
 import { Context } from '../context';
 import { Depot } from './Depot';
 import generateToken from '../utilities/generateToken';
-import { APP_SECRET } from '../utilities/getUserId';
+import { Company } from './Company';
+import { getUserId } from '../utilities/getUserId';
 
 export const Role = enumType({
   name: 'Role',
@@ -31,6 +32,22 @@ export const User = objectType({
     t.nonNull.field('role', {
       type: Role,
     });
+    t.nonNull.field('company', {
+      type: Company,
+      resolve: async (parent, _, context: Context) => {
+        const company = await context.prisma.user
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .company();
+
+        if (!company) {
+          throw new Error('Company not found');
+        }
+
+        return company;
+      },
+    });
     t.field('depot', {
       type: Depot,
       resolve(parent, _, context: Context) {
@@ -40,6 +57,48 @@ export const User = objectType({
           })
           .depot();
       },
+    });
+  },
+});
+
+export const UserQuery = extendType({
+  type: 'Query',
+  definition(t) {
+    t.field('user', {
+      type: User,
+      args: {
+        userId: nonNull(idArg()),
+      },
+      resolve: (_, { userId }, context: Context) =>
+        context.prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        }),
+    });
+    t.field('me', {
+      type: 'User',
+      resolve: (_, __, context: Context) => {
+        const userId = getUserId(context);
+        return context.prisma.user.findUnique({
+          where: {
+            id: String(userId),
+          },
+        });
+      },
+    });
+
+    t.list.field('users', {
+      type: User,
+      args: {
+        companyId: nonNull(idArg()),
+      },
+      resolve: (_, { companyId }, context: Context) =>
+        context.prisma.user.findMany({
+          where: {
+            companyId,
+          },
+        }),
     });
   },
 });
@@ -67,6 +126,8 @@ const RegisterInput = inputObjectType({
   definition(t) {
     t.nonNull.string('email');
     t.nonNull.string('password');
+    t.nonNull.string('name');
+    t.nonNull.string('companyId');
   },
 });
 
@@ -134,7 +195,13 @@ export const UserMutation = extendType({
           data: {
             email: args.data.email,
             password: hashedPassword,
-            name: 'Test Name',
+            name: args.data.name,
+            role: 'USER',
+            company: {
+              connect: {
+                id: args.data.companyId,
+              },
+            },
           },
         });
 

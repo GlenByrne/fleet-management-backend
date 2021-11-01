@@ -2,6 +2,19 @@
 ### Do not make changes to this file directly
 
 
+input AddCompanyInput {
+  adminName: String!
+  email: String!
+  name: String!
+  password: String!
+}
+
+type AddCompanyPayload {
+  company: Company
+  token: String
+  user: User
+}
+
 input AddDefectInput {
   dateReported: DateTime!
   description: String!
@@ -44,6 +57,16 @@ type AuthPayload {
   user: User
 }
 
+type Company {
+  depots: [Depot!]!
+  fuelCards: [FuelCard!]!
+  id: ID!
+  name: String!
+  tollTags: [TollTag!]!
+  users: [User!]!
+  vehicles: [Vehicle!]!
+}
+
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -74,16 +97,18 @@ input DeleteVehicleInput {
 }
 
 type Depot {
-  fuelCards: [FuelCard]!
+  company: Company!
+  fuelCards: [FuelCard!]!
   id: ID!
   name: String!
-  tollTags: [TollTag]!
-  vehicles: [Vehicle]!
+  tollTags: [TollTag!]!
+  vehicles: [Vehicle!]!
 }
 
 type FuelCard {
   cardNumber: String!
   cardProvider: String!
+  company: Company!
   depot: Depot
   id: ID!
   vehicle: Vehicle
@@ -95,6 +120,7 @@ input LoginInput {
 }
 
 type Mutation {
+  addCompany(data: AddCompanyInput!): AddCompanyPayload!
   addDefect(data: AddDefectInput!): Defect!
   addDepot(data: AddDepotInput!): Depot!
   addFuelCard(data: AddFuelCardInput!): FuelCard!
@@ -117,15 +143,20 @@ type Query {
   depots: [Depot]
   fuelCards: [FuelCard]
   fuelCardsNotAssigned: [FuelCard]
+  me: User
   tollTags: [TollTag]
   tollTagsNotAssigned: [TollTag]
+  user(userId: ID!): User
+  users(companyId: ID!): [User]
   vehicle(vehicleId: ID!): Vehicle
   vehicles: [Vehicle]
   vehiclesInDepot(depotId: ID!): [Vehicle]
 }
 
 input RegisterInput {
+  companyId: String!
   email: String!
+  name: String!
   password: String!
 }
 
@@ -135,6 +166,7 @@ enum Role {
 }
 
 type TollTag {
+  company: Company!
   depot: Depot
   id: ID!
   tagNumber: String!
@@ -177,6 +209,7 @@ input UpdateVehicleInput {
 }
 
 type User {
+  company: Company!
   depot: Depot
   email: String!
   id: ID!
@@ -186,8 +219,9 @@ type User {
 }
 
 type Vehicle {
+  company: Company!
   cvrtDueDate: DateTime
-  defects: [Defect]!
+  defects: [Defect!]!
   depot: Depot
   fuelCard: FuelCard
   id: ID!

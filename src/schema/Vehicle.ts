@@ -9,7 +9,9 @@ import {
 } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
+import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
+import { Company } from './Company';
 import { Defect } from './Defect';
 import { Depot } from './Depot';
 import { FuelCard } from './FuelCard';
@@ -38,6 +40,22 @@ export const Vehicle = objectType({
     t.date('cvrtDueDate');
     t.date('thirteenWeekInspectionDueDate');
     t.date('tachoCalibrationDueDate');
+    t.nonNull.field('company', {
+      type: Company,
+      resolve: async (parent, _, context: Context) => {
+        const company = await context.prisma.vehicle
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .company();
+
+        if (!company) {
+          throw new Error('Company not found');
+        }
+
+        return company;
+      },
+    });
     t.field('depot', {
       type: Depot,
       resolve(parent, _, context: Context) {
@@ -48,7 +66,7 @@ export const Vehicle = objectType({
           .depot();
       },
     });
-    t.nonNull.list.field('defects', {
+    t.nonNull.list.nonNull.field('defects', {
       type: Defect,
       resolve(parent, _, context: Context) {
         return context.prisma.vehicle
@@ -98,7 +116,23 @@ export const VehicleQuery = extendType({
     });
     t.list.field('vehicles', {
       type: Vehicle,
-      resolve: (_, __, context: Context) => context.prisma.vehicle.findMany(),
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.vehicle.findMany({
+          where: {
+            companyId: company?.id,
+          },
+        });
+      },
     });
     t.list.field('defectsForVehicle', {
       type: Defect,
@@ -171,8 +205,18 @@ export const VehicleMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.vehicle.create({
+      resolve: async (_, args, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.vehicle.create({
           data: {
             type: args.data.type,
             registration: args.data.registration,
@@ -183,11 +227,17 @@ export const VehicleMutation = extendType({
             thirteenWeekInspectionDueDate:
               args.data.thirteenWeekInspectionDueDate,
             tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+            company: {
+              connect: {
+                id: company?.id,
+              },
+            },
             ...createConnection('depot', args.data.depotId),
             ...createConnection('fuelCard', args.data.fuelCardId),
             ...createConnection('tollTag', args.data.tollTagId),
           },
-        }),
+        });
+      },
     });
 
     t.nonNull.field('deleteVehicle', {
