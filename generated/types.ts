@@ -89,9 +89,18 @@ export interface NexusGenInputs {
   DeleteVehicleInput: { // input type
     id: string; // ID!
   }
+  DepotInputFilter: { // input type
+    searchCriteria?: string | null; // String
+  }
+  FuelCardInputFilter: { // input type
+    searchCriteria?: string | null; // String
+  }
   LoginInput: { // input type
     email: string; // String!
     password: string; // String!
+  }
+  TollTagInputFilter: { // input type
+    searchCriteria?: string | null; // String
   }
   UpdateDepotInput: { // input type
     id: string; // ID!
@@ -129,6 +138,12 @@ export interface NexusGenInputs {
     thirteenWeekInspectionDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     tollTagId?: string | null; // String
     type: NexusGenEnums['VehicleType']; // VehicleType!
+  }
+  UsersInputFilter: { // input type
+    searchCriteria?: string | null; // String
+  }
+  VehicleInputFilter: { // input type
+    searchCriteria?: string | null; // String
   }
 }
 
@@ -517,11 +532,26 @@ export interface NexusGenArgTypes {
     defectsForVehicle: { // args
       vehicleId: string; // ID!
     }
+    depots: { // args
+      data?: NexusGenInputs['DepotInputFilter'] | null; // DepotInputFilter
+    }
+    fuelCards: { // args
+      data?: NexusGenInputs['FuelCardInputFilter'] | null; // FuelCardInputFilter
+    }
+    tollTags: { // args
+      data?: NexusGenInputs['TollTagInputFilter'] | null; // TollTagInputFilter
+    }
     user: { // args
       userId: string; // ID!
     }
+    users: { // args
+      data?: NexusGenInputs['UsersInputFilter'] | null; // UsersInputFilter
+    }
     vehicle: { // args
       vehicleId: string; // ID!
+    }
+    vehicles: { // args
+      data?: NexusGenInputs['VehicleInputFilter'] | null; // VehicleInputFilter
     }
     vehiclesInDepot: { // args
       depotId: string; // ID!

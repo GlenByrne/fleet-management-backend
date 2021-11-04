@@ -77,6 +77,13 @@ export const UsersPayload = objectType({
   },
 });
 
+const UsersInputFilter = inputObjectType({
+  name: 'UsersInputFilter',
+  definition(t) {
+    t.string('searchCriteria');
+  },
+});
+
 export const UserQuery = extendType({
   type: 'Query',
   definition(t) {
@@ -106,7 +113,12 @@ export const UserQuery = extendType({
 
     t.list.field('users', {
       type: UsersPayload,
-      resolve: async (_, __, context: Context) => {
+      args: {
+        data: arg({
+          type: UsersInputFilter,
+        }),
+      },
+      resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
 
         const company = await context.prisma.user
@@ -124,6 +136,15 @@ export const UserQuery = extendType({
               {
                 role: {
                   not: 'ADMIN',
+                },
+              },
+              {
+                name: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
                 },
               },
             ],

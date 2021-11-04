@@ -117,6 +117,10 @@ type Depot {
   vehicles: [Vehicle!]!
 }
 
+input DepotInputFilter {
+  searchCriteria: String
+}
+
 type FuelCard {
   cardNumber: String!
   cardProvider: String!
@@ -124,6 +128,10 @@ type FuelCard {
   depot: Depot
   id: ID!
   vehicle: Vehicle
+}
+
+input FuelCardInputFilter {
+  searchCriteria: String
 }
 
 input LoginInput {
@@ -154,16 +162,16 @@ type Mutation {
 
 type Query {
   defectsForVehicle(vehicleId: ID!): [Defect]
-  depots: [Depot]
-  fuelCards: [FuelCard]
+  depots(data: DepotInputFilter): [Depot]
+  fuelCards(data: FuelCardInputFilter): [FuelCard]
   fuelCardsNotAssigned: [FuelCard]
   me: User
-  tollTags: [TollTag]
+  tollTags(data: TollTagInputFilter): [TollTag]
   tollTagsNotAssigned: [TollTag]
   user(userId: ID!): User
-  users: [UsersPayload]
+  users(data: UsersInputFilter): [UsersPayload]
   vehicle(vehicleId: ID!): Vehicle
-  vehicles: [Vehicle]
+  vehicles(data: VehicleInputFilter): [Vehicle]
   vehiclesInDepot(depotId: ID!): [Vehicle]
 }
 
@@ -180,6 +188,10 @@ type TollTag {
   tagNumber: String!
   tagProvider: String!
   vehicle: Vehicle
+}
+
+input TollTagInputFilter {
+  searchCriteria: String
 }
 
 input UpdateDepotInput {
@@ -234,6 +246,10 @@ type User {
   role: Role!
 }
 
+input UsersInputFilter {
+  searchCriteria: String
+}
+
 type UsersPayload {
   depot: Depot
   email: String!
@@ -257,6 +273,10 @@ type Vehicle {
   thirteenWeekInspectionDueDate: DateTime
   tollTag: TollTag
   type: VehicleType!
+}
+
+input VehicleInputFilter {
+  searchCriteria: String
 }
 
 enum VehicleType {

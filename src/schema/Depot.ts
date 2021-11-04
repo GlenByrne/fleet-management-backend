@@ -67,12 +67,24 @@ export const Depot = objectType({
   },
 });
 
+const DepotInputFilter = inputObjectType({
+  name: 'DepotInputFilter',
+  definition(t) {
+    t.string('searchCriteria');
+  },
+});
+
 export const DepotQuery = extendType({
   type: 'Query',
   definition(t) {
     t.list.field('depots', {
       type: Depot,
-      resolve: async (_, __, context: Context) => {
+      args: {
+        data: arg({
+          type: DepotInputFilter,
+        }),
+      },
+      resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
 
         const company = await context.prisma.user
@@ -84,7 +96,18 @@ export const DepotQuery = extendType({
           .company();
         return context.prisma.depot.findMany({
           where: {
-            companyId: company?.id,
+            AND: [
+              { companyId: company?.id },
+              {
+                name: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
           },
           orderBy: {
             name: 'asc',

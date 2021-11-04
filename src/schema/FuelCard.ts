@@ -52,12 +52,24 @@ export const FuelCard = objectType({
   },
 });
 
+const FuelCardInputFilter = inputObjectType({
+  name: 'FuelCardInputFilter',
+  definition(t) {
+    t.string('searchCriteria');
+  },
+});
+
 export const FuelCardQuery = extendType({
   type: 'Query',
   definition(t) {
     t.list.field('fuelCards', {
       type: FuelCard,
-      resolve: async (_, __, context: Context) => {
+      args: {
+        data: arg({
+          type: FuelCardInputFilter,
+        }),
+      },
+      resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
 
         const company = await context.prisma.user
@@ -70,7 +82,18 @@ export const FuelCardQuery = extendType({
 
         return context.prisma.fuelCard.findMany({
           where: {
-            companyId: company?.id,
+            AND: [
+              { companyId: company?.id },
+              {
+                cardNumber: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
           },
           orderBy: {
             cardNumber: 'asc',
@@ -95,6 +118,9 @@ export const FuelCardQuery = extendType({
         return context.prisma.fuelCard.findMany({
           where: {
             AND: [{ vehicleId: null }, { companyId: company?.id }],
+          },
+          orderBy: {
+            cardNumber: 'asc',
           },
         });
       },

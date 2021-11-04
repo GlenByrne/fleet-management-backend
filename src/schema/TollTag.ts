@@ -52,12 +52,24 @@ export const TollTag = objectType({
   },
 });
 
+const TollTagInputFilter = inputObjectType({
+  name: 'TollTagInputFilter',
+  definition(t) {
+    t.string('searchCriteria');
+  },
+});
+
 export const TollTagQuery = extendType({
   type: 'Query',
   definition(t) {
     t.list.field('tollTags', {
       type: TollTag,
-      resolve: async (_, __, context: Context) => {
+      args: {
+        data: arg({
+          type: TollTagInputFilter,
+        }),
+      },
+      resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
 
         const company = await context.prisma.user
@@ -70,7 +82,18 @@ export const TollTagQuery = extendType({
 
         return context.prisma.tollTag.findMany({
           where: {
-            companyId: company?.id,
+            AND: [
+              { companyId: company?.id },
+              {
+                tagNumber: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
           },
           orderBy: {
             tagNumber: 'asc',
@@ -95,6 +118,9 @@ export const TollTagQuery = extendType({
         return context.prisma.tollTag.findMany({
           where: {
             AND: [{ vehicleId: null }, { companyId: company?.id }],
+          },
+          orderBy: {
+            tagNumber: 'asc',
           },
         });
       },

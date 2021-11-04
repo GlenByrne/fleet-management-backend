@@ -99,6 +99,13 @@ export const Vehicle = objectType({
   },
 });
 
+const VehicleInputFilter = inputObjectType({
+  name: 'VehicleInputFilter',
+  definition(t) {
+    t.string('searchCriteria');
+  },
+});
+
 export const VehicleQuery = extendType({
   type: 'Query',
   definition(t) {
@@ -116,7 +123,12 @@ export const VehicleQuery = extendType({
     });
     t.list.field('vehicles', {
       type: Vehicle,
-      resolve: async (_, __, context: Context) => {
+      args: {
+        data: arg({
+          type: VehicleInputFilter,
+        }),
+      },
+      resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
 
         const company = await context.prisma.user
@@ -129,7 +141,18 @@ export const VehicleQuery = extendType({
 
         return context.prisma.vehicle.findMany({
           where: {
-            companyId: company?.id,
+            AND: [
+              { companyId: company?.id },
+              {
+                registration: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
           },
           orderBy: {
             registration: 'asc',
