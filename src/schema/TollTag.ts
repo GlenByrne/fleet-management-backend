@@ -72,6 +72,9 @@ export const TollTagQuery = extendType({
           where: {
             companyId: company?.id,
           },
+          orderBy: {
+            tagNumber: 'asc',
+          },
         });
       },
     });

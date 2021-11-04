@@ -1,11 +1,4 @@
-import {
-  objectType,
-  nonNull,
-  arg,
-  inputObjectType,
-  extendType,
-  idArg,
-} from 'nexus';
+import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
 import { getUserId } from '../utilities/getUserId';
@@ -78,6 +71,9 @@ export const FuelCardQuery = extendType({
         return context.prisma.fuelCard.findMany({
           where: {
             companyId: company?.id,
+          },
+          orderBy: {
+            cardNumber: 'asc',
           },
         });
       },

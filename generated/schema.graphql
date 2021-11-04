@@ -38,6 +38,14 @@ input AddTollTagInput {
   tagProvider: String!
 }
 
+input AddUserInput {
+  depotId: String!
+  email: String!
+  name: String!
+  password: String!
+  role: Role!
+}
+
 input AddVehicleInput {
   cvrtDueDate: DateTime
   depotId: String
@@ -92,6 +100,10 @@ input DeleteTollTagInput {
   id: ID!
 }
 
+input DeleteUserInput {
+  id: ID!
+}
+
 input DeleteVehicleInput {
   id: ID!
 }
@@ -125,16 +137,18 @@ type Mutation {
   addDepot(data: AddDepotInput!): Depot!
   addFuelCard(data: AddFuelCardInput!): FuelCard!
   addTollTag(data: AddTollTagInput!): TollTag!
+  addUser(data: AddUserInput!): UsersPayload!
   addVehicle(data: AddVehicleInput!): Vehicle!
   deleteDepot(data: DeleteDepotInput!): Depot!
   deleteFuelCard(data: DeleteFuelCardInput!): FuelCard!
   deleteTollTag(data: DeleteTollTagInput!): TollTag!
+  deleteUser(data: DeleteUserInput!): User!
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
   login(data: LoginInput!): AuthPayload!
-  register(data: RegisterInput!): AuthPayload!
   updateDepot(data: UpdateDepotInput!): Depot!
   updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
   updateTollTag(data: UpdateTollTagInput!): TollTag!
+  updateUser(data: UpdateUserInput!): UsersPayload!
   updateVehicle(data: UpdateVehicleInput!): Vehicle!
 }
 
@@ -147,21 +161,15 @@ type Query {
   tollTags: [TollTag]
   tollTagsNotAssigned: [TollTag]
   user(userId: ID!): User
-  users(companyId: ID!): [User]
+  users: [UsersPayload]
   vehicle(vehicleId: ID!): Vehicle
   vehicles: [Vehicle]
   vehiclesInDepot(depotId: ID!): [Vehicle]
 }
 
-input RegisterInput {
-  companyId: String!
-  email: String!
-  name: String!
-  password: String!
-}
-
 enum Role {
   Admin
+  Driver
   User
 }
 
@@ -193,6 +201,14 @@ input UpdateTollTagInput {
   tagProvider: String!
 }
 
+input UpdateUserInput {
+  depotId: String!
+  email: String!
+  id: ID!
+  name: String!
+  role: Role!
+}
+
 input UpdateVehicleInput {
   cvrtDueDate: DateTime
   depotId: String
@@ -215,6 +231,14 @@ type User {
   id: ID!
   name: String!
   password: String!
+  role: Role!
+}
+
+type UsersPayload {
+  depot: Depot
+  email: String!
+  id: String!
+  name: String!
   role: Role!
 }
 

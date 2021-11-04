@@ -131,6 +131,9 @@ export const VehicleQuery = extendType({
           where: {
             companyId: company?.id,
           },
+          orderBy: {
+            registration: 'asc',
+          },
         });
       },
     });
@@ -321,6 +324,7 @@ export const VehicleMutation = extendType({
             ),
           },
         });
+
         return vehicle;
       },
     });

@@ -101,5 +101,6 @@ enum VehicleType {
 
 enum Role {
   USER
+  DRIVER
   ADMIN
 }

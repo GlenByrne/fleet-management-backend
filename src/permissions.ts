@@ -1,4 +1,4 @@
-import { rule, shield } from 'graphql-shield';
+import { and, rule, shield } from 'graphql-shield';
 import { Context } from './context';
 import { getUserId } from './utilities/getUserId';
 
@@ -6,6 +6,16 @@ const rules = {
   isAuthenticatedUser: rule()((_, __, context: Context) => {
     const userId = getUserId(context);
     return Boolean(userId);
+  }),
+  isAdmin: rule()(async (_, __, context: Context) => {
+    const userId = getUserId(context);
+    const user = await context.prisma.user.findUnique({
+      where: {
+        id: String(userId),
+      },
+    });
+
+    return user?.role === 'ADMIN';
   }),
 };
 
@@ -20,6 +30,7 @@ const permissions = shield({
     fuelCardsNotAssigned: rules.isAuthenticatedUser,
     depots: rules.isAuthenticatedUser,
     vehiclesInDepot: rules.isAuthenticatedUser,
+    users: and(rules.isAuthenticatedUser, rules.isAdmin),
   },
   Mutation: {
     addVehicle: rules.isAuthenticatedUser,
@@ -35,6 +46,8 @@ const permissions = shield({
     updateDepot: rules.isAuthenticatedUser,
     deleteDepot: rules.isAuthenticatedUser,
     addDefect: rules.isAuthenticatedUser,
+    addUser: and(rules.isAuthenticatedUser, rules.isAdmin),
+    deleteUser: and(rules.isAuthenticatedUser, rules.isAdmin),
   },
 });
 

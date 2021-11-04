@@ -86,6 +86,9 @@ export const DepotQuery = extendType({
           where: {
             companyId: company?.id,
           },
+          orderBy: {
+            name: 'asc',
+          },
         });
       },
     });
