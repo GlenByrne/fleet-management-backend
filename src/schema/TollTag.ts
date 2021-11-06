@@ -70,59 +70,67 @@ export const TollTagQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
-        return context.prisma.tollTag.findMany({
-          where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                tagNumber: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
               },
-            ],
-          },
-          orderBy: {
-            tagNumber: 'asc',
-          },
-        });
+            })
+            .company();
+
+          return context.prisma.tollTag.findMany({
+            where: {
+              AND: [
+                { companyId: company?.id },
+                {
+                  tagNumber: {
+                    contains:
+                      args.data?.searchCriteria != null
+                        ? args.data.searchCriteria
+                        : undefined,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            },
+            orderBy: {
+              tagNumber: 'asc',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving toll tags');
+        }
       },
     });
 
     t.list.field('tollTagsNotAssigned', {
       type: TollTag,
       resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
+              },
+            })
+            .company();
+
+          return context.prisma.tollTag.findMany({
             where: {
-              id: userId != null ? userId : undefined,
+              AND: [{ vehicleId: null }, { companyId: company?.id }],
             },
-          })
-          .company();
-
-        return context.prisma.tollTag.findMany({
-          where: {
-            AND: [{ vehicleId: null }, { companyId: company?.id }],
-          },
-          orderBy: {
-            tagNumber: 'asc',
-          },
-        });
+            orderBy: {
+              tagNumber: 'asc',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving unassigned toll tags');
+        }
       },
     });
   },
@@ -167,28 +175,32 @@ export const TollTagMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
-        return context.prisma.tollTag.create({
-          data: {
-            tagNumber: args.data.tagNumber,
-            tagProvider: args.data.tagProvider,
-            company: {
-              connect: {
-                id: company?.id,
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
               },
+            })
+            .company();
+
+          return context.prisma.tollTag.create({
+            data: {
+              tagNumber: args.data.tagNumber,
+              tagProvider: args.data.tagProvider,
+              company: {
+                connect: {
+                  id: company?.id,
+                },
+              },
+              ...createConnection('depot', args.data.depotId),
             },
-            ...createConnection('depot', args.data.depotId),
-          },
-        });
+          });
+        } catch (error) {
+          throw new Error('Error adding toll tag');
+        }
       },
     });
 
@@ -202,34 +214,38 @@ export const TollTagMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const oldTollTag = await context.prisma.tollTag.findUnique({
-          where: {
-            id: args.data.id,
-          },
-          include: {
-            depot: {
-              select: {
-                id: true,
+        try {
+          const oldTollTag = await context.prisma.tollTag.findUnique({
+            where: {
+              id: args.data.id,
+            },
+            include: {
+              depot: {
+                select: {
+                  id: true,
+                },
               },
             },
-          },
-        });
+          });
 
-        const tollTag = context.prisma.tollTag.update({
-          where: {
-            id: args.data.id,
-          },
-          data: {
-            tagNumber: args.data.tagNumber,
-            tagProvider: args.data.tagProvider,
-            ...upsertConnection(
-              'depot',
-              oldTollTag?.depot?.id,
-              args.data.depotId
-            ),
-          },
-        });
-        return tollTag;
+          const tollTag = context.prisma.tollTag.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              tagNumber: args.data.tagNumber,
+              tagProvider: args.data.tagProvider,
+              ...upsertConnection(
+                'depot',
+                oldTollTag?.depot?.id,
+                args.data.depotId
+              ),
+            },
+          });
+          return tollTag;
+        } catch (error) {
+          throw new Error('Error updating toll tag');
+        }
       },
     });
 
@@ -242,12 +258,17 @@ export const TollTagMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.tollTag.delete({
-          where: {
-            id: args.data.id,
-          },
-        }),
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.tollTag.delete({
+            where: {
+              id: args.data.id,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error deleting toll tag');
+        }
+      },
     });
   },
 });

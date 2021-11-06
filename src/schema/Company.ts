@@ -190,51 +190,55 @@ export const CompanyMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const existingUser = await context.prisma.user.findUnique({
-          where: {
-            email: args.data.email,
-          },
-        });
-
-        if (existingUser) {
-          throw new Error('ERROR: Account already exists with this email');
-        }
-
-        const hashedPassword = await hash(args.data.password, 10);
-
-        const company = await context.prisma.company.create({
-          data: {
-            name: args.data.name,
-            users: {
-              create: [
-                {
-                  name: args.data.adminName,
-                  email: args.data.email,
-                  password: hashedPassword,
-                  role: 'ADMIN',
-                },
-              ],
+        try {
+          const existingUser = await context.prisma.user.findUnique({
+            where: {
+              email: args.data.email,
             },
-          },
-        });
+          });
 
-        const user = await context.prisma.user.findUnique({
-          where: {
-            email: args.data.email,
-          },
-        });
+          if (existingUser) {
+            throw new Error('ERROR: Account already exists with this email');
+          }
 
-        if (!user) {
-          throw new Error('Error');
+          const hashedPassword = await hash(args.data.password, 10);
+
+          const company = await context.prisma.company.create({
+            data: {
+              name: args.data.name,
+              users: {
+                create: [
+                  {
+                    name: args.data.adminName,
+                    email: args.data.email,
+                    password: hashedPassword,
+                    role: 'ADMIN',
+                  },
+                ],
+              },
+            },
+          });
+
+          const user = await context.prisma.user.findUnique({
+            where: {
+              email: args.data.email,
+            },
+          });
+
+          if (!user) {
+            throw new Error('Error');
+          }
+
+          const token = generateAccessToken(user.id);
+
+          return {
+            token,
+            company,
+            user,
+          };
+        } catch (error) {
+          throw new Error('Failed to create company');
         }
-
-        const token = generateAccessToken(user.id);
-
-        return {
-          token,
-          company,
-          user,
-        };
       },
     });
   },

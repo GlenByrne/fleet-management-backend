@@ -149,22 +149,31 @@ export const UserQuery = extendType({
       args: {
         userId: nonNull(idArg()),
       },
-      resolve: (_, { userId }, context: Context) =>
-        context.prisma.user.findUnique({
-          where: {
-            id: userId,
-          },
-        }),
+      resolve: (_, { userId }, context: Context) => {
+        try {
+          return context.prisma.user.findUnique({
+            where: {
+              id: userId,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving user');
+        }
+      },
     });
     t.field('me', {
       type: 'User',
       resolve: (_, __, context: Context) => {
-        const userId = getUserId(context);
-        return context.prisma.user.findUnique({
-          where: {
-            id: String(userId),
-          },
-        });
+        try {
+          const userId = getUserId(context);
+          return context.prisma.user.findUnique({
+            where: {
+              id: String(userId),
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving current user');
+        }
       },
     });
 
@@ -176,49 +185,53 @@ export const UserQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
+              },
+            })
+            .company();
+
+          return context.prisma.user.findMany({
             where: {
-              id: userId != null ? userId : undefined,
+              AND: [
+                { companyId: company?.id },
+                {
+                  role: {
+                    not: 'ADMIN',
+                  },
+                },
+                {
+                  name: {
+                    contains:
+                      args.data?.searchCriteria != null
+                        ? args.data.searchCriteria
+                        : undefined,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
             },
-          })
-          .company();
-
-        return context.prisma.user.findMany({
-          where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                role: {
-                  not: 'ADMIN',
-                },
-              },
-              {
-                name: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
-              },
-            ],
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            depot: true,
-            password: false,
-            company: false,
-          },
-          orderBy: {
-            name: 'asc',
-          },
-        });
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              depot: true,
+              password: false,
+              company: false,
+            },
+            orderBy: {
+              name: 'asc',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving users');
+        }
       },
     });
   },
@@ -237,28 +250,32 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const user = await context.prisma.user.findUnique({
-          where: {
-            email: args.data.email,
-          },
-        });
+        try {
+          const user = await context.prisma.user.findUnique({
+            where: {
+              email: args.data.email,
+            },
+          });
 
-        if (!user) {
-          throw new Error('No user found');
+          if (!user) {
+            throw new Error('No user found');
+          }
+
+          const valid = await compare(args.data.password, user.password);
+
+          if (!valid) {
+            throw new Error('Password is Incorrect');
+          }
+
+          const token = generateAccessToken(user.id);
+
+          return {
+            token,
+            user,
+          };
+        } catch (error) {
+          throw new Error('Error logging in');
         }
-
-        const valid = await compare(args.data.password, user.password);
-
-        if (!valid) {
-          throw new Error('Password is Incorrect');
-        }
-
-        const token = generateAccessToken(user.id);
-
-        return {
-          token,
-          user,
-        };
       },
     });
 
@@ -321,53 +338,57 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
+              },
+            })
+            .company();
+
+          const existingUser = await context.prisma.user.findUnique({
             where: {
-              id: userId != null ? userId : undefined,
+              email: args.data.email,
             },
-          })
-          .company();
+          });
 
-        const existingUser = await context.prisma.user.findUnique({
-          where: {
-            email: args.data.email,
-          },
-        });
+          if (existingUser) {
+            throw new Error('ERROR: Account already exists with this email');
+          }
 
-        if (existingUser) {
-          throw new Error('ERROR: Account already exists with this email');
-        }
+          const hashedPassword = await hash(args.data.password, 10);
 
-        const hashedPassword = await hash(args.data.password, 10);
-
-        const user = await context.prisma.user.create({
-          data: {
-            email: args.data.email,
-            password: hashedPassword,
-            name: args.data.name,
-            role: args.data.role,
-            ...createConnection('depot', args.data.depotId),
-            company: {
-              connect: {
-                id: company?.id,
+          const user = await context.prisma.user.create({
+            data: {
+              email: args.data.email,
+              password: hashedPassword,
+              name: args.data.name,
+              role: args.data.role,
+              ...createConnection('depot', args.data.depotId),
+              company: {
+                connect: {
+                  id: company?.id,
+                },
               },
             },
-          },
-          include: {
-            depot: true,
-          },
-        });
+            include: {
+              depot: true,
+            },
+          });
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          depot: user.depot,
-        };
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            depot: user.depot,
+          };
+        } catch (error) {
+          throw new Error('Error adding user');
+        }
       },
     });
 
@@ -380,12 +401,17 @@ export const UserMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.user.delete({
-          where: {
-            id: args.data.id,
-          },
-        }),
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.user.delete({
+            where: {
+              id: args.data.id,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error deleting user');
+        }
+      },
     });
 
     t.nonNull.field('updateUser', {
@@ -398,41 +424,49 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const oldUser = await context.prisma.user.findUnique({
-          where: {
-            id: args.data.id,
-          },
-          include: {
-            depot: {
-              select: {
-                id: true,
+        try {
+          const oldUser = await context.prisma.user.findUnique({
+            where: {
+              id: args.data.id,
+            },
+            include: {
+              depot: {
+                select: {
+                  id: true,
+                },
               },
             },
-          },
-        });
+          });
 
-        const user = await context.prisma.user.update({
-          where: {
-            id: args.data.id,
-          },
-          data: {
-            name: args.data.name,
-            email: args.data.email,
-            role: args.data.role,
-            ...upsertConnection('depot', oldUser?.depot?.id, args.data.depotId),
-          },
-          include: {
-            depot: true,
-          },
-        });
+          const user = await context.prisma.user.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              name: args.data.name,
+              email: args.data.email,
+              role: args.data.role,
+              ...upsertConnection(
+                'depot',
+                oldUser?.depot?.id,
+                args.data.depotId
+              ),
+            },
+            include: {
+              depot: true,
+            },
+          });
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          depot: user.depot,
-        };
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            depot: user.depot,
+          };
+        } catch (error) {
+          throw new Error('Error updating user');
+        }
       },
     });
   },

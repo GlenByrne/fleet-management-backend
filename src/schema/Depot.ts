@@ -85,34 +85,38 @@ export const DepotQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-        return context.prisma.depot.findMany({
-          where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                name: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
               },
-            ],
-          },
-          orderBy: {
-            name: 'asc',
-          },
-        });
+            })
+            .company();
+          return context.prisma.depot.findMany({
+            where: {
+              AND: [
+                { companyId: company?.id },
+                {
+                  name: {
+                    contains:
+                      args.data?.searchCriteria != null
+                        ? args.data.searchCriteria
+                        : undefined,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            },
+            orderBy: {
+              name: 'asc',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving depots');
+        }
       },
     });
 
@@ -121,14 +125,19 @@ export const DepotQuery = extendType({
       args: {
         depotId: nonNull(idArg()),
       },
-      resolve: (_, { depotId }, context: Context) =>
-        context.prisma.depot
-          .findUnique({
-            where: {
-              id: depotId,
-            },
-          })
-          .vehicles(),
+      resolve: (_, { depotId }, context: Context) => {
+        try {
+          return context.prisma.depot
+            .findUnique({
+              where: {
+                id: depotId,
+              },
+            })
+            .vehicles();
+        } catch (error) {
+          throw new Error('Error retrieving vehicles for depot');
+        }
+      },
     });
   },
 });
@@ -168,26 +177,30 @@ export const DepotMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
+              },
+            })
+            .company();
 
-        return context.prisma.depot.create({
-          data: {
-            name: args.data.name,
-            company: {
-              connect: {
-                id: company?.id,
+          return context.prisma.depot.create({
+            data: {
+              name: args.data.name,
+              company: {
+                connect: {
+                  id: company?.id,
+                },
               },
             },
-          },
-        });
+          });
+        } catch (error) {
+          throw new Error('Error adding depot');
+        }
       },
     });
 
@@ -200,15 +213,20 @@ export const DepotMutation = extendType({
           })
         ),
       },
-      resolve: async (_, args, context: Context) =>
-        context.prisma.depot.update({
-          where: {
-            id: args.data.id,
-          },
-          data: {
-            name: args.data.name,
-          },
-        }),
+      resolve: async (_, args, context: Context) => {
+        try {
+          return context.prisma.depot.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              name: args.data.name,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error updating depot');
+        }
+      },
     });
 
     t.nonNull.field('deleteDepot', {
@@ -220,12 +238,17 @@ export const DepotMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.depot.delete({
-          where: {
-            id: args.data.id,
-          },
-        }),
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.depot.delete({
+            where: {
+              id: args.data.id,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error deleting depot');
+        }
+      },
     });
   },
 });

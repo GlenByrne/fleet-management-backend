@@ -114,12 +114,17 @@ export const VehicleQuery = extendType({
       args: {
         vehicleId: nonNull(idArg()),
       },
-      resolve: (_, { vehicleId }, context: Context) =>
-        context.prisma.vehicle.findUnique({
-          where: {
-            id: vehicleId,
-          },
-        }),
+      resolve: (_, { vehicleId }, context: Context) => {
+        try {
+          return context.prisma.vehicle.findUnique({
+            where: {
+              id: vehicleId,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving vehicle');
+        }
+      },
     });
     t.list.field('vehicles', {
       type: Vehicle,
@@ -160,7 +165,7 @@ export const VehicleQuery = extendType({
             },
           });
         } catch {
-          throw new Error('Not Authorised');
+          throw new Error('Error retrieving vehicles');
         }
       },
     });
@@ -169,14 +174,19 @@ export const VehicleQuery = extendType({
       args: {
         vehicleId: nonNull(idArg()),
       },
-      resolve: (_, { vehicleId }, context: Context) =>
-        context.prisma.vehicle
-          .findUnique({
-            where: {
-              id: vehicleId,
-            },
-          })
-          .defects(),
+      resolve: (_, { vehicleId }, context: Context) => {
+        try {
+          return context.prisma.vehicle
+            .findUnique({
+              where: {
+                id: vehicleId,
+              },
+            })
+            .defects();
+        } catch (error) {
+          throw new Error('Error retrieving defects for vehicle');
+        }
+      },
     });
   },
 });
@@ -236,37 +246,41 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
-        return context.prisma.vehicle.create({
-          data: {
-            type: args.data.type,
-            registration: args.data.registration,
-            make: args.data.make,
-            model: args.data.model,
-            owner: args.data.owner,
-            cvrtDueDate: args.data.cvrtDueDate,
-            thirteenWeekInspectionDueDate:
-              args.data.thirteenWeekInspectionDueDate,
-            tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
-            company: {
-              connect: {
-                id: company?.id,
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
               },
+            })
+            .company();
+
+          return context.prisma.vehicle.create({
+            data: {
+              type: args.data.type,
+              registration: args.data.registration,
+              make: args.data.make,
+              model: args.data.model,
+              owner: args.data.owner,
+              cvrtDueDate: args.data.cvrtDueDate,
+              thirteenWeekInspectionDueDate:
+                args.data.thirteenWeekInspectionDueDate,
+              tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+              company: {
+                connect: {
+                  id: company?.id,
+                },
+              },
+              ...createConnection('depot', args.data.depotId),
+              ...createConnection('fuelCard', args.data.fuelCardId),
+              ...createConnection('tollTag', args.data.tollTagId),
             },
-            ...createConnection('depot', args.data.depotId),
-            ...createConnection('fuelCard', args.data.fuelCardId),
-            ...createConnection('tollTag', args.data.tollTagId),
-          },
-        });
+          });
+        } catch (error) {
+          throw new Error('Error adding vehicle');
+        }
       },
     });
 
@@ -279,12 +293,17 @@ export const VehicleMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.vehicle.delete({
-          where: {
-            id: args.data.id,
-          },
-        }),
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.vehicle.delete({
+            where: {
+              id: args.data.id,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error deleting vehicle');
+        }
+      },
     });
 
     t.nonNull.field('updateVehicle', {
@@ -355,7 +374,7 @@ export const VehicleMutation = extendType({
 
           return vehicle;
         } catch {
-          throw new Error('Not Authorised');
+          throw new Error('Error updating vehicle');
         }
       },
     });

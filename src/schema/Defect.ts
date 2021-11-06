@@ -27,14 +27,19 @@ export const DefectQuery = extendType({
       args: {
         vehicleId: nonNull(idArg()),
       },
-      resolve: (_, { vehicleId }, context: Context) =>
-        context.prisma.vehicle
-          .findUnique({
-            where: {
-              id: vehicleId,
-            },
-          })
-          .defects(),
+      resolve: (_, { vehicleId }, context: Context) => {
+        try {
+          return context.prisma.vehicle
+            .findUnique({
+              where: {
+                id: vehicleId,
+              },
+            })
+            .defects();
+        } catch (error) {
+          throw new Error('Error retrieving defects');
+        }
+      },
     });
   },
 });
@@ -61,19 +66,24 @@ export const DefectMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.defect.create({
-          data: {
-            description: args.data.description,
-            dateReported: args.data.dateReported,
-            status: args.data.status || '',
-            vehicle: {
-              connect: {
-                id: args.data.vehicleId,
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.defect.create({
+            data: {
+              description: args.data.description,
+              dateReported: args.data.dateReported,
+              status: args.data.status || '',
+              vehicle: {
+                connect: {
+                  id: args.data.vehicleId,
+                },
               },
             },
-          },
-        }),
+          });
+        } catch (error) {
+          throw new Error('Error adding defect');
+        }
+      },
     });
   },
 });

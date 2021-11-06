@@ -70,59 +70,67 @@ export const FuelCardQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
-        return context.prisma.fuelCard.findMany({
-          where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                cardNumber: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
               },
-            ],
-          },
-          orderBy: {
-            cardNumber: 'asc',
-          },
-        });
+            })
+            .company();
+
+          return context.prisma.fuelCard.findMany({
+            where: {
+              AND: [
+                { companyId: company?.id },
+                {
+                  cardNumber: {
+                    contains:
+                      args.data?.searchCriteria != null
+                        ? args.data.searchCriteria
+                        : undefined,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            },
+            orderBy: {
+              cardNumber: 'asc',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving fuel cards');
+        }
       },
     });
 
     t.list.field('fuelCardsNotAssigned', {
       type: FuelCard,
       resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
+              },
+            })
+            .company();
+
+          return context.prisma.fuelCard.findMany({
             where: {
-              id: userId != null ? userId : undefined,
+              AND: [{ vehicleId: null }, { companyId: company?.id }],
             },
-          })
-          .company();
-
-        return context.prisma.fuelCard.findMany({
-          where: {
-            AND: [{ vehicleId: null }, { companyId: company?.id }],
-          },
-          orderBy: {
-            cardNumber: 'asc',
-          },
-        });
+            orderBy: {
+              cardNumber: 'asc',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error retrieving unassigned fuel cards');
+        }
       },
     });
   },
@@ -167,28 +175,32 @@ export const FuelCardMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
-        return context.prisma.fuelCard.create({
-          data: {
-            cardNumber: args.data.cardNumber,
-            cardProvider: args.data.cardProvider,
-            company: {
-              connect: {
-                id: company?.id,
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
               },
+            })
+            .company();
+
+          return context.prisma.fuelCard.create({
+            data: {
+              cardNumber: args.data.cardNumber,
+              cardProvider: args.data.cardProvider,
+              company: {
+                connect: {
+                  id: company?.id,
+                },
+              },
+              ...createConnection('depot', args.data.depotId),
             },
-            ...createConnection('depot', args.data.depotId),
-          },
-        });
+          });
+        } catch (error) {
+          throw new Error('Error adding fuel card');
+        }
       },
     });
 
@@ -202,34 +214,38 @@ export const FuelCardMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const oldFuelCard = await context.prisma.fuelCard.findUnique({
-          where: {
-            id: args.data.id,
-          },
-          include: {
-            depot: {
-              select: {
-                id: true,
+        try {
+          const oldFuelCard = await context.prisma.fuelCard.findUnique({
+            where: {
+              id: args.data.id,
+            },
+            include: {
+              depot: {
+                select: {
+                  id: true,
+                },
               },
             },
-          },
-        });
+          });
 
-        const fuelCard = context.prisma.fuelCard.update({
-          where: {
-            id: args.data.id,
-          },
-          data: {
-            cardNumber: args.data.cardNumber,
-            cardProvider: args.data.cardProvider,
-            ...upsertConnection(
-              'depot',
-              oldFuelCard?.depot?.id,
-              args.data.depotId
-            ),
-          },
-        });
-        return fuelCard;
+          const fuelCard = context.prisma.fuelCard.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              cardNumber: args.data.cardNumber,
+              cardProvider: args.data.cardProvider,
+              ...upsertConnection(
+                'depot',
+                oldFuelCard?.depot?.id,
+                args.data.depotId
+              ),
+            },
+          });
+          return fuelCard;
+        } catch (error) {
+          throw new Error('Error updating fuel card');
+        }
       },
     });
 
@@ -242,12 +258,17 @@ export const FuelCardMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) =>
-        context.prisma.fuelCard.delete({
-          where: {
-            id: args.data.id,
-          },
-        }),
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.fuelCard.delete({
+            where: {
+              id: args.data.id,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error deleting fuel card');
+        }
+      },
     });
   },
 });
