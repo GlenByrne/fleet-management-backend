@@ -129,35 +129,39 @@ export const VehicleQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        try {
+          const userId = getUserId(context);
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
-        return context.prisma.vehicle.findMany({
-          where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                registration: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
+          const company = await context.prisma.user
+            .findUnique({
+              where: {
+                id: userId != null ? userId : undefined,
               },
-            ],
-          },
-          orderBy: {
-            registration: 'asc',
-          },
-        });
+            })
+            .company();
+
+          return context.prisma.vehicle.findMany({
+            where: {
+              AND: [
+                { companyId: company?.id },
+                {
+                  registration: {
+                    contains:
+                      args.data?.searchCriteria != null
+                        ? args.data.searchCriteria
+                        : undefined,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            },
+            orderBy: {
+              registration: 'asc',
+            },
+          });
+        } catch {
+          throw new Error('Not Authorised');
+        }
       },
     });
     t.list.field('defectsForVehicle', {
@@ -293,62 +297,66 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const oldVehicle = await context.prisma.vehicle.findUnique({
-          where: {
-            id: args.data.id,
-          },
-          include: {
-            fuelCard: {
-              select: {
-                id: true,
+        try {
+          const oldVehicle = await context.prisma.vehicle.findUnique({
+            where: {
+              id: args.data.id,
+            },
+            include: {
+              fuelCard: {
+                select: {
+                  id: true,
+                },
+              },
+              tollTag: {
+                select: {
+                  id: true,
+                },
+              },
+              depot: {
+                select: {
+                  id: true,
+                },
               },
             },
-            tollTag: {
-              select: {
-                id: true,
-              },
-            },
-            depot: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        });
+          });
 
-        const vehicle = context.prisma.vehicle.update({
-          where: {
-            id: args.data.id,
-          },
-          data: {
-            type: args.data.type,
-            registration: args.data.registration,
-            make: args.data.make,
-            model: args.data.model,
-            owner: args.data.owner,
-            cvrtDueDate: args.data.cvrtDueDate,
-            thirteenWeekInspectionDueDate:
-              args.data.thirteenWeekInspectionDueDate,
-            tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
-            ...upsertConnection(
-              'depot',
-              oldVehicle?.depot?.id,
-              args.data.depotId
-            ),
-            ...upsertConnection(
-              'fuelCard',
-              oldVehicle?.fuelCard?.id,
-              args.data.fuelCardId
-            ),
-            ...upsertConnection(
-              'tollTag',
-              oldVehicle?.tollTag?.id,
-              args.data.tollTagId
-            ),
-          },
-        });
+          const vehicle = context.prisma.vehicle.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              type: args.data.type,
+              registration: args.data.registration,
+              make: args.data.make,
+              model: args.data.model,
+              owner: args.data.owner,
+              cvrtDueDate: args.data.cvrtDueDate,
+              thirteenWeekInspectionDueDate:
+                args.data.thirteenWeekInspectionDueDate,
+              tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+              ...upsertConnection(
+                'depot',
+                oldVehicle?.depot?.id,
+                args.data.depotId
+              ),
+              ...upsertConnection(
+                'fuelCard',
+                oldVehicle?.fuelCard?.id,
+                args.data.fuelCardId
+              ),
+              ...upsertConnection(
+                'tollTag',
+                oldVehicle?.tollTag?.id,
+                args.data.tollTagId
+              ),
+            },
+          });
 
-        return vehicle;
+          return vehicle;
+        } catch {
+          throw new Error('Not Authorised');
+        }
       },
     });
   },

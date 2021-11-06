@@ -10,11 +10,11 @@ import {
 import { compare, hash } from 'bcrypt';
 import { Context } from '../context';
 import { Depot } from './Depot';
-import generateToken from '../utilities/generateToken';
 import { Company } from './Company';
 import { getUserId } from '../utilities/getUserId';
 import createConnection from '../utilities/createConnection';
 import upsertConnection from '../utilities/upsertConnection';
+import generateAccessToken from '../utilities/generateAccessToken';
 
 export const Role = enumType({
   name: 'Role',
@@ -64,6 +64,34 @@ export const User = objectType({
   },
 });
 
+export const AuthPayload = objectType({
+  name: 'AuthPayload',
+  definition(t) {
+    t.string('token');
+    t.field('user', {
+      type: User,
+    });
+  },
+});
+
+const LoginInput = inputObjectType({
+  name: 'LoginInput',
+  definition(t) {
+    t.nonNull.string('email');
+    t.nonNull.string('password');
+  },
+});
+
+// const RegisterInput = inputObjectType({
+//   name: 'RegisterInput',
+//   definition(t) {
+//     t.nonNull.string('email');
+//     t.nonNull.string('password');
+//     t.nonNull.string('name');
+//     t.nonNull.string('companyId');
+//   },
+// });
+
 export const UsersPayload = objectType({
   name: 'UsersPayload',
   definition(t) {
@@ -81,6 +109,35 @@ const UsersInputFilter = inputObjectType({
   name: 'UsersInputFilter',
   definition(t) {
     t.string('searchCriteria');
+  },
+});
+
+const AddUserInput = inputObjectType({
+  name: 'AddUserInput',
+  definition(t) {
+    t.nonNull.string('email');
+    t.nonNull.string('password');
+    t.nonNull.string('name');
+    t.nonNull.string('depotId');
+    t.nonNull.field('role', { type: Role });
+  },
+});
+
+const DeleteUserInput = inputObjectType({
+  name: 'DeleteUserInput',
+  definition(t) {
+    t.nonNull.id('id');
+  },
+});
+
+const UpdateUserInput = inputObjectType({
+  name: 'UpdateUserInput',
+  definition(t) {
+    t.nonNull.id('id');
+    t.nonNull.string('email');
+    t.nonNull.string('name');
+    t.nonNull.string('depotId');
+    t.nonNull.field('role', { type: Role });
   },
 });
 
@@ -167,63 +224,6 @@ export const UserQuery = extendType({
   },
 });
 
-export const AuthPayload = objectType({
-  name: 'AuthPayload',
-  definition(t) {
-    t.string('token');
-    t.field('user', {
-      type: User,
-    });
-  },
-});
-
-const LoginInput = inputObjectType({
-  name: 'LoginInput',
-  definition(t) {
-    t.nonNull.string('email');
-    t.nonNull.string('password');
-  },
-});
-
-// const RegisterInput = inputObjectType({
-//   name: 'RegisterInput',
-//   definition(t) {
-//     t.nonNull.string('email');
-//     t.nonNull.string('password');
-//     t.nonNull.string('name');
-//     t.nonNull.string('companyId');
-//   },
-// });
-
-const AddUserInput = inputObjectType({
-  name: 'AddUserInput',
-  definition(t) {
-    t.nonNull.string('email');
-    t.nonNull.string('password');
-    t.nonNull.string('name');
-    t.nonNull.string('depotId');
-    t.nonNull.field('role', { type: Role });
-  },
-});
-
-const DeleteUserInput = inputObjectType({
-  name: 'DeleteUserInput',
-  definition(t) {
-    t.nonNull.id('id');
-  },
-});
-
-const UpdateUserInput = inputObjectType({
-  name: 'UpdateUserInput',
-  definition(t) {
-    t.nonNull.id('id');
-    t.nonNull.string('email');
-    t.nonNull.string('name');
-    t.nonNull.string('depotId');
-    t.nonNull.field('role', { type: Role });
-  },
-});
-
 export const UserMutation = extendType({
   type: 'Mutation',
   definition(t) {
@@ -253,7 +253,7 @@ export const UserMutation = extendType({
           throw new Error('Password is Incorrect');
         }
 
-        const token = generateToken(user.id);
+        const token = generateAccessToken(user.id);
 
         return {
           token,

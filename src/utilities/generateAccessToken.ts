@@ -1,17 +1,17 @@
 import { sign } from 'jsonwebtoken';
 import { APP_SECRET } from './getUserId';
 
-const generateToken = (userId: string) => {
+const generateAccessToken = (userId: string) => {
   const token = sign(
     {
       userId,
     },
     APP_SECRET,
     {
-      expiresIn: '1h',
+      expiresIn: '15m',
     }
   );
   return token;
 };
 
-export default generateToken;
+export default generateAccessToken;

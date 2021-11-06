@@ -2,6 +2,7 @@ import { verify } from 'jsonwebtoken';
 import { Context } from '../context';
 
 export const APP_SECRET = 'uoisehofihzoefhos';
+export const REFRESH_TOKEN_SECRET = 'jfnlszkfehlsfejsskjlfjd';
 
 interface Token {
   userId: string;

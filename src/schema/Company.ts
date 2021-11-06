@@ -6,7 +6,7 @@ import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
 import { User } from './User';
-import generateToken from '../utilities/generateToken';
+import generateAccessToken from '../utilities/generateAccessToken';
 
 export const Company = objectType({
   name: 'Company',
@@ -228,7 +228,7 @@ export const CompanyMutation = extendType({
           throw new Error('Error');
         }
 
-        const token = generateToken(user.id);
+        const token = generateAccessToken(user.id);
 
         return {
           token,
