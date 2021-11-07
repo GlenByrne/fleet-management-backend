@@ -165,11 +165,11 @@ export interface NexusGenObjects {
   AddCompanyPayload: { // root type
     company?: NexusGenRootTypes['Company'] | null; // Company
     token?: string | null; // String
-    user?: NexusGenRootTypes['User'] | null; // User
+    user?: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
   }
   AuthPayload: { // root type
     token?: string | null; // String
-    user?: NexusGenRootTypes['User'] | null; // User
+    user?: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
   }
   Company: { // root type
     id: string; // ID!
@@ -239,11 +239,11 @@ export interface NexusGenFieldTypes {
   AddCompanyPayload: { // field return type
     company: NexusGenRootTypes['Company'] | null; // Company
     token: string | null; // String
-    user: NexusGenRootTypes['User'] | null; // User
+    user: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
   }
   AuthPayload: { // field return type
     token: string | null; // String
-    user: NexusGenRootTypes['User'] | null; // User
+    user: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
   }
   Company: { // field return type
     depots: NexusGenRootTypes['Depot'][]; // [Depot!]!
@@ -302,10 +302,10 @@ export interface NexusGenFieldTypes {
     depots: Array<NexusGenRootTypes['Depot'] | null> | null; // [Depot]
     fuelCards: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     fuelCardsNotAssigned: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
-    me: NexusGenRootTypes['User'] | null; // User
+    me: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
     tollTags: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
     tollTagsNotAssigned: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
-    user: NexusGenRootTypes['User'] | null; // User
+    user: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
     users: Array<NexusGenRootTypes['UsersPayload'] | null> | null; // [UsersPayload]
     vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
     vehicles: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
@@ -357,11 +357,11 @@ export interface NexusGenFieldTypeNames {
   AddCompanyPayload: { // field return type name
     company: 'Company'
     token: 'String'
-    user: 'User'
+    user: 'UsersPayload'
   }
   AuthPayload: { // field return type name
     token: 'String'
-    user: 'User'
+    user: 'UsersPayload'
   }
   Company: { // field return type name
     depots: 'Depot'
@@ -420,10 +420,10 @@ export interface NexusGenFieldTypeNames {
     depots: 'Depot'
     fuelCards: 'FuelCard'
     fuelCardsNotAssigned: 'FuelCard'
-    me: 'User'
+    me: 'UsersPayload'
     tollTags: 'TollTag'
     tollTagsNotAssigned: 'TollTag'
-    user: 'User'
+    user: 'UsersPayload'
     users: 'UsersPayload'
     vehicle: 'Vehicle'
     vehicles: 'Vehicle'

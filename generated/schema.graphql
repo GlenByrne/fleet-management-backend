@@ -12,7 +12,7 @@ input AddCompanyInput {
 type AddCompanyPayload {
   company: Company
   token: String
-  user: User
+  user: UsersPayload
 }
 
 input AddDefectInput {
@@ -62,7 +62,7 @@ input AddVehicleInput {
 
 type AuthPayload {
   token: String
-  user: User
+  user: UsersPayload
 }
 
 type Company {
@@ -165,10 +165,10 @@ type Query {
   depots(data: DepotInputFilter): [Depot]
   fuelCards(data: FuelCardInputFilter): [FuelCard]
   fuelCardsNotAssigned: [FuelCard]
-  me: User
+  me: UsersPayload
   tollTags(data: TollTagInputFilter): [TollTag]
   tollTagsNotAssigned: [TollTag]
-  user(userId: ID!): User
+  user(userId: ID!): UsersPayload
   users(data: UsersInputFilter): [UsersPayload]
   vehicle(vehicleId: ID!): Vehicle
   vehicles(data: VehicleInputFilter): [Vehicle]

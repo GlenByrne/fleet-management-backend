@@ -88,6 +88,12 @@ export const DepotQuery = extendType({
         try {
           const userId = getUserId(context);
 
+          if (!userId) {
+            throw new Error(
+              'Unable to retrieve depots. You are not logged in.'
+            );
+          }
+
           const company = await context.prisma.user
             .findUnique({
               where: {
@@ -180,6 +186,10 @@ export const DepotMutation = extendType({
         try {
           const userId = getUserId(context);
 
+          if (!userId) {
+            throw new Error('Unable to add depot. You are not logged in.');
+          }
+
           const company = await context.prisma.user
             .findUnique({
               where: {
@@ -187,6 +197,16 @@ export const DepotMutation = extendType({
               },
             })
             .company();
+
+          const existingDepot = await context.prisma.depot.findUnique({
+            where: {
+              name: args.data.name,
+            },
+          });
+
+          if (existingDepot) {
+            throw new Error('Depot already exists with this name');
+          }
 
           return context.prisma.depot.create({
             data: {

@@ -70,67 +70,71 @@ export const FuelCardQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.fuelCard.findMany({
-            where: {
-              AND: [
-                { companyId: company?.id },
-                {
-                  cardNumber: {
-                    contains:
-                      args.data?.searchCriteria != null
-                        ? args.data.searchCriteria
-                        : undefined,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            },
-            orderBy: {
-              cardNumber: 'asc',
-            },
-          });
-        } catch (error) {
-          throw new Error('Error retrieving fuel cards');
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve fuel cards. You are not logged in.'
+          );
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.fuelCard.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                cardNumber: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+          orderBy: {
+            cardNumber: 'asc',
+          },
+        });
       },
     });
 
     t.list.field('fuelCardsNotAssigned', {
       type: FuelCard,
       resolve: async (_, __, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.fuelCard.findMany({
-            where: {
-              AND: [{ vehicleId: null }, { companyId: company?.id }],
-            },
-            orderBy: {
-              cardNumber: 'asc',
-            },
-          });
-        } catch (error) {
-          throw new Error('Error retrieving unassigned fuel cards');
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve unassigned fuel cards. You are not logged in.'
+          );
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.fuelCard.findMany({
+          where: {
+            AND: [{ vehicleId: null }, { companyId: company?.id }],
+          },
+          orderBy: {
+            cardNumber: 'asc',
+          },
+        });
       },
     });
   },
@@ -175,32 +179,42 @@ export const FuelCardMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.fuelCard.create({
-            data: {
-              cardNumber: args.data.cardNumber,
-              cardProvider: args.data.cardProvider,
-              company: {
-                connect: {
-                  id: company?.id,
-                },
-              },
-              ...createConnection('depot', args.data.depotId),
-            },
-          });
-        } catch (error) {
-          throw new Error('Error adding fuel card');
+        if (!userId) {
+          throw new Error('Unable to add fuel card. You are not logged in.');
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        const existingCard = await context.prisma.fuelCard.findUnique({
+          where: {
+            cardNumber: args.data.cardNumber,
+          },
+        });
+
+        if (existingCard) {
+          throw new Error('Card already exists with this registration');
+        }
+
+        return context.prisma.fuelCard.create({
+          data: {
+            cardNumber: args.data.cardNumber,
+            cardProvider: args.data.cardProvider,
+            company: {
+              connect: {
+                id: company?.id,
+              },
+            },
+            ...createConnection('depot', args.data.depotId),
+          },
+        });
       },
     });
 

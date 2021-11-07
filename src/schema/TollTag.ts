@@ -70,67 +70,71 @@ export const TollTagQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.tollTag.findMany({
-            where: {
-              AND: [
-                { companyId: company?.id },
-                {
-                  tagNumber: {
-                    contains:
-                      args.data?.searchCriteria != null
-                        ? args.data.searchCriteria
-                        : undefined,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            },
-            orderBy: {
-              tagNumber: 'asc',
-            },
-          });
-        } catch (error) {
-          throw new Error('Error retrieving toll tags');
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve toll tags. You are not logged in.'
+          );
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.tollTag.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                tagNumber: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+          orderBy: {
+            tagNumber: 'asc',
+          },
+        });
       },
     });
 
     t.list.field('tollTagsNotAssigned', {
       type: TollTag,
       resolve: async (_, __, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.tollTag.findMany({
-            where: {
-              AND: [{ vehicleId: null }, { companyId: company?.id }],
-            },
-            orderBy: {
-              tagNumber: 'asc',
-            },
-          });
-        } catch (error) {
-          throw new Error('Error retrieving unassigned toll tags');
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve unassigned toll tags. You are not logged in.'
+          );
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.tollTag.findMany({
+          where: {
+            AND: [{ vehicleId: null }, { companyId: company?.id }],
+          },
+          orderBy: {
+            tagNumber: 'asc',
+          },
+        });
       },
     });
   },
@@ -175,32 +179,42 @@ export const TollTagMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.tollTag.create({
-            data: {
-              tagNumber: args.data.tagNumber,
-              tagProvider: args.data.tagProvider,
-              company: {
-                connect: {
-                  id: company?.id,
-                },
-              },
-              ...createConnection('depot', args.data.depotId),
-            },
-          });
-        } catch (error) {
-          throw new Error('Error adding toll tag');
+        if (!userId) {
+          throw new Error('Unable to add toll tag. You are not logged in.');
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        const existingTag = await context.prisma.tollTag.findUnique({
+          where: {
+            tagNumber: args.data.tagNumber,
+          },
+        });
+
+        if (existingTag) {
+          throw new Error('Tag already exists with this number');
+        }
+
+        return context.prisma.tollTag.create({
+          data: {
+            tagNumber: args.data.tagNumber,
+            tagProvider: args.data.tagProvider,
+            company: {
+              connect: {
+                id: company?.id,
+              },
+            },
+            ...createConnection('depot', args.data.depotId),
+          },
+        });
       },
     });
 

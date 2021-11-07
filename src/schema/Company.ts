@@ -5,7 +5,7 @@ import { Depot } from './Depot';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
-import { User } from './User';
+import { User, UsersPayload } from './User';
 import generateAccessToken from '../utilities/generateAccessToken';
 
 export const Company = objectType({
@@ -172,7 +172,7 @@ export const AddCompanyPayload = objectType({
       type: Company,
     });
     t.field('user', {
-      type: User,
+      type: UsersPayload,
     });
   },
 });
@@ -222,6 +222,15 @@ export const CompanyMutation = extendType({
           const user = await context.prisma.user.findUnique({
             where: {
               email: args.data.email,
+            },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              depot: true,
+              password: false,
+              company: false,
             },
           });
 

@@ -134,39 +134,41 @@ export const VehicleQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.vehicle.findMany({
-            where: {
-              AND: [
-                { companyId: company?.id },
-                {
-                  registration: {
-                    contains:
-                      args.data?.searchCriteria != null
-                        ? args.data.searchCriteria
-                        : undefined,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            },
-            orderBy: {
-              registration: 'asc',
-            },
-          });
-        } catch {
-          throw new Error('Error retrieving vehicles');
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve vehicles. You are not logged in.'
+          );
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.vehicle.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                registration: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+          orderBy: {
+            registration: 'asc',
+          },
+        });
       },
     });
     t.list.field('defectsForVehicle', {
@@ -184,7 +186,7 @@ export const VehicleQuery = extendType({
             })
             .defects();
         } catch (error) {
-          throw new Error('Error retrieving defects for vehicle');
+          throw new Error('There was an error retrieving defects for vehicle');
         }
       },
     });
@@ -246,41 +248,51 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.vehicle.create({
-            data: {
-              type: args.data.type,
-              registration: args.data.registration,
-              make: args.data.make,
-              model: args.data.model,
-              owner: args.data.owner,
-              cvrtDueDate: args.data.cvrtDueDate,
-              thirteenWeekInspectionDueDate:
-                args.data.thirteenWeekInspectionDueDate,
-              tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
-              company: {
-                connect: {
-                  id: company?.id,
-                },
-              },
-              ...createConnection('depot', args.data.depotId),
-              ...createConnection('fuelCard', args.data.fuelCardId),
-              ...createConnection('tollTag', args.data.tollTagId),
-            },
-          });
-        } catch (error) {
-          throw new Error('Error adding vehicle');
+        if (!userId) {
+          throw new Error('Unable to add vehicle. You are not logged in.');
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        const existingVehicle = await context.prisma.vehicle.findUnique({
+          where: {
+            registration: args.data.registration,
+          },
+        });
+
+        if (existingVehicle) {
+          throw new Error('Vehicle already exists with this registration');
+        }
+
+        return context.prisma.vehicle.create({
+          data: {
+            type: args.data.type,
+            registration: args.data.registration,
+            make: args.data.make,
+            model: args.data.model,
+            owner: args.data.owner,
+            cvrtDueDate: args.data.cvrtDueDate,
+            thirteenWeekInspectionDueDate:
+              args.data.thirteenWeekInspectionDueDate,
+            tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+            company: {
+              connect: {
+                id: company?.id,
+              },
+            },
+            ...createConnection('depot', args.data.depotId),
+            ...createConnection('fuelCard', args.data.fuelCardId),
+            ...createConnection('tollTag', args.data.tollTagId),
+          },
+        });
       },
     });
 

@@ -8,6 +8,7 @@ import {
   objectType,
 } from 'nexus';
 import { compare, hash } from 'bcrypt';
+import { AuthenticationError } from 'apollo-server-errors';
 import { Context } from '../context';
 import { Depot } from './Depot';
 import { Company } from './Company';
@@ -63,35 +64,6 @@ export const User = objectType({
     });
   },
 });
-
-export const AuthPayload = objectType({
-  name: 'AuthPayload',
-  definition(t) {
-    t.string('token');
-    t.field('user', {
-      type: User,
-    });
-  },
-});
-
-const LoginInput = inputObjectType({
-  name: 'LoginInput',
-  definition(t) {
-    t.nonNull.string('email');
-    t.nonNull.string('password');
-  },
-});
-
-// const RegisterInput = inputObjectType({
-//   name: 'RegisterInput',
-//   definition(t) {
-//     t.nonNull.string('email');
-//     t.nonNull.string('password');
-//     t.nonNull.string('name');
-//     t.nonNull.string('companyId');
-//   },
-// });
-
 export const UsersPayload = objectType({
   name: 'UsersPayload',
   definition(t) {
@@ -102,6 +74,24 @@ export const UsersPayload = objectType({
     t.field('depot', {
       type: Depot,
     });
+  },
+});
+
+export const AuthPayload = objectType({
+  name: 'AuthPayload',
+  definition(t) {
+    t.string('token');
+    t.field('user', {
+      type: UsersPayload,
+    });
+  },
+});
+
+const LoginInput = inputObjectType({
+  name: 'LoginInput',
+  definition(t) {
+    t.nonNull.string('email');
+    t.nonNull.string('password');
   },
 });
 
@@ -145,7 +135,7 @@ export const UserQuery = extendType({
   type: 'Query',
   definition(t) {
     t.field('user', {
-      type: User,
+      type: UsersPayload,
       args: {
         userId: nonNull(idArg()),
       },
@@ -155,25 +145,44 @@ export const UserQuery = extendType({
             where: {
               id: userId,
             },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              depot: true,
+              password: false,
+              company: false,
+            },
           });
-        } catch (error) {
+        } catch {
           throw new Error('Error retrieving user');
         }
       },
     });
     t.field('me', {
-      type: 'User',
+      type: UsersPayload,
       resolve: (_, __, context: Context) => {
-        try {
-          const userId = getUserId(context);
-          return context.prisma.user.findUnique({
-            where: {
-              id: String(userId),
-            },
-          });
-        } catch (error) {
-          throw new Error('Error retrieving current user');
+        const userId = getUserId(context);
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve your account info. You are not logged in.'
+          );
         }
+        return context.prisma.user.findUnique({
+          where: {
+            id: String(userId),
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            depot: true,
+            password: false,
+            company: false,
+          },
+        });
       },
     });
 
@@ -187,6 +196,10 @@ export const UserQuery = extendType({
       resolve: async (_, args, context: Context) => {
         try {
           const userId = getUserId(context);
+
+          if (!userId) {
+            throw new Error('Unable to retrieve users. You are not logged in.');
+          }
 
           const company = await context.prisma.user
             .findUnique({
@@ -250,32 +263,37 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const user = await context.prisma.user.findUnique({
-            where: {
-              email: args.data.email,
-            },
-          });
+        const user = await context.prisma.user.findUnique({
+          where: {
+            email: args.data.email,
+          },
+          include: {
+            depot: true,
+          },
+        });
 
-          if (!user) {
-            throw new Error('No user found');
-          }
-
-          const valid = await compare(args.data.password, user.password);
-
-          if (!valid) {
-            throw new Error('Password is Incorrect');
-          }
-
-          const token = generateAccessToken(user.id);
-
-          return {
-            token,
-            user,
-          };
-        } catch (error) {
-          throw new Error('Error logging in');
+        if (!user) {
+          throw new Error('No user with these credentials could be found');
         }
+
+        const valid = await compare(args.data.password, user.password);
+
+        if (!valid) {
+          throw new Error('The password you have entered is incorrect');
+        }
+
+        const token = generateAccessToken(user.id);
+
+        return {
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            depot: user.depot,
+          },
+        };
       },
     });
 
@@ -338,57 +356,53 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          const existingUser = await context.prisma.user.findUnique({
+        const company = await context.prisma.user
+          .findUnique({
             where: {
-              email: args.data.email,
+              id: userId != null ? userId : undefined,
             },
-          });
+          })
+          .company();
 
-          if (existingUser) {
-            throw new Error('ERROR: Account already exists with this email');
-          }
+        const existingUser = await context.prisma.user.findUnique({
+          where: {
+            email: args.data.email,
+          },
+        });
 
-          const hashedPassword = await hash(args.data.password, 10);
+        if (existingUser) {
+          throw new Error('Account already exists with this email');
+        }
 
-          const user = await context.prisma.user.create({
-            data: {
-              email: args.data.email,
-              password: hashedPassword,
-              name: args.data.name,
-              role: args.data.role,
-              ...createConnection('depot', args.data.depotId),
-              company: {
-                connect: {
-                  id: company?.id,
-                },
+        const hashedPassword = await hash(args.data.password, 10);
+
+        const user = await context.prisma.user.create({
+          data: {
+            email: args.data.email,
+            password: hashedPassword,
+            name: args.data.name,
+            role: args.data.role,
+            ...createConnection('depot', args.data.depotId),
+            company: {
+              connect: {
+                id: company?.id,
               },
             },
-            include: {
-              depot: true,
-            },
-          });
+          },
+          include: {
+            depot: true,
+          },
+        });
 
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            depot: user.depot,
-          };
-        } catch (error) {
-          throw new Error('Error adding user');
-        }
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          depot: user.depot,
+        };
       },
     });
 
