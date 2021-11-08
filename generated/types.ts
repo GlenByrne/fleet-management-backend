@@ -125,6 +125,13 @@ export interface NexusGenInputs {
     name: string; // String!
     role: NexusGenEnums['Role']; // Role!
   }
+  UpdateVehicleDates: { // input type
+    id: string; // String!
+  }
+  UpdateVehicleDatesWithCompletion: { // input type
+    completionDate: NexusGenScalars['DateTime']; // DateTime!
+    id: string; // String!
+  }
   UpdateVehicleInput: { // input type
     cvrtDueDate?: NexusGenScalars['DateTime'] | null; // DateTime
     depotId?: string | null; // String
@@ -149,7 +156,6 @@ export interface NexusGenInputs {
 
 export interface NexusGenEnums {
   Role: "ADMIN" | "DRIVER" | "USER"
-  Status: "COMPLETE" | "INCOMPLETE"
   VehicleType: "TRAILER" | "TRUCK" | "VAN"
 }
 
@@ -173,10 +179,8 @@ export interface NexusGenObjects {
     user?: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
   }
   CVRT: { // root type
-    completionDate?: NexusGenScalars['DateTime'] | null; // DateTime
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
-    status?: NexusGenEnums['Status'] | null; // Status
   }
   Company: { // root type
     id: string; // ID!
@@ -201,16 +205,14 @@ export interface NexusGenObjects {
   Mutation: {};
   Query: {};
   TachoCalibration: { // root type
-    completionDate?: NexusGenScalars['DateTime'] | null; // DateTime
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
-    status?: NexusGenEnums['Status'] | null; // Status
+    previousDate?: NexusGenScalars['DateTime'] | null; // DateTime
   }
   ThirteenWeekInspection: { // root type
-    completionDate?: NexusGenScalars['DateTime'] | null; // DateTime
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
-    status?: NexusGenEnums['Status'] | null; // Status
+    previousDate?: NexusGenScalars['DateTime'] | null; // DateTime
   }
   TollTag: { // root type
     id: string; // ID!
@@ -262,10 +264,8 @@ export interface NexusGenFieldTypes {
     user: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
   }
   CVRT: { // field return type
-    completionDate: NexusGenScalars['DateTime'] | null; // DateTime
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
-    status: NexusGenEnums['Status'] | null; // Status
   }
   Company: { // field return type
     depots: NexusGenRootTypes['Depot'][]; // [Depot!]!
@@ -318,6 +318,9 @@ export interface NexusGenFieldTypes {
     updateTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     updateUser: NexusGenRootTypes['UsersPayload']; // UsersPayload!
     updateVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
+    updateVehicleCVRT: NexusGenRootTypes['Vehicle']; // Vehicle!
+    updateVehicleTachoCalibration: NexusGenRootTypes['Vehicle']; // Vehicle!
+    updateVehicleThirteenWeekInspection: NexusGenRootTypes['Vehicle']; // Vehicle!
   }
   Query: { // field return type
     defectsForVehicle: Array<NexusGenRootTypes['Defect'] | null> | null; // [Defect]
@@ -334,16 +337,14 @@ export interface NexusGenFieldTypes {
     vehiclesInDepot: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
   }
   TachoCalibration: { // field return type
-    completionDate: NexusGenScalars['DateTime'] | null; // DateTime
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
-    status: NexusGenEnums['Status'] | null; // Status
+    previousDate: NexusGenScalars['DateTime'] | null; // DateTime
   }
   ThirteenWeekInspection: { // field return type
-    completionDate: NexusGenScalars['DateTime'] | null; // DateTime
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
-    status: NexusGenEnums['Status'] | null; // Status
+    previousDate: NexusGenScalars['DateTime'] | null; // DateTime
   }
   TollTag: { // field return type
     company: NexusGenRootTypes['Company']; // Company!
@@ -398,10 +399,8 @@ export interface NexusGenFieldTypeNames {
     user: 'UsersPayload'
   }
   CVRT: { // field return type name
-    completionDate: 'DateTime'
     dueDate: 'DateTime'
     id: 'ID'
-    status: 'Status'
   }
   Company: { // field return type name
     depots: 'Depot'
@@ -454,6 +453,9 @@ export interface NexusGenFieldTypeNames {
     updateTollTag: 'TollTag'
     updateUser: 'UsersPayload'
     updateVehicle: 'Vehicle'
+    updateVehicleCVRT: 'Vehicle'
+    updateVehicleTachoCalibration: 'Vehicle'
+    updateVehicleThirteenWeekInspection: 'Vehicle'
   }
   Query: { // field return type name
     defectsForVehicle: 'Defect'
@@ -470,16 +472,14 @@ export interface NexusGenFieldTypeNames {
     vehiclesInDepot: 'Vehicle'
   }
   TachoCalibration: { // field return type name
-    completionDate: 'DateTime'
     dueDate: 'DateTime'
     id: 'ID'
-    status: 'Status'
+    previousDate: 'DateTime'
   }
   ThirteenWeekInspection: { // field return type name
-    completionDate: 'DateTime'
     dueDate: 'DateTime'
     id: 'ID'
-    status: 'Status'
+    previousDate: 'DateTime'
   }
   TollTag: { // field return type name
     company: 'Company'
@@ -578,6 +578,15 @@ export interface NexusGenArgTypes {
     }
     updateVehicle: { // args
       data: NexusGenInputs['UpdateVehicleInput']; // UpdateVehicleInput!
+    }
+    updateVehicleCVRT: { // args
+      data: NexusGenInputs['UpdateVehicleDates']; // UpdateVehicleDates!
+    }
+    updateVehicleTachoCalibration: { // args
+      data: NexusGenInputs['UpdateVehicleDatesWithCompletion']; // UpdateVehicleDatesWithCompletion!
+    }
+    updateVehicleThirteenWeekInspection: { // args
+      data: NexusGenInputs['UpdateVehicleDatesWithCompletion']; // UpdateVehicleDatesWithCompletion!
     }
   }
   Query: {

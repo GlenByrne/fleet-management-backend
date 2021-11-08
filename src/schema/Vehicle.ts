@@ -8,6 +8,7 @@ import {
 } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
+import createOrNull from '../utilities/createOrNull';
 import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
 import { Company } from './Company';
@@ -256,6 +257,21 @@ const DeleteVehicleInput = inputObjectType({
   },
 });
 
+const UpdateVehicleDates = inputObjectType({
+  name: 'UpdateVehicleDates',
+  definition(t) {
+    t.nonNull.string('id');
+  },
+});
+
+const UpdateVehicleDatesWithCompletion = inputObjectType({
+  name: 'UpdateVehicleDatesWithCompletion',
+  definition(t) {
+    t.nonNull.string('id');
+    t.nonNull.date('completionDate');
+  },
+});
+
 export const VehicleMutation = extendType({
   type: 'Mutation',
   definition(t) {
@@ -301,18 +317,11 @@ export const VehicleMutation = extendType({
             model: args.data.model,
             owner: args.data.owner,
             cvrt: {
-              create: { dueDate: args.data.cvrtDueDate, status: 'INCOMPLETE' },
+              create: { dueDate: args.data.cvrtDueDate },
             },
             thirteenWeekInspection: {
               create: {
                 dueDate: args.data.thirteenWeekInspectionDueDate,
-                status: 'INCOMPLETE',
-              },
-            },
-            tachoCalibration: {
-              create: {
-                dueDate: args.data.tachoCalibrationDueDate,
-                status: 'INCOMPLETE',
               },
             },
             company: {
@@ -320,6 +329,10 @@ export const VehicleMutation = extendType({
                 id: company?.id,
               },
             },
+            ...createOrNull(
+              'tachoCalibration',
+              args.data.tachoCalibrationDueDate
+            ),
             ...createConnection('depot', args.data.depotId),
             ...createConnection('fuelCard', args.data.fuelCardId),
             ...createConnection('tollTag', args.data.tollTagId),
@@ -430,6 +443,175 @@ export const VehicleMutation = extendType({
           return vehicle;
         } catch {
           throw new Error('Error updating vehicle');
+        }
+      },
+    });
+
+    t.nonNull.field('updateVehicleCVRT', {
+      type: Vehicle,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateVehicleDates,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        try {
+          const vehicle = await context.prisma.vehicle.findUnique({
+            where: {
+              id: args.data.id,
+            },
+            include: {
+              cvrt: true,
+            },
+          });
+
+          if (!vehicle) {
+            throw new Error('This vehicle does not exist.');
+          }
+
+          if (!vehicle.cvrt) {
+            throw new Error('This vehicle does not have a cvrt due date set.');
+          }
+
+          const year = vehicle.cvrt.dueDate.getFullYear();
+          const month = vehicle.cvrt.dueDate.getMonth();
+          const day = vehicle.cvrt.dueDate.getDate();
+          const nextCVRT = new Date(year + 1, month, day);
+
+          const updatedVehicle = await context.prisma.vehicle.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              cvrt: {
+                update: {
+                  dueDate: nextCVRT,
+                },
+              },
+            },
+          });
+
+          return updatedVehicle;
+        } catch (error) {
+          throw new Error('Error deleting vehicle');
+        }
+      },
+    });
+
+    t.nonNull.field('updateVehicleThirteenWeekInspection', {
+      type: Vehicle,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateVehicleDatesWithCompletion,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        try {
+          const vehicle = await context.prisma.vehicle.findUnique({
+            where: {
+              id: args.data.id,
+            },
+            include: {
+              thirteenWeekInspection: true,
+            },
+          });
+
+          if (!vehicle) {
+            throw new Error('This vehicle does not exist.');
+          }
+
+          if (!vehicle.thirteenWeekInspection) {
+            throw new Error(
+              'This vehicle does not have a thirteen week inspection due date set.'
+            );
+          }
+
+          const weeksToAdd = 13;
+          const completionDate = new Date(args.data.completionDate);
+          const nextThirteenWeekInspection = new Date(
+            completionDate.setDate(completionDate.getDate() + weeksToAdd * 7)
+          );
+
+          const updatedVehicle = await context.prisma.vehicle.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              thirteenWeekInspection: {
+                update: {
+                  dueDate: nextThirteenWeekInspection,
+                  previousDate: completionDate,
+                },
+              },
+            },
+          });
+
+          return updatedVehicle;
+        } catch (error) {
+          throw new Error('Error deleting vehicle');
+        }
+      },
+    });
+
+    t.nonNull.field('updateVehicleTachoCalibration', {
+      type: Vehicle,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateVehicleDatesWithCompletion,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        try {
+          const vehicle = await context.prisma.vehicle.findUnique({
+            where: {
+              id: args.data.id,
+            },
+            include: {
+              tachoCalibration: true,
+            },
+          });
+
+          if (!vehicle) {
+            throw new Error('This vehicle does not exist.');
+          }
+
+          if (!vehicle.tachoCalibration) {
+            throw new Error(
+              'This vehicle does not have a thirteen week inspection due date set.'
+            );
+          }
+
+          const yearsToAdd = 2;
+          const completionDate = new Date(args.data.completionDate);
+          const nextTachoCalibration = new Date(
+            completionDate.setFullYear(
+              completionDate.getFullYear() + yearsToAdd
+            )
+          );
+
+          const updatedVehicle = await context.prisma.vehicle.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              tachoCalibration: {
+                update: {
+                  dueDate: nextTachoCalibration,
+                  previousDate: completionDate,
+                },
+              },
+            },
+          });
+
+          return updatedVehicle;
+        } catch (error) {
+          throw new Error('Error deleting vehicle');
         }
       },
     });

@@ -94,30 +94,26 @@ model Defect {
 }
 
 model CVRT {
-  id             String    @id @default(uuid())
-  dueDate        DateTime
-  completionDate DateTime?
-  status         Status    @default(INCOMPLETE)
-  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
-  vehicleId      String    @unique
+  id        String   @id @default(uuid())
+  dueDate   DateTime
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId String   @unique
 }
 
 model ThirteenWeekInspection {
-  id             String    @id @default(uuid())
-  dueDate        DateTime
-  completionDate DateTime?
-  status         Status    @default(INCOMPLETE)
-  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
-  vehicleId      String    @unique
+  id           String    @id @default(uuid())
+  dueDate      DateTime
+  previousDate DateTime?
+  vehicle      Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId    String    @unique
 }
 
 model TachographCalibration {
-  id             String    @id @default(uuid())
-  dueDate        DateTime
-  completionDate DateTime?
-  status         Status    @default(INCOMPLETE)
-  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
-  vehicleId      String    @unique
+  id           String    @id @default(uuid())
+  dueDate      DateTime
+  previousDate DateTime?
+  vehicle      Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId    String    @unique
 }
 
 enum VehicleType {
@@ -130,9 +126,4 @@ enum Role {
   USER
   DRIVER
   ADMIN
-}
-
-enum Status {
-  INCOMPLETE
-  COMPLETE
 }

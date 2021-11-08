@@ -66,10 +66,8 @@ type AuthPayload {
 }
 
 type CVRT {
-  completionDate: DateTime
   dueDate: DateTime!
   id: ID!
-  status: Status
 }
 
 type Company {
@@ -165,6 +163,9 @@ type Mutation {
   updateTollTag(data: UpdateTollTagInput!): TollTag!
   updateUser(data: UpdateUserInput!): UsersPayload!
   updateVehicle(data: UpdateVehicleInput!): Vehicle!
+  updateVehicleCVRT(data: UpdateVehicleDates!): Vehicle!
+  updateVehicleTachoCalibration(data: UpdateVehicleDatesWithCompletion!): Vehicle!
+  updateVehicleThirteenWeekInspection(data: UpdateVehicleDatesWithCompletion!): Vehicle!
 }
 
 type Query {
@@ -188,23 +189,16 @@ enum Role {
   User
 }
 
-enum Status {
-  Complete
-  Incomplete
-}
-
 type TachoCalibration {
-  completionDate: DateTime
   dueDate: DateTime!
   id: ID!
-  status: Status
+  previousDate: DateTime
 }
 
 type ThirteenWeekInspection {
-  completionDate: DateTime
   dueDate: DateTime!
   id: ID!
-  status: Status
+  previousDate: DateTime
 }
 
 type TollTag {
@@ -245,6 +239,15 @@ input UpdateUserInput {
   id: ID!
   name: String!
   role: Role!
+}
+
+input UpdateVehicleDates {
+  id: String!
+}
+
+input UpdateVehicleDatesWithCompletion {
+  completionDate: DateTime!
+  id: String!
 }
 
 input UpdateVehicleInput {
