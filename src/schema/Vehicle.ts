@@ -5,26 +5,20 @@ import {
   extendType,
   arg,
   inputObjectType,
-  enumType,
 } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
 import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
 import { Company } from './Company';
+import CVRT from './CVRT';
 import { Defect } from './Defect';
 import { Depot } from './Depot';
+import { VehicleType } from './Enum';
 import { FuelCard } from './FuelCard';
+import TachoCalibration from './TachoCalibration';
+import ThirteenWeekInspection from './ThirteenWeekInspection';
 import { TollTag } from './TollTag';
-
-export const VehicleType = enumType({
-  name: 'VehicleType',
-  members: {
-    Van: 'VAN',
-    Truck: 'TRUCK',
-    Trailer: 'TRAILER',
-  },
-});
 
 export const Vehicle = objectType({
   name: 'Vehicle',
@@ -37,9 +31,36 @@ export const Vehicle = objectType({
     t.nonNull.string('make');
     t.nonNull.string('model');
     t.nonNull.string('owner');
-    t.date('cvrtDueDate');
-    t.date('thirteenWeekInspectionDueDate');
-    t.date('tachoCalibrationDueDate');
+    t.field('cvrt', {
+      type: CVRT,
+      resolve(parent, _, context: Context) {
+        return context.prisma.vehicle
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .cvrt();
+      },
+    });
+    t.field('thirteenWeekInspection', {
+      type: ThirteenWeekInspection,
+      resolve(parent, _, context: Context) {
+        return context.prisma.vehicle
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .thirteenWeekInspection();
+      },
+    });
+    t.field('tachoCalibration', {
+      type: TachoCalibration,
+      resolve(parent, _, context: Context) {
+        return context.prisma.vehicle
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .tachoCalibration();
+      },
+    });
     t.nonNull.field('company', {
       type: Company,
       resolve: async (parent, _, context: Context) => {
@@ -279,10 +300,21 @@ export const VehicleMutation = extendType({
             make: args.data.make,
             model: args.data.model,
             owner: args.data.owner,
-            cvrtDueDate: args.data.cvrtDueDate,
-            thirteenWeekInspectionDueDate:
-              args.data.thirteenWeekInspectionDueDate,
-            tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+            cvrt: {
+              create: { dueDate: args.data.cvrtDueDate, status: 'INCOMPLETE' },
+            },
+            thirteenWeekInspection: {
+              create: {
+                dueDate: args.data.thirteenWeekInspectionDueDate,
+                status: 'INCOMPLETE',
+              },
+            },
+            tachoCalibration: {
+              create: {
+                dueDate: args.data.tachoCalibrationDueDate,
+                status: 'INCOMPLETE',
+              },
+            },
             company: {
               connect: {
                 id: company?.id,
@@ -362,10 +394,21 @@ export const VehicleMutation = extendType({
               make: args.data.make,
               model: args.data.model,
               owner: args.data.owner,
-              cvrtDueDate: args.data.cvrtDueDate,
-              thirteenWeekInspectionDueDate:
-                args.data.thirteenWeekInspectionDueDate,
-              tachoCalibrationDueDate: args.data.tachoCalibrationDueDate,
+              cvrt: {
+                update: {
+                  dueDate: args.data.cvrtDueDate,
+                },
+              },
+              thirteenWeekInspection: {
+                update: {
+                  dueDate: args.data.thirteenWeekInspectionDueDate,
+                },
+              },
+              tachoCalibration: {
+                update: {
+                  dueDate: args.data.tachoCalibrationDueDate,
+                },
+              },
               ...upsertConnection(
                 'depot',
                 oldVehicle?.depot?.id,

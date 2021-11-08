@@ -1,6 +1,5 @@
 import {
   arg,
-  enumType,
   extendType,
   idArg,
   inputObjectType,
@@ -8,7 +7,6 @@ import {
   objectType,
 } from 'nexus';
 import { compare, hash } from 'bcrypt';
-import { AuthenticationError } from 'apollo-server-errors';
 import { Context } from '../context';
 import { Depot } from './Depot';
 import { Company } from './Company';
@@ -16,15 +14,7 @@ import { getUserId } from '../utilities/getUserId';
 import createConnection from '../utilities/createConnection';
 import upsertConnection from '../utilities/upsertConnection';
 import generateAccessToken from '../utilities/generateAccessToken';
-
-export const Role = enumType({
-  name: 'Role',
-  members: {
-    User: 'USER',
-    Driver: 'DRIVER',
-    Admin: 'ADMIN',
-  },
-});
+import { Role } from './Enum';
 
 export const User = objectType({
   name: 'User',

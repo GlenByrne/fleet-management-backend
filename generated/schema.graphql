@@ -65,6 +65,13 @@ type AuthPayload {
   user: UsersPayload
 }
 
+type CVRT {
+  completionDate: DateTime
+  dueDate: DateTime!
+  id: ID!
+  status: Status
+}
+
 type Company {
   depots: [Depot!]!
   fuelCards: [FuelCard!]!
@@ -181,6 +188,25 @@ enum Role {
   User
 }
 
+enum Status {
+  Complete
+  Incomplete
+}
+
+type TachoCalibration {
+  completionDate: DateTime
+  dueDate: DateTime!
+  id: ID!
+  status: Status
+}
+
+type ThirteenWeekInspection {
+  completionDate: DateTime
+  dueDate: DateTime!
+  id: ID!
+  status: Status
+}
+
 type TollTag {
   company: Company!
   depot: Depot
@@ -260,7 +286,7 @@ type UsersPayload {
 
 type Vehicle {
   company: Company!
-  cvrtDueDate: DateTime
+  cvrt: CVRT
   defects: [Defect!]!
   depot: Depot
   fuelCard: FuelCard
@@ -269,8 +295,8 @@ type Vehicle {
   model: String!
   owner: String!
   registration: String!
-  tachoCalibrationDueDate: DateTime
-  thirteenWeekInspectionDueDate: DateTime
+  tachoCalibration: TachoCalibration
+  thirteenWeekInspection: ThirteenWeekInspection
   tollTag: TollTag
   type: VehicleType!
 }
