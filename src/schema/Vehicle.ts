@@ -8,6 +8,7 @@ import {
 } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
+import getDateTwoWeeks from '../utilities/getDateTwoWeeks';
 import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
 import { Company } from './Company';
@@ -209,6 +210,129 @@ export const VehicleQuery = extendType({
         } catch (error) {
           throw new Error('There was an error retrieving defects for vehicle');
         }
+      },
+    });
+
+    t.list.field('upcomingCVRT', {
+      type: Vehicle,
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve vehicles with upcoming CVRTs. You are not logged in.'
+          );
+        }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.vehicle.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                cvrt: {
+                  dueDate: {
+                    lte: getDateTwoWeeks(),
+                  },
+                },
+              },
+            ],
+          },
+          orderBy: {
+            cvrt: {
+              dueDate: 'asc',
+            },
+          },
+        });
+      },
+    });
+
+    t.list.field('upcomingThirteenWeek', {
+      type: Vehicle,
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve vehicles with upcoming thirteen weeks. You are not logged in.'
+          );
+        }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.vehicle.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                thirteenWeekInspection: {
+                  dueDate: {
+                    lte: getDateTwoWeeks(),
+                  },
+                },
+              },
+            ],
+          },
+          orderBy: {
+            thirteenWeekInspection: {
+              dueDate: 'asc',
+            },
+          },
+        });
+      },
+    });
+
+    t.list.field('upcomingTachoCalibration', {
+      type: Vehicle,
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve vehicles with upcoming tacho calibration. You are not logged in.'
+          );
+        }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.vehicle.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                tachoCalibration: {
+                  dueDate: {
+                    lte: getDateTwoWeeks(),
+                  },
+                },
+              },
+            ],
+          },
+          orderBy: {
+            tachoCalibration: {
+              dueDate: 'asc',
+            },
+          },
+        });
       },
     });
   },
@@ -457,46 +581,42 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const vehicle = await context.prisma.vehicle.findUnique({
-            where: {
-              id: args.data.id,
-            },
-            include: {
-              cvrt: true,
-            },
-          });
+        const vehicle = await context.prisma.vehicle.findUnique({
+          where: {
+            id: args.data.id,
+          },
+          include: {
+            cvrt: true,
+          },
+        });
 
-          if (!vehicle) {
-            throw new Error('This vehicle does not exist.');
-          }
+        if (!vehicle) {
+          throw new Error('This vehicle does not exist.');
+        }
 
-          if (!vehicle.cvrt) {
-            throw new Error('This vehicle does not have a cvrt due date set.');
-          }
+        if (!vehicle.cvrt) {
+          throw new Error('This vehicle does not have a cvrt due date set.');
+        }
 
-          const year = vehicle.cvrt.dueDate.getFullYear();
-          const month = vehicle.cvrt.dueDate.getMonth();
-          const day = vehicle.cvrt.dueDate.getDate();
-          const nextCVRT = new Date(year + 1, month, day);
+        const year = vehicle.cvrt.dueDate.getFullYear();
+        const month = vehicle.cvrt.dueDate.getMonth();
+        const day = vehicle.cvrt.dueDate.getDate();
+        const nextCVRT = new Date(year + 1, month, day);
 
-          const updatedVehicle = await context.prisma.vehicle.update({
-            where: {
-              id: args.data.id,
-            },
-            data: {
-              cvrt: {
-                update: {
-                  dueDate: nextCVRT,
-                },
+        const updatedVehicle = await context.prisma.vehicle.update({
+          where: {
+            id: args.data.id,
+          },
+          data: {
+            cvrt: {
+              update: {
+                dueDate: nextCVRT,
               },
             },
-          });
+          },
+        });
 
-          return updatedVehicle;
-        } catch (error) {
-          throw new Error('Error deleting vehicle');
-        }
+        return updatedVehicle;
       },
     });
 
@@ -510,50 +630,46 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const vehicle = await context.prisma.vehicle.findUnique({
-            where: {
-              id: args.data.id,
-            },
-            include: {
-              thirteenWeekInspection: true,
-            },
-          });
+        const vehicle = await context.prisma.vehicle.findUnique({
+          where: {
+            id: args.data.id,
+          },
+          include: {
+            thirteenWeekInspection: true,
+          },
+        });
 
-          if (!vehicle) {
-            throw new Error('This vehicle does not exist.');
-          }
+        if (!vehicle) {
+          throw new Error('This vehicle does not exist.');
+        }
 
-          if (!vehicle.thirteenWeekInspection) {
-            throw new Error(
-              'This vehicle does not have a thirteen week inspection due date set.'
-            );
-          }
-
-          const weeksToAdd = 13;
-          const completionDate = new Date(args.data.completionDate);
-          const nextThirteenWeekInspection = new Date(
-            completionDate.setDate(completionDate.getDate() + weeksToAdd * 7)
+        if (!vehicle.thirteenWeekInspection) {
+          throw new Error(
+            'This vehicle does not have a thirteen week inspection due date set.'
           );
+        }
 
-          const updatedVehicle = await context.prisma.vehicle.update({
-            where: {
-              id: args.data.id,
-            },
-            data: {
-              thirteenWeekInspection: {
-                update: {
-                  dueDate: nextThirteenWeekInspection,
-                  previousDate: completionDate,
-                },
+        const weeksToAdd = 13;
+        const completionDate = new Date(args.data.completionDate);
+        const nextThirteenWeekInspection = new Date(
+          completionDate.setDate(completionDate.getDate() + weeksToAdd * 7)
+        );
+
+        const updatedVehicle = await context.prisma.vehicle.update({
+          where: {
+            id: args.data.id,
+          },
+          data: {
+            thirteenWeekInspection: {
+              update: {
+                dueDate: nextThirteenWeekInspection,
+                previousDate: completionDate,
               },
             },
-          });
+          },
+        });
 
-          return updatedVehicle;
-        } catch (error) {
-          throw new Error('Error deleting vehicle');
-        }
+        return updatedVehicle;
       },
     });
 
@@ -567,52 +683,46 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const vehicle = await context.prisma.vehicle.findUnique({
-            where: {
-              id: args.data.id,
-            },
-            include: {
-              tachoCalibration: true,
-            },
-          });
+        const vehicle = await context.prisma.vehicle.findUnique({
+          where: {
+            id: args.data.id,
+          },
+          include: {
+            tachoCalibration: true,
+          },
+        });
 
-          if (!vehicle) {
-            throw new Error('This vehicle does not exist.');
-          }
+        if (!vehicle) {
+          throw new Error('This vehicle does not exist.');
+        }
 
-          if (!vehicle.tachoCalibration) {
-            throw new Error(
-              'This vehicle does not have a thirteen week inspection due date set.'
-            );
-          }
-
-          const yearsToAdd = 2;
-          const completionDate = new Date(args.data.completionDate);
-          const nextTachoCalibration = new Date(
-            completionDate.setFullYear(
-              completionDate.getFullYear() + yearsToAdd
-            )
+        if (!vehicle.tachoCalibration) {
+          throw new Error(
+            'This vehicle does not have a thirteen week inspection due date set.'
           );
+        }
 
-          const updatedVehicle = await context.prisma.vehicle.update({
-            where: {
-              id: args.data.id,
-            },
-            data: {
-              tachoCalibration: {
-                update: {
-                  dueDate: nextTachoCalibration,
-                  previousDate: completionDate,
-                },
+        const yearsToAdd = 2;
+        const completionDate = new Date(args.data.completionDate);
+        const nextTachoCalibration = new Date(
+          completionDate.setFullYear(completionDate.getFullYear() + yearsToAdd)
+        );
+
+        const updatedVehicle = await context.prisma.vehicle.update({
+          where: {
+            id: args.data.id,
+          },
+          data: {
+            tachoCalibration: {
+              update: {
+                dueDate: nextTachoCalibration,
+                previousDate: completionDate,
               },
             },
-          });
+          },
+        });
 
-          return updatedVehicle;
-        } catch (error) {
-          throw new Error('Error deleting vehicle');
-        }
+        return updatedVehicle;
       },
     });
   },

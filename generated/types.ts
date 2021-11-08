@@ -266,6 +266,7 @@ export interface NexusGenFieldTypes {
   CVRT: { // field return type
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
+    vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   Company: { // field return type
     depots: NexusGenRootTypes['Depot'][]; // [Depot!]!
@@ -330,6 +331,9 @@ export interface NexusGenFieldTypes {
     me: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
     tollTags: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
     tollTagsNotAssigned: Array<NexusGenRootTypes['TollTag'] | null> | null; // [TollTag]
+    upcomingCVRT: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
+    upcomingTachoCalibration: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
+    upcomingThirteenWeek: Array<NexusGenRootTypes['Vehicle'] | null> | null; // [Vehicle]
     user: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
     users: Array<NexusGenRootTypes['UsersPayload'] | null> | null; // [UsersPayload]
     vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
@@ -340,11 +344,13 @@ export interface NexusGenFieldTypes {
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
     previousDate: NexusGenScalars['DateTime'] | null; // DateTime
+    vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   ThirteenWeekInspection: { // field return type
     dueDate: NexusGenScalars['DateTime']; // DateTime!
     id: string; // ID!
     previousDate: NexusGenScalars['DateTime'] | null; // DateTime
+    vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
   TollTag: { // field return type
     company: NexusGenRootTypes['Company']; // Company!
@@ -401,6 +407,7 @@ export interface NexusGenFieldTypeNames {
   CVRT: { // field return type name
     dueDate: 'DateTime'
     id: 'ID'
+    vehicle: 'Vehicle'
   }
   Company: { // field return type name
     depots: 'Depot'
@@ -465,6 +472,9 @@ export interface NexusGenFieldTypeNames {
     me: 'UsersPayload'
     tollTags: 'TollTag'
     tollTagsNotAssigned: 'TollTag'
+    upcomingCVRT: 'Vehicle'
+    upcomingTachoCalibration: 'Vehicle'
+    upcomingThirteenWeek: 'Vehicle'
     user: 'UsersPayload'
     users: 'UsersPayload'
     vehicle: 'Vehicle'
@@ -475,11 +485,13 @@ export interface NexusGenFieldTypeNames {
     dueDate: 'DateTime'
     id: 'ID'
     previousDate: 'DateTime'
+    vehicle: 'Vehicle'
   }
   ThirteenWeekInspection: { // field return type name
     dueDate: 'DateTime'
     id: 'ID'
     previousDate: 'DateTime'
+    vehicle: 'Vehicle'
   }
   TollTag: { // field return type name
     company: 'Company'

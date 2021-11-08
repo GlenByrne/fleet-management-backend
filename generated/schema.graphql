@@ -68,6 +68,7 @@ type AuthPayload {
 type CVRT {
   dueDate: DateTime!
   id: ID!
+  vehicle: Vehicle
 }
 
 type Company {
@@ -176,6 +177,9 @@ type Query {
   me: UsersPayload
   tollTags(data: TollTagInputFilter): [TollTag]
   tollTagsNotAssigned: [TollTag]
+  upcomingCVRT: [Vehicle]
+  upcomingTachoCalibration: [Vehicle]
+  upcomingThirteenWeek: [Vehicle]
   user(userId: ID!): UsersPayload
   users(data: UsersInputFilter): [UsersPayload]
   vehicle(vehicleId: ID!): Vehicle
@@ -193,12 +197,14 @@ type TachoCalibration {
   dueDate: DateTime!
   id: ID!
   previousDate: DateTime
+  vehicle: Vehicle
 }
 
 type ThirteenWeekInspection {
   dueDate: DateTime!
   id: ID!
   previousDate: DateTime
+  vehicle: Vehicle
 }
 
 type TollTag {
