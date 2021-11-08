@@ -8,7 +8,6 @@ import {
 } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
-import createOrNull from '../utilities/createOrNull';
 import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
 import { Company } from './Company';
@@ -324,15 +323,16 @@ export const VehicleMutation = extendType({
                 dueDate: args.data.thirteenWeekInspectionDueDate,
               },
             },
+            tachoCalibration: {
+              create: {
+                dueDate: args.data.tachoCalibrationDueDate,
+              },
+            },
             company: {
               connect: {
                 id: company?.id,
               },
             },
-            ...createOrNull(
-              'tachoCalibration',
-              args.data.tachoCalibrationDueDate
-            ),
             ...createConnection('depot', args.data.depotId),
             ...createConnection('fuelCard', args.data.fuelCardId),
             ...createConnection('tollTag', args.data.tollTagId),
