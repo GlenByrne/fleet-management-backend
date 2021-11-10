@@ -30,21 +30,21 @@ model User {
 }
 
 model Vehicle {
-  id                     String                  @id @default(uuid())
+  id                     String      @id @default(uuid())
   type                   VehicleType
-  registration           String                  @unique
+  registration           String      @unique
   make                   String
   model                  String
   owner                  String
-  cvrt                   Cvrt?
-  thirteenWeekInspection ThirteenWeekInspection?
-  tachoCalibration       TachographCalibration?
-  depot                  Depot?                  @relation(fields: [depotId], references: [id])
+  cvrt                   DateTime?
+  thirteenWeekInspection DateTime?
+  tachoCalibration       DateTime?
+  depot                  Depot?      @relation(fields: [depotId], references: [id])
   depotId                String?
   fuelCard               FuelCard?
   tollTag                TollTag?
   defects                Defect[]
-  company                Company                 @relation(fields: [companyId], references: [id])
+  company                Company     @relation(fields: [companyId], references: [id])
   companyId              String
 }
 
@@ -91,29 +91,6 @@ model Defect {
   status        String
   vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
   vehicleId     String    @unique
-}
-
-model Cvrt {
-  id        String   @id @default(uuid())
-  dueDate   DateTime
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  vehicleId String   @unique
-}
-
-model ThirteenWeekInspection {
-  id           String    @id @default(uuid())
-  dueDate      DateTime
-  previousDate DateTime?
-  vehicle      Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  vehicleId    String    @unique
-}
-
-model TachographCalibration {
-  id           String    @id @default(uuid())
-  dueDate      DateTime
-  previousDate DateTime?
-  vehicle      Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  vehicleId    String    @unique
 }
 
 enum VehicleType {

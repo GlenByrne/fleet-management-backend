@@ -12,13 +12,10 @@ import getDateTwoWeeks from '../utilities/getDateTwoWeeks';
 import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
 import { Company } from './Company';
-import CVRT from './CVRT';
 import { Defect } from './Defect';
 import { Depot } from './Depot';
 import { VehicleType } from './Enum';
 import { FuelCard } from './FuelCard';
-import TachoCalibration from './TachoCalibration';
-import ThirteenWeekInspection from './ThirteenWeekInspection';
 import { TollTag } from './TollTag';
 
 export const Vehicle = objectType({
@@ -32,36 +29,9 @@ export const Vehicle = objectType({
     t.nonNull.string('make');
     t.nonNull.string('model');
     t.nonNull.string('owner');
-    t.field('cvrt', {
-      type: CVRT,
-      resolve(parent, _, context: Context) {
-        return context.prisma.vehicle
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .cvrt();
-      },
-    });
-    t.field('thirteenWeekInspection', {
-      type: ThirteenWeekInspection,
-      resolve(parent, _, context: Context) {
-        return context.prisma.vehicle
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .thirteenWeekInspection();
-      },
-    });
-    t.field('tachoCalibration', {
-      type: TachoCalibration,
-      resolve(parent, _, context: Context) {
-        return context.prisma.vehicle
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .tachoCalibration();
-      },
-    });
+    t.date('cvrt');
+    t.date('thirteenWeekInspection');
+    t.date('tachoCalibration');
     t.nonNull.field('company', {
       type: Company,
       resolve: async (parent, _, context: Context) => {
@@ -238,17 +208,13 @@ export const VehicleQuery = extendType({
               { companyId: company?.id },
               {
                 cvrt: {
-                  dueDate: {
-                    lte: getDateTwoWeeks(),
-                  },
+                  lte: getDateTwoWeeks(),
                 },
               },
             ],
           },
           orderBy: {
-            cvrt: {
-              dueDate: 'asc',
-            },
+            cvrt: 'asc',
           },
         });
       },
@@ -279,17 +245,13 @@ export const VehicleQuery = extendType({
               { companyId: company?.id },
               {
                 thirteenWeekInspection: {
-                  dueDate: {
-                    lte: getDateTwoWeeks(),
-                  },
+                  lte: getDateTwoWeeks(),
                 },
               },
             ],
           },
           orderBy: {
-            thirteenWeekInspection: {
-              dueDate: 'asc',
-            },
+            thirteenWeekInspection: 'asc',
           },
         });
       },
@@ -320,17 +282,13 @@ export const VehicleQuery = extendType({
               { companyId: company?.id },
               {
                 tachoCalibration: {
-                  dueDate: {
-                    lte: getDateTwoWeeks(),
-                  },
+                  lte: getDateTwoWeeks(),
                 },
               },
             ],
           },
           orderBy: {
-            tachoCalibration: {
-              dueDate: 'asc',
-            },
+            tachoCalibration: 'asc',
           },
         });
       },
@@ -346,9 +304,9 @@ const AddVehicleInput = inputObjectType({
     t.nonNull.string('make');
     t.nonNull.string('model');
     t.nonNull.string('owner');
-    t.date('cvrtDueDate');
-    t.date('thirteenWeekInspectionDueDate');
-    t.date('tachoCalibrationDueDate');
+    t.date('cvrt');
+    t.date('thirteenWeekInspection');
+    t.date('tachoCalibration');
     t.string('depotId');
     t.string('fuelCardId');
     t.string('tollTagId');
@@ -364,9 +322,9 @@ const UpdateVehicleInput = inputObjectType({
     t.nonNull.string('make');
     t.nonNull.string('model');
     t.nonNull.string('owner');
-    t.date('cvrtDueDate');
-    t.date('thirteenWeekInspectionDueDate');
-    t.date('tachoCalibrationDueDate');
+    t.date('cvrt');
+    t.date('thirteenWeekInspection');
+    t.date('tachoCalibration');
     t.string('depotId');
     t.string('fuelCardId');
     t.string('tollTagId');
@@ -439,24 +397,14 @@ export const VehicleMutation = extendType({
             make: args.data.make,
             model: args.data.model,
             owner: args.data.owner,
-            cvrt: {
-              create: { dueDate: args.data.cvrtDueDate },
-            },
-            thirteenWeekInspection: {
-              create: {
-                dueDate: args.data.thirteenWeekInspectionDueDate,
-              },
-            },
-            tachoCalibration: {
-              create: {
-                dueDate: args.data.tachoCalibrationDueDate,
-              },
-            },
             company: {
               connect: {
                 id: company?.id,
               },
             },
+            cvrt: args.data.cvrt,
+            thirteenWeekInspection: args.data.thirteenWeekInspection,
+            tachoCalibration: args.data.tachoCalibration,
             ...createConnection('depot', args.data.depotId),
             ...createConnection('fuelCard', args.data.fuelCardId),
             ...createConnection('tollTag', args.data.tollTagId),
@@ -531,21 +479,9 @@ export const VehicleMutation = extendType({
               make: args.data.make,
               model: args.data.model,
               owner: args.data.owner,
-              cvrt: {
-                update: {
-                  dueDate: args.data.cvrtDueDate,
-                },
-              },
-              thirteenWeekInspection: {
-                update: {
-                  dueDate: args.data.thirteenWeekInspectionDueDate,
-                },
-              },
-              tachoCalibration: {
-                update: {
-                  dueDate: args.data.tachoCalibrationDueDate,
-                },
-              },
+              cvrt: args.data.cvrt,
+              thirteenWeekInspection: args.data.thirteenWeekInspection,
+              tachoCalibration: args.data.tachoCalibration,
               ...upsertConnection(
                 'depot',
                 oldVehicle?.depot?.id,
@@ -585,9 +521,6 @@ export const VehicleMutation = extendType({
           where: {
             id: args.data.id,
           },
-          include: {
-            cvrt: true,
-          },
         });
 
         if (!vehicle) {
@@ -598,9 +531,9 @@ export const VehicleMutation = extendType({
           throw new Error('This vehicle does not have a cvrt due date set.');
         }
 
-        const year = vehicle.cvrt.dueDate.getFullYear();
-        const month = vehicle.cvrt.dueDate.getMonth();
-        const day = vehicle.cvrt.dueDate.getDate();
+        const year = vehicle.cvrt.getFullYear();
+        const month = vehicle.cvrt.getMonth();
+        const day = vehicle.cvrt.getDate();
         const nextCVRT = new Date(year + 1, month, day);
 
         const updatedVehicle = await context.prisma.vehicle.update({
@@ -608,11 +541,7 @@ export const VehicleMutation = extendType({
             id: args.data.id,
           },
           data: {
-            cvrt: {
-              update: {
-                dueDate: nextCVRT,
-              },
-            },
+            cvrt: nextCVRT,
           },
         });
 
@@ -633,9 +562,6 @@ export const VehicleMutation = extendType({
         const vehicle = await context.prisma.vehicle.findUnique({
           where: {
             id: args.data.id,
-          },
-          include: {
-            thirteenWeekInspection: true,
           },
         });
 
@@ -660,12 +586,7 @@ export const VehicleMutation = extendType({
             id: args.data.id,
           },
           data: {
-            thirteenWeekInspection: {
-              update: {
-                dueDate: nextThirteenWeekInspection,
-                previousDate: completionDate,
-              },
-            },
+            thirteenWeekInspection: nextThirteenWeekInspection,
           },
         });
 
@@ -686,9 +607,6 @@ export const VehicleMutation = extendType({
         const vehicle = await context.prisma.vehicle.findUnique({
           where: {
             id: args.data.id,
-          },
-          include: {
-            tachoCalibration: true,
           },
         });
 
@@ -713,12 +631,7 @@ export const VehicleMutation = extendType({
             id: args.data.id,
           },
           data: {
-            tachoCalibration: {
-              update: {
-                dueDate: nextTachoCalibration,
-                previousDate: completionDate,
-              },
-            },
+            tachoCalibration: nextTachoCalibration,
           },
         });
 

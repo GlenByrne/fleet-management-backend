@@ -47,15 +47,15 @@ input AddUserInput {
 }
 
 input AddVehicleInput {
-  cvrtDueDate: DateTime
+  cvrt: DateTime
   depotId: String
   fuelCardId: String
   make: String!
   model: String!
   owner: String!
   registration: String!
-  tachoCalibrationDueDate: DateTime
-  thirteenWeekInspectionDueDate: DateTime
+  tachoCalibration: DateTime
+  thirteenWeekInspection: DateTime
   tollTagId: String
   type: VehicleType!
 }
@@ -63,12 +63,6 @@ input AddVehicleInput {
 type AuthPayload {
   token: String
   user: UsersPayload
-}
-
-type CVRT {
-  dueDate: DateTime!
-  id: ID!
-  vehicle: Vehicle
 }
 
 type Company {
@@ -193,20 +187,6 @@ enum Role {
   User
 }
 
-type TachoCalibration {
-  dueDate: DateTime!
-  id: ID!
-  previousDate: DateTime
-  vehicle: Vehicle
-}
-
-type ThirteenWeekInspection {
-  dueDate: DateTime!
-  id: ID!
-  previousDate: DateTime
-  vehicle: Vehicle
-}
-
 type TollTag {
   company: Company!
   depot: Depot
@@ -257,7 +237,7 @@ input UpdateVehicleDatesWithCompletion {
 }
 
 input UpdateVehicleInput {
-  cvrtDueDate: DateTime
+  cvrt: DateTime
   depotId: String
   fuelCardId: String
   id: String!
@@ -265,8 +245,8 @@ input UpdateVehicleInput {
   model: String!
   owner: String!
   registration: String!
-  tachoCalibrationDueDate: DateTime
-  thirteenWeekInspectionDueDate: DateTime
+  tachoCalibration: DateTime
+  thirteenWeekInspection: DateTime
   tollTagId: String
   type: VehicleType!
 }
@@ -295,7 +275,7 @@ type UsersPayload {
 
 type Vehicle {
   company: Company!
-  cvrt: CVRT
+  cvrt: DateTime
   defects: [Defect!]!
   depot: Depot
   fuelCard: FuelCard
@@ -304,8 +284,8 @@ type Vehicle {
   model: String!
   owner: String!
   registration: String!
-  tachoCalibration: TachoCalibration
-  thirteenWeekInspection: ThirteenWeekInspection
+  tachoCalibration: DateTime
+  thirteenWeekInspection: DateTime
   tollTag: TollTag
   type: VehicleType!
 }
