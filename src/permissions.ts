@@ -25,6 +25,7 @@ const permissions = shield(
       vehicle: rules.isAuthenticatedUser,
       vehicles: rules.isAuthenticatedUser,
       defectsForVehicle: rules.isAuthenticatedUser,
+      upcomingCVRT: rules.isAuthenticatedUser,
       tollTags: rules.isAuthenticatedUser,
       tollTagsNotAssigned: rules.isAuthenticatedUser,
       fuelCards: rules.isAuthenticatedUser,

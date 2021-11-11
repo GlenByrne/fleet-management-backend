@@ -7,15 +7,20 @@ import {
   inputObjectType,
 } from 'nexus';
 import { Context } from '../context';
+import { getUserId } from '../utilities/getUserId';
+import { DefectStatus } from './Enum';
 
 export const Defect = objectType({
   name: 'Defect',
   definition(t) {
     t.nonNull.id('id');
     t.nonNull.string('description');
+    t.nonNull.string('reporter');
     t.nonNull.date('dateReported');
     t.date('dateCompleted');
-    t.string('status');
+    t.nonNull.field('status', {
+      type: DefectStatus,
+    });
   },
 });
 
@@ -48,9 +53,18 @@ const AddDefectInput = inputObjectType({
   name: 'AddDefectInput',
   definition(t) {
     t.nonNull.string('description');
-    t.nonNull.date('dateReported');
-    t.string('status');
     t.nonNull.id('vehicleId');
+  },
+});
+
+const UpdateDefectInput = inputObjectType({
+  name: 'UpdateDefectInput',
+  definition(t) {
+    t.nonNull.id('id');
+    t.nonNull.string('description');
+    t.nonNull.field('status', {
+      type: DefectStatus,
+    });
   },
 });
 
@@ -66,22 +80,64 @@ export const DefectMutation = extendType({
           })
         ),
       },
-      resolve: (_, args, context: Context) => {
+      resolve: async (_, args, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to add defect. You are not logged in.');
+        }
+
+        const user = await context.prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        });
+
+        if (!user) {
+          throw new Error('Unable to add defect. You are not logged in.');
+        }
+
+        return context.prisma.defect.create({
+          data: {
+            description: args.data.description,
+            dateReported: new Date(),
+            reporter: user.name,
+            status: 'INCOMPLETE',
+            vehicle: {
+              connect: {
+                id: args.data.vehicleId,
+              },
+            },
+          },
+        });
+      },
+    });
+
+    t.nonNull.field('updateDefect', {
+      type: Defect,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateDefectInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
         try {
-          return context.prisma.defect.create({
+          const isComplete = args.data.status === 'COMPLETE';
+
+          return context.prisma.defect.update({
+            where: {
+              id: args.data.id,
+            },
             data: {
               description: args.data.description,
-              dateReported: args.data.dateReported,
-              status: args.data.status || '',
-              vehicle: {
-                connect: {
-                  id: args.data.vehicleId,
-                },
-              },
+              status: args.data.status,
+              dateCompleted: isComplete ? new Date() : null,
             },
           });
         } catch (error) {
-          throw new Error('Error adding defect');
+          throw new Error('Error updating fuel card');
         }
       },
     });

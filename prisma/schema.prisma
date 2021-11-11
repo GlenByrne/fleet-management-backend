@@ -84,13 +84,14 @@ model TollTag {
 }
 
 model Defect {
-  id            String    @id @default(uuid())
+  id            String       @id @default(uuid())
   description   String
+  reporter      String
   dateReported  DateTime
   dateCompleted DateTime?
-  status        String
-  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
-  vehicleId     String    @unique
+  status        DefectStatus @default(INCOMPLETE)
+  vehicle       Vehicle      @relation(fields: [vehicleId], references: [id])
+  vehicleId     String
 }
 
 enum VehicleType {
@@ -103,4 +104,9 @@ enum Role {
   USER
   DRIVER
   ADMIN
+}
+
+enum DefectStatus {
+  INCOMPLETE
+  COMPLETE
 }

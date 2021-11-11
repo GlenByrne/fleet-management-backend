@@ -36,9 +36,7 @@ export interface NexusGenInputs {
     password: string; // String!
   }
   AddDefectInput: { // input type
-    dateReported: NexusGenScalars['DateTime']; // DateTime!
     description: string; // String!
-    status?: string | null; // String
     vehicleId: string; // ID!
   }
   AddDepotInput: { // input type
@@ -102,6 +100,11 @@ export interface NexusGenInputs {
   TollTagInputFilter: { // input type
     searchCriteria?: string | null; // String
   }
+  UpdateDefectInput: { // input type
+    description: string; // String!
+    id: string; // ID!
+    status: NexusGenEnums['DefectStatus']; // DefectStatus!
+  }
   UpdateDepotInput: { // input type
     id: string; // ID!
     name: string; // String!
@@ -155,6 +158,7 @@ export interface NexusGenInputs {
 }
 
 export interface NexusGenEnums {
+  DefectStatus: "COMPLETE" | "INCOMPLETE"
   Role: "ADMIN" | "DRIVER" | "USER"
   VehicleType: "TRAILER" | "TRUCK" | "VAN"
 }
@@ -187,7 +191,8 @@ export interface NexusGenObjects {
     dateReported: NexusGenScalars['DateTime']; // DateTime!
     description: string; // String!
     id: string; // ID!
-    status?: string | null; // String
+    reporter: string; // String!
+    status: NexusGenEnums['DefectStatus']; // DefectStatus!
   }
   Depot: { // root type
     id: string; // ID!
@@ -266,7 +271,8 @@ export interface NexusGenFieldTypes {
     dateReported: NexusGenScalars['DateTime']; // DateTime!
     description: string; // String!
     id: string; // ID!
-    status: string | null; // String
+    reporter: string; // String!
+    status: NexusGenEnums['DefectStatus']; // DefectStatus!
   }
   Depot: { // field return type
     company: NexusGenRootTypes['Company']; // Company!
@@ -298,6 +304,7 @@ export interface NexusGenFieldTypes {
     deleteUser: NexusGenRootTypes['User']; // User!
     deleteVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
     login: NexusGenRootTypes['AuthPayload']; // AuthPayload!
+    updateDefect: NexusGenRootTypes['Defect']; // Defect!
     updateDepot: NexusGenRootTypes['Depot']; // Depot!
     updateFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     updateTollTag: NexusGenRootTypes['TollTag']; // TollTag!
@@ -390,7 +397,8 @@ export interface NexusGenFieldTypeNames {
     dateReported: 'DateTime'
     description: 'String'
     id: 'ID'
-    status: 'String'
+    reporter: 'String'
+    status: 'DefectStatus'
   }
   Depot: { // field return type name
     company: 'Company'
@@ -422,6 +430,7 @@ export interface NexusGenFieldTypeNames {
     deleteUser: 'User'
     deleteVehicle: 'Vehicle'
     login: 'AuthPayload'
+    updateDefect: 'Defect'
     updateDepot: 'Depot'
     updateFuelCard: 'FuelCard'
     updateTollTag: 'TollTag'
@@ -530,6 +539,9 @@ export interface NexusGenArgTypes {
     }
     login: { // args
       data: NexusGenInputs['LoginInput']; // LoginInput!
+    }
+    updateDefect: { // args
+      data: NexusGenInputs['UpdateDefectInput']; // UpdateDefectInput!
     }
     updateDepot: { // args
       data: NexusGenInputs['UpdateDepotInput']; // UpdateDepotInput!

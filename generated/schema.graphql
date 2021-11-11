@@ -16,9 +16,7 @@ type AddCompanyPayload {
 }
 
 input AddDefectInput {
-  dateReported: DateTime!
   description: String!
-  status: String
   vehicleId: ID!
 }
 
@@ -85,7 +83,13 @@ type Defect {
   dateReported: DateTime!
   description: String!
   id: ID!
-  status: String
+  reporter: String!
+  status: DefectStatus!
+}
+
+enum DefectStatus {
+  Complete
+  Incomplete
 }
 
 input DeleteDepotInput {
@@ -153,6 +157,7 @@ type Mutation {
   deleteUser(data: DeleteUserInput!): User!
   deleteVehicle(data: DeleteVehicleInput!): Vehicle!
   login(data: LoginInput!): AuthPayload!
+  updateDefect(data: UpdateDefectInput!): Defect!
   updateDepot(data: UpdateDepotInput!): Depot!
   updateFuelCard(data: UpdateFuelCardInput!): FuelCard!
   updateTollTag(data: UpdateTollTagInput!): TollTag!
@@ -198,6 +203,12 @@ type TollTag {
 
 input TollTagInputFilter {
   searchCriteria: String
+}
+
+input UpdateDefectInput {
+  description: String!
+  id: ID!
+  status: DefectStatus!
 }
 
 input UpdateDepotInput {

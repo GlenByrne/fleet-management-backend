@@ -17,3 +17,11 @@ export const VehicleType = enumType({
     Trailer: 'TRAILER',
   },
 });
+
+export const DefectStatus = enumType({
+  name: 'DefectStatus',
+  members: {
+    Incomplete: 'INCOMPLETE',
+    Complete: 'COMPLETE',
+  },
+});
