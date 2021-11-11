@@ -72,6 +72,9 @@ export interface NexusGenInputs {
     tollTagId?: string | null; // String
     type: NexusGenEnums['VehicleType']; // VehicleType!
   }
+  DeleteDefectInput: { // input type
+    id: string; // ID!
+  }
   DeleteDepotInput: { // input type
     id: string; // ID!
   }
@@ -298,6 +301,7 @@ export interface NexusGenFieldTypes {
     addTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     addUser: NexusGenRootTypes['UsersPayload']; // UsersPayload!
     addVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
+    deleteDefect: NexusGenRootTypes['Defect']; // Defect!
     deleteDepot: NexusGenRootTypes['Depot']; // Depot!
     deleteFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
     deleteTollTag: NexusGenRootTypes['TollTag']; // TollTag!
@@ -424,6 +428,7 @@ export interface NexusGenFieldTypeNames {
     addTollTag: 'TollTag'
     addUser: 'UsersPayload'
     addVehicle: 'Vehicle'
+    deleteDefect: 'Defect'
     deleteDepot: 'Depot'
     deleteFuelCard: 'FuelCard'
     deleteTollTag: 'TollTag'
@@ -521,6 +526,9 @@ export interface NexusGenArgTypes {
     }
     addVehicle: { // args
       data: NexusGenInputs['AddVehicleInput']; // AddVehicleInput!
+    }
+    deleteDefect: { // args
+      data: NexusGenInputs['DeleteDefectInput']; // DeleteDefectInput!
     }
     deleteDepot: { // args
       data: NexusGenInputs['DeleteDepotInput']; // DeleteDepotInput!

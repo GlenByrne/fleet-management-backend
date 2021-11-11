@@ -68,6 +68,13 @@ const UpdateDefectInput = inputObjectType({
   },
 });
 
+const DeleteDefectInput = inputObjectType({
+  name: 'DeleteDefectInput',
+  definition(t) {
+    t.nonNull.id('id');
+  },
+});
+
 export const DefectMutation = extendType({
   type: 'Mutation',
   definition(t) {
@@ -138,6 +145,28 @@ export const DefectMutation = extendType({
           });
         } catch (error) {
           throw new Error('Error updating fuel card');
+        }
+      },
+    });
+
+    t.nonNull.field('deleteDefect', {
+      type: Defect,
+      args: {
+        data: nonNull(
+          arg({
+            type: DeleteDefectInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.defect.delete({
+            where: {
+              id: args.data.id,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error deleting defect');
         }
       },
     });
