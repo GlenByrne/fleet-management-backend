@@ -18,15 +18,16 @@ model Company {
 }
 
 model User {
-  id        String  @id @default(uuid())
-  name      String
-  email     String  @unique
-  password  String
-  role      Role    @default(USER)
-  depot     Depot?  @relation(fields: [depotId], references: [id])
-  depotId   String?
-  company   Company @relation(fields: [companyId], references: [id])
-  companyId String
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          Role           @default(USER)
+  depot         Depot?         @relation(fields: [depotId], references: [id])
+  depotId       String?
+  company       Company        @relation(fields: [companyId], references: [id])
+  companyId     String
+  infringements Infringement[]
 }
 
 model Vehicle {
@@ -94,6 +95,15 @@ model Defect {
   vehicleId     String
 }
 
+model Infringement {
+  id          String             @id @default(uuid())
+  description String
+  dateOccured DateTime
+  status      InfringementStatus
+  driver      User               @relation(fields: [userId], references: [id])
+  userId      String
+}
+
 enum VehicleType {
   VAN
   TRUCK
@@ -109,4 +119,9 @@ enum Role {
 enum DefectStatus {
   INCOMPLETE
   COMPLETE
+}
+
+enum InfringementStatus {
+  UNSIGNED
+  SIGNED
 }

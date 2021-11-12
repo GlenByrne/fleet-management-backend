@@ -25,3 +25,11 @@ export const DefectStatus = enumType({
     Complete: 'COMPLETE',
   },
 });
+
+export const InfringementStatus = enumType({
+  name: 'InfringementStatus',
+  members: {
+    Unsigned: 'UNSIGNED',
+    Signed: 'SIGNED',
+  },
+});

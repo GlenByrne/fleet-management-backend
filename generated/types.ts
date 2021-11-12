@@ -47,6 +47,11 @@ export interface NexusGenInputs {
     cardProvider: string; // String!
     depotId?: string | null; // String
   }
+  AddInfringementInput: { // input type
+    dateOccured: NexusGenScalars['DateTime']; // DateTime!
+    description: string; // String!
+    driverId: string; // ID!
+  }
   AddTollTagInput: { // input type
     depotId?: string | null; // String
     tagNumber: string; // String!
@@ -162,6 +167,7 @@ export interface NexusGenInputs {
 
 export interface NexusGenEnums {
   DefectStatus: "COMPLETE" | "INCOMPLETE"
+  InfringementStatus: "SIGNED" | "UNSIGNED"
   Role: "ADMIN" | "DRIVER" | "USER"
   VehicleType: "TRAILER" | "TRUCK" | "VAN"
 }
@@ -206,6 +212,12 @@ export interface NexusGenObjects {
     cardProvider: string; // String!
     id: string; // ID!
   }
+  Infringement: { // root type
+    dateOccured: NexusGenScalars['DateTime']; // DateTime!
+    description: string; // String!
+    id: string; // ID!
+    status: NexusGenEnums['InfringementStatus']; // InfringementStatus!
+  }
   Mutation: {};
   Query: {};
   TollTag: { // root type
@@ -224,6 +236,7 @@ export interface NexusGenObjects {
     depot?: NexusGenRootTypes['Depot'] | null; // Depot
     email: string; // String!
     id: string; // String!
+    infringements: NexusGenRootTypes['Infringement'][]; // [Infringement!]!
     name: string; // String!
     role: NexusGenEnums['Role']; // Role!
   }
@@ -293,11 +306,19 @@ export interface NexusGenFieldTypes {
     id: string; // ID!
     vehicle: NexusGenRootTypes['Vehicle'] | null; // Vehicle
   }
+  Infringement: { // field return type
+    dateOccured: NexusGenScalars['DateTime']; // DateTime!
+    description: string; // String!
+    driver: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
+    id: string; // ID!
+    status: NexusGenEnums['InfringementStatus']; // InfringementStatus!
+  }
   Mutation: { // field return type
     addCompany: NexusGenRootTypes['AddCompanyPayload']; // AddCompanyPayload!
     addDefect: NexusGenRootTypes['Defect']; // Defect!
     addDepot: NexusGenRootTypes['Depot']; // Depot!
     addFuelCard: NexusGenRootTypes['FuelCard']; // FuelCard!
+    addInfringement: NexusGenRootTypes['Infringement']; // Infringement!
     addTollTag: NexusGenRootTypes['TollTag']; // TollTag!
     addUser: NexusGenRootTypes['UsersPayload']; // UsersPayload!
     addVehicle: NexusGenRootTypes['Vehicle']; // Vehicle!
@@ -321,6 +342,7 @@ export interface NexusGenFieldTypes {
   Query: { // field return type
     defectsForVehicle: Array<NexusGenRootTypes['Defect'] | null> | null; // [Defect]
     depots: Array<NexusGenRootTypes['Depot'] | null> | null; // [Depot]
+    drivers: NexusGenRootTypes['UsersPayload'][]; // [UsersPayload!]!
     fuelCards: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     fuelCardsNotAssigned: Array<NexusGenRootTypes['FuelCard'] | null> | null; // [FuelCard]
     me: NexusGenRootTypes['UsersPayload'] | null; // UsersPayload
@@ -348,6 +370,7 @@ export interface NexusGenFieldTypes {
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     email: string; // String!
     id: string; // ID!
+    infringements: NexusGenRootTypes['Infringement'][]; // [Infringement!]!
     name: string; // String!
     password: string; // String!
     role: NexusGenEnums['Role']; // Role!
@@ -356,6 +379,7 @@ export interface NexusGenFieldTypes {
     depot: NexusGenRootTypes['Depot'] | null; // Depot
     email: string; // String!
     id: string; // String!
+    infringements: NexusGenRootTypes['Infringement'][]; // [Infringement!]!
     name: string; // String!
     role: NexusGenEnums['Role']; // Role!
   }
@@ -420,11 +444,19 @@ export interface NexusGenFieldTypeNames {
     id: 'ID'
     vehicle: 'Vehicle'
   }
+  Infringement: { // field return type name
+    dateOccured: 'DateTime'
+    description: 'String'
+    driver: 'UsersPayload'
+    id: 'ID'
+    status: 'InfringementStatus'
+  }
   Mutation: { // field return type name
     addCompany: 'AddCompanyPayload'
     addDefect: 'Defect'
     addDepot: 'Depot'
     addFuelCard: 'FuelCard'
+    addInfringement: 'Infringement'
     addTollTag: 'TollTag'
     addUser: 'UsersPayload'
     addVehicle: 'Vehicle'
@@ -448,6 +480,7 @@ export interface NexusGenFieldTypeNames {
   Query: { // field return type name
     defectsForVehicle: 'Defect'
     depots: 'Depot'
+    drivers: 'UsersPayload'
     fuelCards: 'FuelCard'
     fuelCardsNotAssigned: 'FuelCard'
     me: 'UsersPayload'
@@ -475,6 +508,7 @@ export interface NexusGenFieldTypeNames {
     depot: 'Depot'
     email: 'String'
     id: 'ID'
+    infringements: 'Infringement'
     name: 'String'
     password: 'String'
     role: 'Role'
@@ -483,6 +517,7 @@ export interface NexusGenFieldTypeNames {
     depot: 'Depot'
     email: 'String'
     id: 'String'
+    infringements: 'Infringement'
     name: 'String'
     role: 'Role'
   }
@@ -517,6 +552,9 @@ export interface NexusGenArgTypes {
     }
     addFuelCard: { // args
       data: NexusGenInputs['AddFuelCardInput']; // AddFuelCardInput!
+    }
+    addInfringement: { // args
+      data: NexusGenInputs['AddInfringementInput']; // AddInfringementInput!
     }
     addTollTag: { // args
       data: NexusGenInputs['AddTollTagInput']; // AddTollTagInput!

@@ -229,6 +229,7 @@ export const CompanyMutation = extendType({
               email: true,
               role: true,
               depot: true,
+              infringements: true,
               password: false,
               company: false,
             },

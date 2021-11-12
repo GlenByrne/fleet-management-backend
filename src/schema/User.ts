@@ -15,6 +15,7 @@ import createConnection from '../utilities/createConnection';
 import upsertConnection from '../utilities/upsertConnection';
 import generateAccessToken from '../utilities/generateAccessToken';
 import { Role } from './Enum';
+import Infringement from './Infringement';
 
 export const User = objectType({
   name: 'User',
@@ -52,6 +53,16 @@ export const User = objectType({
           .depot();
       },
     });
+    t.nonNull.list.nonNull.field('infringements', {
+      type: Infringement,
+      resolve(parent, _, context: Context) {
+        return context.prisma.user
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .infringements();
+      },
+    });
   },
 });
 export const UsersPayload = objectType({
@@ -63,6 +74,9 @@ export const UsersPayload = objectType({
     t.nonNull.field('role', { type: Role });
     t.field('depot', {
       type: Depot,
+    });
+    t.nonNull.list.nonNull.field('infringements', {
+      type: Infringement,
     });
   },
 });
@@ -141,6 +155,7 @@ export const UserQuery = extendType({
               email: true,
               role: true,
               depot: true,
+              infringements: true,
               password: false,
               company: false,
             },
@@ -169,6 +184,7 @@ export const UserQuery = extendType({
             email: true,
             role: true,
             depot: true,
+            infringements: true,
             password: false,
             company: false,
           },
@@ -184,57 +200,97 @@ export const UserQuery = extendType({
         }),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          if (!userId) {
-            throw new Error('Unable to retrieve users. You are not logged in.');
-          }
-
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
-          return context.prisma.user.findMany({
-            where: {
-              AND: [
-                { companyId: company?.id },
-                {
-                  role: {
-                    not: 'ADMIN',
-                  },
-                },
-                {
-                  name: {
-                    contains:
-                      args.data?.searchCriteria != null
-                        ? args.data.searchCriteria
-                        : undefined,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-              depot: true,
-              password: false,
-              company: false,
-            },
-            orderBy: {
-              name: 'asc',
-            },
-          });
-        } catch (error) {
-          throw new Error('Error retrieving users');
+        if (!userId) {
+          throw new Error('Unable to retrieve users. You are not logged in.');
         }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.user.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                role: {
+                  not: 'ADMIN',
+                },
+              },
+              {
+                name: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            depot: true,
+            infringements: true,
+            password: false,
+            company: false,
+          },
+          orderBy: {
+            name: 'asc',
+          },
+        });
+      },
+    });
+
+    t.nonNull.list.nonNull.field('drivers', {
+      type: UsersPayload,
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to retrieve users. You are not logged in.');
+        }
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
+        return context.prisma.user.findMany({
+          where: {
+            AND: [
+              { companyId: company?.id },
+              {
+                role: 'DRIVER',
+              },
+            ],
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            depot: true,
+            infringements: true,
+            password: false,
+            company: false,
+          },
+          orderBy: {
+            name: 'asc',
+          },
+        });
       },
     });
   },
@@ -259,6 +315,7 @@ export const UserMutation = extendType({
           },
           include: {
             depot: true,
+            infringements: true,
           },
         });
 
@@ -282,6 +339,7 @@ export const UserMutation = extendType({
             email: user.email,
             role: user.role,
             depot: user.depot,
+            infringements: user.infringements,
           },
         };
       },
@@ -383,6 +441,7 @@ export const UserMutation = extendType({
           },
           include: {
             depot: true,
+            infringements: true,
           },
         });
 
@@ -392,6 +451,7 @@ export const UserMutation = extendType({
           email: user.email,
           role: user.role,
           depot: user.depot,
+          infringements: user.infringements,
         };
       },
     });
@@ -458,6 +518,7 @@ export const UserMutation = extendType({
             },
             include: {
               depot: true,
+              infringements: true,
             },
           });
 
@@ -467,6 +528,7 @@ export const UserMutation = extendType({
             email: user.email,
             role: user.role,
             depot: user.depot,
+            infringements: user.infringements,
           };
         } catch (error) {
           throw new Error('Error updating user');

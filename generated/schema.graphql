@@ -30,6 +30,12 @@ input AddFuelCardInput {
   depotId: String
 }
 
+input AddInfringementInput {
+  dateOccured: DateTime!
+  description: String!
+  driverId: ID!
+}
+
 input AddTollTagInput {
   depotId: String
   tagNumber: String!
@@ -142,6 +148,19 @@ input FuelCardInputFilter {
   searchCriteria: String
 }
 
+type Infringement {
+  dateOccured: DateTime!
+  description: String!
+  driver: UsersPayload
+  id: ID!
+  status: InfringementStatus!
+}
+
+enum InfringementStatus {
+  Signed
+  Unsigned
+}
+
 input LoginInput {
   email: String!
   password: String!
@@ -152,6 +171,7 @@ type Mutation {
   addDefect(data: AddDefectInput!): Defect!
   addDepot(data: AddDepotInput!): Depot!
   addFuelCard(data: AddFuelCardInput!): FuelCard!
+  addInfringement(data: AddInfringementInput!): Infringement!
   addTollTag(data: AddTollTagInput!): TollTag!
   addUser(data: AddUserInput!): UsersPayload!
   addVehicle(data: AddVehicleInput!): Vehicle!
@@ -176,6 +196,7 @@ type Mutation {
 type Query {
   defectsForVehicle(vehicleId: ID!): [Defect]
   depots(data: DepotInputFilter): [Depot]
+  drivers: [UsersPayload!]!
   fuelCards(data: FuelCardInputFilter): [FuelCard]
   fuelCardsNotAssigned: [FuelCard]
   me: UsersPayload
@@ -272,6 +293,7 @@ type User {
   depot: Depot
   email: String!
   id: ID!
+  infringements: [Infringement!]!
   name: String!
   password: String!
   role: Role!
@@ -285,6 +307,7 @@ type UsersPayload {
   depot: Depot
   email: String!
   id: String!
+  infringements: [Infringement!]!
   name: String!
   role: Role!
 }
