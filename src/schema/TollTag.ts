@@ -1,10 +1,7 @@
 import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
 import { Context } from '../context';
-import createConnection from '../utilities/createConnection';
 import { getUserId } from '../utilities/getUserId';
-import upsertConnection from '../utilities/upsertConnection';
 import { Company } from './Company';
-import { Depot } from './Depot';
 import { Vehicle } from './Vehicle';
 
 export const TollTag = objectType({
@@ -37,16 +34,6 @@ export const TollTag = objectType({
             where: { id: parent.id },
           })
           .vehicle();
-      },
-    });
-    t.field('depot', {
-      type: Depot,
-      resolve(parent, _, context: Context) {
-        return context.prisma.tollTag
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .depot();
       },
     });
   },
@@ -145,7 +132,6 @@ const AddTollTagInput = inputObjectType({
   definition(t) {
     t.nonNull.string('tagNumber');
     t.nonNull.string('tagProvider');
-    t.string('depotId');
   },
 });
 
@@ -155,7 +141,6 @@ const UpdateTollTagInput = inputObjectType({
     t.nonNull.id('id');
     t.nonNull.string('tagNumber');
     t.nonNull.string('tagProvider');
-    t.string('depotId');
   },
 });
 
@@ -212,7 +197,6 @@ export const TollTagMutation = extendType({
                 id: company?.id,
               },
             },
-            ...createConnection('depot', args.data.depotId),
           },
         });
       },
@@ -229,34 +213,15 @@ export const TollTagMutation = extendType({
       },
       resolve: async (_, args, context: Context) => {
         try {
-          const oldTollTag = await context.prisma.tollTag.findUnique({
-            where: {
-              id: args.data.id,
-            },
-            include: {
-              depot: {
-                select: {
-                  id: true,
-                },
-              },
-            },
-          });
-
-          const tollTag = context.prisma.tollTag.update({
+          return context.prisma.tollTag.update({
             where: {
               id: args.data.id,
             },
             data: {
               tagNumber: args.data.tagNumber,
               tagProvider: args.data.tagProvider,
-              ...upsertConnection(
-                'depot',
-                oldTollTag?.depot?.id,
-                args.data.depotId
-              ),
             },
           });
-          return tollTag;
         } catch (error) {
           throw new Error('Error updating toll tag');
         }

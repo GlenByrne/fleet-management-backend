@@ -1,10 +1,7 @@
 import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
 import { Context } from '../context';
-import createConnection from '../utilities/createConnection';
 import { getUserId } from '../utilities/getUserId';
-import upsertConnection from '../utilities/upsertConnection';
 import { Company } from './Company';
-import { Depot } from './Depot';
 import { Vehicle } from './Vehicle';
 
 export const FuelCard = objectType({
@@ -37,16 +34,6 @@ export const FuelCard = objectType({
             where: { id: parent.id },
           })
           .vehicle();
-      },
-    });
-    t.field('depot', {
-      type: Depot,
-      resolve(parent, _, context: Context) {
-        return context.prisma.fuelCard
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .depot();
       },
     });
   },
@@ -145,7 +132,6 @@ const AddFuelCardInput = inputObjectType({
   definition(t) {
     t.nonNull.string('cardNumber');
     t.nonNull.string('cardProvider');
-    t.string('depotId');
   },
 });
 
@@ -155,7 +141,6 @@ const UpdateFuelCardInput = inputObjectType({
     t.nonNull.id('id');
     t.nonNull.string('cardNumber');
     t.nonNull.string('cardProvider');
-    t.string('depotId');
   },
 });
 
@@ -212,7 +197,6 @@ export const FuelCardMutation = extendType({
                 id: company?.id,
               },
             },
-            ...createConnection('depot', args.data.depotId),
           },
         });
       },
@@ -229,34 +213,15 @@ export const FuelCardMutation = extendType({
       },
       resolve: async (_, args, context: Context) => {
         try {
-          const oldFuelCard = await context.prisma.fuelCard.findUnique({
-            where: {
-              id: args.data.id,
-            },
-            include: {
-              depot: {
-                select: {
-                  id: true,
-                },
-              },
-            },
-          });
-
-          const fuelCard = context.prisma.fuelCard.update({
+          return context.prisma.fuelCard.update({
             where: {
               id: args.data.id,
             },
             data: {
               cardNumber: args.data.cardNumber,
               cardProvider: args.data.cardProvider,
-              ...upsertConnection(
-                'depot',
-                oldFuelCard?.depot?.id,
-                args.data.depotId
-              ),
             },
           });
-          return fuelCard;
         } catch (error) {
           throw new Error('Error updating fuel card');
         }

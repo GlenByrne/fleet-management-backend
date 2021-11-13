@@ -50,13 +50,11 @@ model Vehicle {
 }
 
 model Depot {
-  id        String     @id @default(uuid())
-  name      String     @unique
+  id        String    @id @default(uuid())
+  name      String    @unique
   vehicles  Vehicle[]
-  fuelCards FuelCard[]
-  tollTags  TollTag[]
   User      User[]
-  company   Company    @relation(fields: [companyId], references: [id])
+  company   Company   @relation(fields: [companyId], references: [id])
   companyId String
 }
 
@@ -66,8 +64,6 @@ model FuelCard {
   cardProvider String
   vehicle      Vehicle? @relation(fields: [vehicleId], references: [id])
   vehicleId    String?  @unique
-  depot        Depot?   @relation(fields: [depotId], references: [id])
-  depotId      String?
   company      Company  @relation(fields: [companyId], references: [id])
   companyId    String
 }
@@ -78,8 +74,6 @@ model TollTag {
   tagProvider String
   vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
   vehicleId   String?  @unique
-  depot       Depot?   @relation(fields: [depotId], references: [id])
-  depotId     String?
   company     Company  @relation(fields: [companyId], references: [id])
   companyId   String
 }

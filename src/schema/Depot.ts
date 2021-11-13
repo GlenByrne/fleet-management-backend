@@ -9,8 +9,6 @@ import {
 import { Context } from '../context';
 import { getUserId } from '../utilities/getUserId';
 import { Company } from './Company';
-import { FuelCard } from './FuelCard';
-import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
 
 export const Depot = objectType({
@@ -42,26 +40,6 @@ export const Depot = objectType({
             where: { id: parent.id },
           })
           .vehicles();
-      },
-    });
-    t.nonNull.list.nonNull.field('fuelCards', {
-      type: FuelCard,
-      resolve(parent, _, context: Context) {
-        return context.prisma.depot
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .fuelCards();
-      },
-    });
-    t.nonNull.list.nonNull.field('tollTags', {
-      type: TollTag,
-      resolve(parent, _, context: Context) {
-        return context.prisma.depot
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .tollTags();
       },
     });
   },
