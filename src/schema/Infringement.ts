@@ -63,6 +63,13 @@ const DeleteInfringementInput = inputObjectType({
   },
 });
 
+const UpdateInfringementStasusInput = inputObjectType({
+  name: 'UpdateInfringementStasusInput',
+  definition(t) {
+    t.nonNull.string('id');
+  },
+});
+
 export const UserQuery = extendType({
   type: 'Query',
   definition(t) {
@@ -195,6 +202,31 @@ export const InfringementMutation = extendType({
           });
         } catch (error) {
           throw new Error('Error deleting infringement');
+        }
+      },
+    });
+
+    t.nonNull.field('updateInfringementStatus', {
+      type: Infringement,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateInfringementStasusInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.infringement.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              status: 'SIGNED',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error updating infringements status');
         }
       },
     });
