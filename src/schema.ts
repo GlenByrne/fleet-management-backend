@@ -7,7 +7,6 @@ import * as fuelCardTypes from './schema/FuelCard';
 import * as tollTagTypes from './schema/TollTag';
 import * as vehicleTypes from './schema/Vehicle';
 import * as userTypes from './schema/User';
-import * as companyTypes from './schema/Company';
 import * as infringementTypes from './schema/Infringement';
 import * as enumTypes from './schema/Enum';
 
@@ -23,7 +22,6 @@ const schemaWithoutPermissions = makeSchema({
     tollTagTypes,
     vehicleTypes,
     userTypes,
-    companyTypes,
     infringementTypes,
     enumTypes,
     DateTimeScalar,

@@ -11,7 +11,6 @@ import createConnection from '../utilities/createConnection';
 import getDateTwoWeeks from '../utilities/getDateTwoWeeks';
 import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
-import { Company } from './Company';
 import { Defect } from './Defect';
 import { Depot } from './Depot';
 import { VehicleType } from './Enum';
@@ -32,22 +31,6 @@ export const Vehicle = objectType({
     t.date('cvrt');
     t.date('thirteenWeekInspection');
     t.date('tachoCalibration');
-    t.nonNull.field('company', {
-      type: Company,
-      resolve: async (parent, _, context: Context) => {
-        const company = await context.prisma.vehicle
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .company();
-
-        if (!company) {
-          throw new Error('Company not found');
-        }
-
-        return company;
-      },
-    });
     t.field('depot', {
       type: Depot,
       resolve(parent, _, context: Context) {
@@ -134,28 +117,15 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         return context.prisma.vehicle.findMany({
           where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                registration: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
-              },
-            ],
+            registration: {
+              contains:
+                args.data?.searchCriteria != null
+                  ? args.data.searchCriteria
+                  : undefined,
+              mode: 'insensitive',
+            },
           },
           orderBy: {
             registration: 'asc',
@@ -194,24 +164,11 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         return context.prisma.vehicle.findMany({
           where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                cvrt: {
-                  lte: getDateTwoWeeks(),
-                },
-              },
-            ],
+            cvrt: {
+              lte: getDateTwoWeeks(),
+            },
           },
           orderBy: {
             cvrt: 'asc',
@@ -231,24 +188,11 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         return context.prisma.vehicle.findMany({
           where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                thirteenWeekInspection: {
-                  lte: getDateTwoWeeks(),
-                },
-              },
-            ],
+            thirteenWeekInspection: {
+              lte: getDateTwoWeeks(),
+            },
           },
           orderBy: {
             thirteenWeekInspection: 'asc',
@@ -268,24 +212,11 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         return context.prisma.vehicle.findMany({
           where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                tachoCalibration: {
-                  lte: getDateTwoWeeks(),
-                },
-              },
-            ],
+            tachoCalibration: {
+              lte: getDateTwoWeeks(),
+            },
           },
           orderBy: {
             tachoCalibration: 'asc',
@@ -372,14 +303,6 @@ export const VehicleMutation = extendType({
           throw new Error('Unable to add vehicle. You are not logged in.');
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         const existingVehicle = await context.prisma.vehicle.findUnique({
           where: {
             registration: args.data.registration,
@@ -397,11 +320,6 @@ export const VehicleMutation = extendType({
             make: args.data.make,
             model: args.data.model,
             owner: args.data.owner,
-            company: {
-              connect: {
-                id: company?.id,
-              },
-            },
             cvrt: args.data.cvrt,
             thirteenWeekInspection: args.data.thirteenWeekInspection,
             tachoCalibration: args.data.tachoCalibration,

@@ -7,16 +7,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Company {
-  id        String     @id @default(uuid())
-  name      String
-  users     User[]
-  vehicles  Vehicle[]
-  depots    Depot[]
-  fuelCards FuelCard[]
-  tollTags  TollTag[]
-}
-
 model User {
   id            String         @id @default(uuid())
   name          String
@@ -25,8 +15,6 @@ model User {
   role          Role           @default(USER)
   depot         Depot?         @relation(fields: [depotId], references: [id])
   depotId       String?
-  company       Company        @relation(fields: [companyId], references: [id])
-  companyId     String
   infringements Infringement[]
 }
 
@@ -45,17 +33,13 @@ model Vehicle {
   fuelCard               FuelCard?
   tollTag                TollTag?
   defects                Defect[]
-  company                Company     @relation(fields: [companyId], references: [id])
-  companyId              String
 }
 
 model Depot {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  vehicles  Vehicle[]
-  User      User[]
-  company   Company   @relation(fields: [companyId], references: [id])
-  companyId String
+  id       String    @id @default(uuid())
+  name     String    @unique
+  vehicles Vehicle[]
+  User     User[]
 }
 
 model FuelCard {
@@ -64,8 +48,6 @@ model FuelCard {
   cardProvider String
   vehicle      Vehicle? @relation(fields: [vehicleId], references: [id])
   vehicleId    String?  @unique
-  company      Company  @relation(fields: [companyId], references: [id])
-  companyId    String
 }
 
 model TollTag {
@@ -74,8 +56,6 @@ model TollTag {
   tagProvider String
   vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
   vehicleId   String?  @unique
-  company     Company  @relation(fields: [companyId], references: [id])
-  companyId   String
 }
 
 model Defect {

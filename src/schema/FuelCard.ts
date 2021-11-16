@@ -1,7 +1,6 @@
 import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
 import { Context } from '../context';
 import { getUserId } from '../utilities/getUserId';
-import { Company } from './Company';
 import { Vehicle } from './Vehicle';
 
 export const FuelCard = objectType({
@@ -10,22 +9,6 @@ export const FuelCard = objectType({
     t.nonNull.id('id');
     t.nonNull.string('cardNumber');
     t.nonNull.string('cardProvider');
-    t.nonNull.field('company', {
-      type: Company,
-      resolve: async (parent, _, context: Context) => {
-        const company = await context.prisma.fuelCard
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .company();
-
-        if (!company) {
-          throw new Error('Company not found');
-        }
-
-        return company;
-      },
-    });
     t.field('vehicle', {
       type: Vehicle,
       resolve(parent, _, context: Context) {
@@ -65,28 +48,15 @@ export const FuelCardQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         return context.prisma.fuelCard.findMany({
           where: {
-            AND: [
-              { companyId: company?.id },
-              {
-                cardNumber: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
-              },
-            ],
+            cardNumber: {
+              contains:
+                args.data?.searchCriteria != null
+                  ? args.data.searchCriteria
+                  : undefined,
+              mode: 'insensitive',
+            },
           },
           orderBy: {
             cardNumber: 'asc',
@@ -106,17 +76,9 @@ export const FuelCardQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         return context.prisma.fuelCard.findMany({
           where: {
-            AND: [{ vehicleId: null }, { companyId: company?.id }],
+            vehicleId: null,
           },
           orderBy: {
             cardNumber: 'asc',
@@ -170,14 +132,6 @@ export const FuelCardMutation = extendType({
           throw new Error('Unable to add fuel card. You are not logged in.');
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         const existingCard = await context.prisma.fuelCard.findUnique({
           where: {
             cardNumber: args.data.cardNumber,
@@ -192,11 +146,6 @@ export const FuelCardMutation = extendType({
           data: {
             cardNumber: args.data.cardNumber,
             cardProvider: args.data.cardProvider,
-            company: {
-              connect: {
-                id: company?.id,
-              },
-            },
           },
         });
       },

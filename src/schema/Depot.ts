@@ -8,7 +8,6 @@ import {
 } from 'nexus';
 import { Context } from '../context';
 import { getUserId } from '../utilities/getUserId';
-import { Company } from './Company';
 import { Vehicle } from './Vehicle';
 
 export const Depot = objectType({
@@ -16,22 +15,6 @@ export const Depot = objectType({
   definition(t) {
     t.nonNull.id('id');
     t.nonNull.string('name');
-    t.nonNull.field('company', {
-      type: Company,
-      resolve: async (parent, _, context: Context) => {
-        const company = await context.prisma.depot
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .company();
-
-        if (!company) {
-          throw new Error('Company not found');
-        }
-
-        return company;
-      },
-    });
     t.nonNull.list.nonNull.field('vehicles', {
       type: Vehicle,
       resolve(parent, _, context: Context) {
@@ -72,27 +55,15 @@ export const DepotQuery = extendType({
             );
           }
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
           return context.prisma.depot.findMany({
             where: {
-              AND: [
-                { companyId: company?.id },
-                {
-                  name: {
-                    contains:
-                      args.data?.searchCriteria != null
-                        ? args.data.searchCriteria
-                        : undefined,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
+              name: {
+                contains:
+                  args.data?.searchCriteria != null
+                    ? args.data.searchCriteria
+                    : undefined,
+                mode: 'insensitive',
+              },
             },
             orderBy: {
               name: 'asc',
@@ -168,14 +139,6 @@ export const DepotMutation = extendType({
             throw new Error('Unable to add depot. You are not logged in.');
           }
 
-          const company = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .company();
-
           const existingDepot = await context.prisma.depot.findUnique({
             where: {
               name: args.data.name,
@@ -189,11 +152,6 @@ export const DepotMutation = extendType({
           return context.prisma.depot.create({
             data: {
               name: args.data.name,
-              company: {
-                connect: {
-                  id: company?.id,
-                },
-              },
             },
           });
         } catch (error) {

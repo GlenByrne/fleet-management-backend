@@ -29,7 +29,6 @@ const Infringement = objectType({
               depot: true,
               infringements: true,
               password: false,
-              company: false,
             },
           });
       },
@@ -84,20 +83,7 @@ export const UserQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .company();
-
         return context.prisma.infringement.findMany({
-          where: {
-            driver: {
-              companyId: company?.id,
-            },
-          },
           orderBy: {
             dateOccured: 'desc',
           },
