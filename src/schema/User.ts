@@ -9,6 +9,7 @@ import {
 import { compare, hash } from 'bcrypt';
 import { Context } from '../context';
 import { Depot } from './Depot';
+import { Company } from './Company';
 import { getUserId } from '../utilities/getUserId';
 import createConnection from '../utilities/createConnection';
 import upsertConnection from '../utilities/upsertConnection';
@@ -25,6 +26,22 @@ export const User = objectType({
     t.nonNull.string('password');
     t.nonNull.field('role', {
       type: Role,
+    });
+    t.nonNull.field('company', {
+      type: Company,
+      resolve: async (parent, _, context: Context) => {
+        const company = await context.prisma.user
+          .findUnique({
+            where: { id: parent.id },
+          })
+          .company();
+
+        if (!company) {
+          throw new Error('Company not found');
+        }
+
+        return company;
+      },
     });
     t.field('depot', {
       type: Depot,
@@ -140,6 +157,7 @@ export const UserQuery = extendType({
               depot: true,
               infringements: true,
               password: false,
+              company: false,
             },
           });
         } catch {
@@ -168,6 +186,7 @@ export const UserQuery = extendType({
             depot: true,
             infringements: true,
             password: false,
+            company: false,
           },
         });
       },
@@ -187,9 +206,18 @@ export const UserQuery = extendType({
           throw new Error('Unable to retrieve users. You are not logged in.');
         }
 
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
         return context.prisma.user.findMany({
           where: {
             AND: [
+              { companyId: company?.id },
               {
                 role: {
                   not: 'ADMIN',
@@ -214,6 +242,7 @@ export const UserQuery = extendType({
             depot: true,
             infringements: true,
             password: false,
+            company: false,
           },
           orderBy: {
             name: 'asc',
@@ -231,9 +260,22 @@ export const UserQuery = extendType({
           throw new Error('Unable to retrieve users. You are not logged in.');
         }
 
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
         return context.prisma.user.findMany({
           where: {
-            role: 'DRIVER',
+            AND: [
+              { companyId: company?.id },
+              {
+                role: 'DRIVER',
+              },
+            ],
           },
           select: {
             id: true,
@@ -243,6 +285,7 @@ export const UserQuery = extendType({
             depot: true,
             infringements: true,
             password: false,
+            company: false,
           },
           orderBy: {
             name: 'asc',
@@ -361,6 +404,16 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
+        const userId = getUserId(context);
+
+        const company = await context.prisma.user
+          .findUnique({
+            where: {
+              id: userId != null ? userId : undefined,
+            },
+          })
+          .company();
+
         const existingUser = await context.prisma.user.findUnique({
           where: {
             email: args.data.email,
@@ -380,6 +433,11 @@ export const UserMutation = extendType({
             name: args.data.name,
             role: args.data.role,
             ...createConnection('depot', args.data.depotId),
+            company: {
+              connect: {
+                id: company?.id,
+              },
+            },
           },
           include: {
             depot: true,
