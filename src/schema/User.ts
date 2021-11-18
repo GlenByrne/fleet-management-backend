@@ -84,7 +84,6 @@ export const UsersPayload = objectType({
 export const AuthPayload = objectType({
   name: 'AuthPayload',
   definition(t) {
-    t.string('token');
     t.field('user', {
       type: UsersPayload,
     });
@@ -320,19 +319,24 @@ export const UserMutation = extendType({
         });
 
         if (!user) {
-          throw new Error('No user with these credentials could be found');
+          throw new Error('Email or password is incorrect');
         }
 
         const valid = await compare(args.data.password, user.password);
 
         if (!valid) {
-          throw new Error('The password you have entered is incorrect');
+          throw new Error('Email or password is incorrect');
         }
 
         const token = generateAccessToken(user.id);
 
+        context.res.cookie('token', token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+        });
+
         return {
-          token,
           user: {
             id: user.id,
             name: user.name,

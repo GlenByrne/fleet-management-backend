@@ -29,7 +29,6 @@ const Infringement = objectType({
               depot: true,
               infringements: true,
               password: false,
-              company: false,
             },
           });
       },
@@ -43,6 +42,54 @@ const AddInfringementInput = inputObjectType({
     t.nonNull.id('driverId');
     t.nonNull.string('description');
     t.nonNull.date('dateOccured');
+  },
+});
+
+const UpdateInfringementInput = inputObjectType({
+  name: 'UpdateInfringementInput',
+  definition(t) {
+    t.nonNull.id('id');
+    t.nonNull.string('description');
+    t.nonNull.date('dateOccured');
+    t.nonNull.field('status', { type: InfringementStatus });
+  },
+});
+
+const DeleteInfringementInput = inputObjectType({
+  name: 'DeleteInfringementInput',
+  definition(t) {
+    t.nonNull.id('id');
+  },
+});
+
+const UpdateInfringementStasusInput = inputObjectType({
+  name: 'UpdateInfringementStasusInput',
+  definition(t) {
+    t.nonNull.string('id');
+  },
+});
+
+export const UserQuery = extendType({
+  type: 'Query',
+  definition(t) {
+    t.list.field('infringements', {
+      type: Infringement,
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve infringements. You are not logged in.'
+          );
+        }
+
+        return context.prisma.infringement.findMany({
+          orderBy: {
+            dateOccured: 'desc',
+          },
+        });
+      },
+    });
   },
 });
 
@@ -93,6 +140,80 @@ export const InfringementMutation = extendType({
             },
           },
         });
+      },
+    });
+
+    t.nonNull.field('updateInfringement', {
+      type: Infringement,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateInfringementInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        try {
+          return context.prisma.infringement.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              description: args.data.description,
+              dateOccured: args.data.dateOccured,
+              status: args.data.status,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error updating infringement');
+        }
+      },
+    });
+
+    t.nonNull.field('deleteInfringement', {
+      type: Infringement,
+      args: {
+        data: nonNull(
+          arg({
+            type: DeleteInfringementInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.infringement.delete({
+            where: {
+              id: args.data.id,
+            },
+          });
+        } catch (error) {
+          throw new Error('Error deleting infringement');
+        }
+      },
+    });
+
+    t.nonNull.field('updateInfringementStatus', {
+      type: Infringement,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateInfringementStasusInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.infringement.update({
+            where: {
+              id: args.data.id,
+            },
+            data: {
+              status: 'SIGNED',
+            },
+          });
+        } catch (error) {
+          throw new Error('Error updating infringements status');
+        }
       },
     });
   },

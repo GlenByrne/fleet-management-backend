@@ -1,14 +1,12 @@
 import { verify } from 'jsonwebtoken';
 import { Context } from '../context';
-
-export const APP_SECRET = 'uoisehofihzoefhos';
-export const REFRESH_TOKEN_SECRET = 'jfnlszkfehlsfejsskjlfjd';
+import APP_SECRET from '../server';
 
 interface Token {
   userId: string;
 }
 
-export function getUserId(context: Context) {
+export const getUserId = (context: Context) => {
   const authHeader = context.req.get('Authorization');
   if (authHeader) {
     const token = authHeader.replace('Bearer ', '');
@@ -16,4 +14,6 @@ export function getUserId(context: Context) {
     return verifiedToken && verifiedToken.userId;
   }
   return null;
-}
+};
+
+export default getUserId;

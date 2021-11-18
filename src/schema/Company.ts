@@ -167,7 +167,6 @@ const AddCompanyInput = inputObjectType({
 export const AddCompanyPayload = objectType({
   name: 'AddCompanyPayload',
   definition(t) {
-    t.string('token');
     t.field('company', {
       type: Company,
     });
@@ -190,65 +189,67 @@ export const CompanyMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const existingUser = await context.prisma.user.findUnique({
-            where: {
-              email: args.data.email,
-            },
-          });
+        const existingUser = await context.prisma.user.findUnique({
+          where: {
+            email: args.data.email,
+          },
+        });
 
-          if (existingUser) {
-            throw new Error('ERROR: Account already exists with this email');
-          }
-
-          const hashedPassword = await hash(args.data.password, 10);
-
-          const company = await context.prisma.company.create({
-            data: {
-              name: args.data.name,
-              users: {
-                create: [
-                  {
-                    name: args.data.adminName,
-                    email: args.data.email,
-                    password: hashedPassword,
-                    role: 'ADMIN',
-                  },
-                ],
-              },
-            },
-          });
-
-          const user = await context.prisma.user.findUnique({
-            where: {
-              email: args.data.email,
-            },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-              depot: true,
-              infringements: true,
-              password: false,
-              company: false,
-            },
-          });
-
-          if (!user) {
-            throw new Error('Error');
-          }
-
-          const token = generateAccessToken(user.id);
-
-          return {
-            token,
-            company,
-            user,
-          };
-        } catch (error) {
-          throw new Error('Failed to create company');
+        if (existingUser) {
+          throw new Error('ERROR: Account already exists with this email');
         }
+
+        const hashedPassword = await hash(args.data.password, 10);
+
+        const company = await context.prisma.company.create({
+          data: {
+            name: args.data.name,
+            users: {
+              create: [
+                {
+                  name: args.data.adminName,
+                  email: args.data.email,
+                  password: hashedPassword,
+                  role: 'ADMIN',
+                },
+              ],
+            },
+          },
+        });
+
+        const user = await context.prisma.user.findUnique({
+          where: {
+            email: args.data.email,
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            depot: true,
+            infringements: true,
+            password: false,
+            company: false,
+          },
+        });
+
+        if (!user) {
+          throw new Error('Error');
+        }
+
+        const token = generateAccessToken(user.id);
+
+        context.res.cookie('token', token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          path: '/',
+        });
+
+        return {
+          company,
+          user,
+        };
       },
     });
   },

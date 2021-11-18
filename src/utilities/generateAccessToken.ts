@@ -1,5 +1,5 @@
 import { sign } from 'jsonwebtoken';
-import { APP_SECRET } from './getUserId';
+import APP_SECRET from '../server';
 
 const generateAccessToken = (userId: string) => {
   const token = sign(
