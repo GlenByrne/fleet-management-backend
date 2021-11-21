@@ -16,6 +16,8 @@ import upsertConnection from '../utilities/upsertConnection';
 import generateAccessToken from '../utilities/generateAccessToken';
 import { Role } from './Enum';
 import Infringement from './Infringement';
+import generateRefreshToken from '../utilities/generateRefreshToken';
+import getRefreshUserId from '../utilities/getRefreshUserId';
 
 export const User = objectType({
   name: 'User',
@@ -87,6 +89,21 @@ export const AuthPayload = objectType({
     t.field('user', {
       type: UsersPayload,
     });
+    t.nonNull.string('accessToken');
+  },
+});
+
+export const LogoutPayload = objectType({
+  name: 'LogoutPayload',
+  definition(t) {
+    t.nonNull.string('message');
+  },
+});
+
+export const RefreshTokenPayload = objectType({
+  name: 'RefreshTokenPayload',
+  definition(t) {
+    t.nonNull.string('accessToken');
   },
 });
 
@@ -328,9 +345,10 @@ export const UserMutation = extendType({
           throw new Error('Email or password is incorrect');
         }
 
-        const token = generateAccessToken(user.id);
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
 
-        context.res.cookie('token', token, {
+        context.res.cookie('refreshToken', refreshToken, {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
@@ -345,6 +363,46 @@ export const UserMutation = extendType({
             depot: user.depot,
             infringements: user.infringements,
           },
+          accessToken,
+        };
+      },
+    });
+
+    t.nonNull.field('logout', {
+      type: LogoutPayload,
+      resolve: async (_, __, context: Context) => {
+        context.res.cookie('refreshToken', '', {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          expires: new Date(0),
+        });
+        return {
+          message: 'Logged out successfully',
+        };
+      },
+    });
+
+    t.nonNull.field('refreshToken', {
+      type: RefreshTokenPayload,
+      resolve: async (_, __, context: Context) => {
+        const userId = getRefreshUserId(context);
+
+        if (!userId) {
+          throw new Error('User could not be found');
+        }
+
+        const accessToken = generateAccessToken(userId);
+        const refreshToken = generateRefreshToken(userId);
+
+        context.res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+        });
+
+        return {
+          accessToken,
         };
       },
     });

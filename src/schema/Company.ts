@@ -7,6 +7,7 @@ import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
 import { User, UsersPayload } from './User';
 import generateAccessToken from '../utilities/generateAccessToken';
+import generateRefreshToken from '../utilities/generateRefreshToken';
 
 export const Company = objectType({
   name: 'Company',
@@ -173,6 +174,7 @@ export const AddCompanyPayload = objectType({
     t.field('user', {
       type: UsersPayload,
     });
+    t.nonNull.string('accessToken');
   },
 });
 
@@ -237,18 +239,19 @@ export const CompanyMutation = extendType({
           throw new Error('Error');
         }
 
-        const token = generateAccessToken(user.id);
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
 
-        context.res.cookie('token', token, {
+        context.res.cookie('refreshToken', refreshToken, {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
-          path: '/',
         });
 
         return {
           company,
           user,
+          accessToken,
         };
       },
     });

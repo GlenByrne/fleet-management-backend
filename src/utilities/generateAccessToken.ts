@@ -1,14 +1,14 @@
 import { sign } from 'jsonwebtoken';
-import APP_SECRET from '../server';
+import { ACCESS_TOKEN_SECRET } from '../server';
 
 const generateAccessToken = (userId: string) => {
   const token = sign(
     {
       userId,
     },
-    APP_SECRET,
+    ACCESS_TOKEN_SECRET,
     {
-      expiresIn: '8h',
+      expiresIn: '15m',
     }
   );
   return token;
