@@ -1,7 +1,7 @@
 import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
 import { Context } from '../context';
 import { getUserId } from '../utilities/getUserId';
-import { Company } from './Company';
+import { Organisation } from './Organisation';
 import { Vehicle } from './Vehicle';
 
 export const TollTag = objectType({
@@ -10,20 +10,20 @@ export const TollTag = objectType({
     t.nonNull.id('id');
     t.nonNull.string('tagNumber');
     t.nonNull.string('tagProvider');
-    t.nonNull.field('company', {
-      type: Company,
+    t.nonNull.field('organisation', {
+      type: Organisation,
       resolve: async (parent, _, context: Context) => {
-        const company = await context.prisma.tollTag
+        const organisation = await context.prisma.tollTag
           .findUnique({
             where: { id: parent.id },
           })
-          .company();
+          .organisation();
 
-        if (!company) {
-          throw new Error('Company not found');
+        if (!organisation) {
+          throw new Error('Organisation not found');
         }
 
-        return company;
+        return organisation;
       },
     });
     t.field('vehicle', {
@@ -65,18 +65,18 @@ export const TollTagQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.tollTag.findMany({
           where: {
             AND: [
-              { companyId: company?.id },
+              { organisationId: organisation?.id },
               {
                 tagNumber: {
                   contains:
@@ -106,17 +106,17 @@ export const TollTagQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.tollTag.findMany({
           where: {
-            AND: [{ vehicleId: null }, { companyId: company?.id }],
+            AND: [{ vehicleId: null }, { organisationId: organisation?.id }],
           },
           orderBy: {
             tagNumber: 'asc',
@@ -170,13 +170,13 @@ export const TollTagMutation = extendType({
           throw new Error('Unable to add toll tag. You are not logged in.');
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         const existingTag = await context.prisma.tollTag.findUnique({
           where: {
@@ -192,9 +192,9 @@ export const TollTagMutation = extendType({
           data: {
             tagNumber: args.data.tagNumber,
             tagProvider: args.data.tagProvider,
-            company: {
+            organisation: {
               connect: {
-                id: company?.id,
+                id: organisation?.id,
               },
             },
           },

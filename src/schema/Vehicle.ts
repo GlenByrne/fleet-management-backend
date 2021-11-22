@@ -11,7 +11,7 @@ import createConnection from '../utilities/createConnection';
 import getDateTwoWeeks from '../utilities/getDateTwoWeeks';
 import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
-import { Company } from './Company';
+import { Organisation } from './Organisation';
 import { Defect } from './Defect';
 import { Depot } from './Depot';
 import { VehicleType } from './Enum';
@@ -32,20 +32,20 @@ export const Vehicle = objectType({
     t.date('cvrt');
     t.date('thirteenWeekInspection');
     t.date('tachoCalibration');
-    t.nonNull.field('company', {
-      type: Company,
+    t.nonNull.field('organisation', {
+      type: Organisation,
       resolve: async (parent, _, context: Context) => {
-        const company = await context.prisma.vehicle
+        const organisation = await context.prisma.vehicle
           .findUnique({
             where: { id: parent.id },
           })
-          .company();
+          .organisation();
 
-        if (!company) {
-          throw new Error('Company not found');
+        if (!organisation) {
+          throw new Error('Organisation not found');
         }
 
-        return company;
+        return organisation;
       },
     });
     t.field('depot', {
@@ -134,18 +134,18 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { companyId: company?.id },
+              { organisationId: organisation?.id },
               {
                 registration: {
                   contains:
@@ -194,18 +194,18 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { companyId: company?.id },
+              { organisationId: organisation?.id },
               {
                 cvrt: {
                   lte: getDateTwoWeeks(),
@@ -231,18 +231,18 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { companyId: company?.id },
+              { organisationId: organisation?.id },
               {
                 thirteenWeekInspection: {
                   lte: getDateTwoWeeks(),
@@ -268,18 +268,18 @@ export const VehicleQuery = extendType({
           );
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { companyId: company?.id },
+              { organisationId: organisation?.id },
               {
                 tachoCalibration: {
                   lte: getDateTwoWeeks(),
@@ -372,13 +372,13 @@ export const VehicleMutation = extendType({
           throw new Error('Unable to add vehicle. You are not logged in.');
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         const existingVehicle = await context.prisma.vehicle.findUnique({
           where: {
@@ -397,9 +397,9 @@ export const VehicleMutation = extendType({
             make: args.data.make,
             model: args.data.model,
             owner: args.data.owner,
-            company: {
+            organisation: {
               connect: {
-                id: company?.id,
+                id: organisation?.id,
               },
             },
             cvrt: args.data.cvrt,

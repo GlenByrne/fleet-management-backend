@@ -3,9 +3,10 @@ import { enumType } from 'nexus';
 export const Role = enumType({
   name: 'Role',
   members: {
+    Owner: 'OWNER',
+    Admin: 'ADMIN',
     User: 'USER',
     Driver: 'DRIVER',
-    Admin: 'ADMIN',
   },
 });
 

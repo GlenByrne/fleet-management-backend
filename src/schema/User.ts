@@ -9,7 +9,7 @@ import {
 import { compare, hash } from 'bcrypt';
 import { Context } from '../context';
 import { Depot } from './Depot';
-import { Company } from './Company';
+import { Organisation } from './Organisation';
 import { getUserId } from '../utilities/getUserId';
 import createConnection from '../utilities/createConnection';
 import upsertConnection from '../utilities/upsertConnection';
@@ -29,20 +29,20 @@ export const User = objectType({
     t.nonNull.field('role', {
       type: Role,
     });
-    t.nonNull.field('company', {
-      type: Company,
+    t.nonNull.field('organisation', {
+      type: Organisation,
       resolve: async (parent, _, context: Context) => {
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: { id: parent.id },
           })
-          .company();
+          .organisation();
 
-        if (!company) {
-          throw new Error('Company not found');
+        if (!organisation) {
+          throw new Error('Organisation not found');
         }
 
-        return company;
+        return organisation;
       },
     });
     t.field('depot', {
@@ -173,7 +173,7 @@ export const UserQuery = extendType({
               depot: true,
               infringements: true,
               password: false,
-              company: false,
+              organisation: false,
             },
           });
         } catch {
@@ -202,7 +202,7 @@ export const UserQuery = extendType({
             depot: true,
             infringements: true,
             password: false,
-            company: false,
+            organisation: false,
           },
         });
       },
@@ -222,18 +222,18 @@ export const UserQuery = extendType({
           throw new Error('Unable to retrieve users. You are not logged in.');
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.user.findMany({
           where: {
             AND: [
-              { companyId: company?.id },
+              { organisationId: organisation?.id },
               {
                 role: {
                   not: 'ADMIN',
@@ -258,7 +258,7 @@ export const UserQuery = extendType({
             depot: true,
             infringements: true,
             password: false,
-            company: false,
+            organisation: false,
           },
           orderBy: {
             name: 'asc',
@@ -276,18 +276,18 @@ export const UserQuery = extendType({
           throw new Error('Unable to retrieve users. You are not logged in.');
         }
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         return context.prisma.user.findMany({
           where: {
             AND: [
-              { companyId: company?.id },
+              { organisationId: organisation?.id },
               {
                 role: 'DRIVER',
               },
@@ -301,7 +301,7 @@ export const UserQuery = extendType({
             depot: true,
             infringements: true,
             password: false,
-            company: false,
+            organisation: false,
           },
           orderBy: {
             name: 'asc',
@@ -435,9 +435,9 @@ export const UserMutation = extendType({
     //         password: hashedPassword,
     //         name: args.data.name,
     //         role: 'USER',
-    //         company: {
+    //         organisation: {
     //           connect: {
-    //             id: args.data.companyId,
+    //             id: args.data.organisationId,
     //           },
     //         },
     //       },
@@ -468,13 +468,13 @@ export const UserMutation = extendType({
       resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
 
-        const company = await context.prisma.user
+        const organisation = await context.prisma.user
           .findUnique({
             where: {
               id: userId != null ? userId : undefined,
             },
           })
-          .company();
+          .organisation();
 
         const existingUser = await context.prisma.user.findUnique({
           where: {
@@ -495,9 +495,9 @@ export const UserMutation = extendType({
             name: args.data.name,
             role: args.data.role,
             ...createConnection('depot', args.data.depotId),
-            company: {
+            organisation: {
               connect: {
-                id: company?.id,
+                id: organisation?.id,
               },
             },
           },

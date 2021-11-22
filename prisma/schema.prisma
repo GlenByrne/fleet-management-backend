@@ -7,7 +7,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Company {
+model Organisation {
   id        String     @id @default(uuid())
   name      String
   users     User[]
@@ -18,64 +18,64 @@ model Company {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  name          String
-  email         String         @unique
-  password      String
-  role          Role           @default(USER)
-  depot         Depot?         @relation(fields: [depotId], references: [id])
-  depotId       String?
-  company       Company        @relation(fields: [companyId], references: [id])
-  companyId     String
-  infringements Infringement[]
+  id             String         @id @default(uuid())
+  name           String
+  email          String         @unique
+  password       String
+  role           Role           @default(USER)
+  depot          Depot?         @relation(fields: [depotId], references: [id])
+  depotId        String?
+  organisation   Organisation   @relation(fields: [organisationId], references: [id])
+  organisationId String
+  infringements  Infringement[]
 }
 
 model Vehicle {
-  id                     String      @id @default(uuid())
+  id                     String       @id @default(uuid())
   type                   VehicleType
-  registration           String      @unique
+  registration           String       @unique
   make                   String
   model                  String
   owner                  String
   cvrt                   DateTime?
   thirteenWeekInspection DateTime?
   tachoCalibration       DateTime?
-  depot                  Depot?      @relation(fields: [depotId], references: [id])
+  depot                  Depot?       @relation(fields: [depotId], references: [id])
   depotId                String?
   fuelCard               FuelCard?
   tollTag                TollTag?
   defects                Defect[]
-  company                Company     @relation(fields: [companyId], references: [id])
-  companyId              String
+  organisation           Organisation @relation(fields: [organisationId], references: [id])
+  organisationId         String
 }
 
 model Depot {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  vehicles  Vehicle[]
-  User      User[]
-  company   Company   @relation(fields: [companyId], references: [id])
-  companyId String
+  id             String       @id @default(uuid())
+  name           String       @unique
+  vehicles       Vehicle[]
+  User           User[]
+  organisation   Organisation @relation(fields: [organisationId], references: [id])
+  organisationId String
 }
 
 model FuelCard {
-  id           String   @id @default(uuid())
-  cardNumber   String   @unique
-  cardProvider String
-  vehicle      Vehicle? @relation(fields: [vehicleId], references: [id])
-  vehicleId    String?  @unique
-  company      Company  @relation(fields: [companyId], references: [id])
-  companyId    String
+  id             String       @id @default(uuid())
+  cardNumber     String       @unique
+  cardProvider   String
+  vehicle        Vehicle?     @relation(fields: [vehicleId], references: [id])
+  vehicleId      String?      @unique
+  organisation   Organisation @relation(fields: [organisationId], references: [id])
+  organisationId String
 }
 
 model TollTag {
-  id          String   @id @default(uuid())
-  tagNumber   String   @unique
-  tagProvider String
-  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
-  vehicleId   String?  @unique
-  company     Company  @relation(fields: [companyId], references: [id])
-  companyId   String
+  id             String       @id @default(uuid())
+  tagNumber      String       @unique
+  tagProvider    String
+  vehicle        Vehicle?     @relation(fields: [vehicleId], references: [id])
+  vehicleId      String?      @unique
+  organisation   Organisation @relation(fields: [organisationId], references: [id])
+  organisationId String
 }
 
 model Defect {
@@ -105,9 +105,10 @@ enum VehicleType {
 }
 
 enum Role {
+  OWNER
+  ADMIN
   USER
   DRIVER
-  ADMIN
 }
 
 enum DefectStatus {

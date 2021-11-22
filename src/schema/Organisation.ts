@@ -9,15 +9,15 @@ import { User, UsersPayload } from './User';
 import generateAccessToken from '../utilities/generateAccessToken';
 import generateRefreshToken from '../utilities/generateRefreshToken';
 
-export const Company = objectType({
-  name: 'Company',
+export const Organisation = objectType({
+  name: 'Organisation',
   definition(t) {
     t.nonNull.id('id');
     t.nonNull.string('name');
     t.nonNull.list.nonNull.field('users', {
       type: User,
       resolve(parent, _, context: Context) {
-        return context.prisma.company
+        return context.prisma.organisation
           .findUnique({
             where: { id: parent.id },
           })
@@ -27,7 +27,7 @@ export const Company = objectType({
     t.nonNull.list.nonNull.field('vehicles', {
       type: Vehicle,
       resolve(parent, _, context: Context) {
-        return context.prisma.company
+        return context.prisma.organisation
           .findUnique({
             where: { id: parent.id },
           })
@@ -37,7 +37,7 @@ export const Company = objectType({
     t.nonNull.list.nonNull.field('depots', {
       type: Depot,
       resolve(parent, _, context: Context) {
-        return context.prisma.company
+        return context.prisma.organisation
           .findUnique({
             where: { id: parent.id },
           })
@@ -47,7 +47,7 @@ export const Company = objectType({
     t.nonNull.list.nonNull.field('fuelCards', {
       type: FuelCard,
       resolve(parent, _, context: Context) {
-        return context.prisma.company
+        return context.prisma.organisation
           .findUnique({
             where: { id: parent.id },
           })
@@ -57,7 +57,7 @@ export const Company = objectType({
     t.nonNull.list.nonNull.field('tollTags', {
       type: TollTag,
       resolve(parent, _, context: Context) {
-        return context.prisma.company
+        return context.prisma.organisation
           .findUnique({
             where: { id: parent.id },
           })
@@ -67,31 +67,31 @@ export const Company = objectType({
   },
 });
 
-export const CompanyQuery = extendType({
+export const OrganisationQuery = extendType({
   type: 'Query',
   definition(t) {
-    // t.field('company', {
-    //   type: Company,
+    // t.field('organisation', {
+    //   type: Organisation,
     //   args: {
-    //     companyId: nonNull(idArg()),
+    //     organisationId: nonNull(idArg()),
     //   },
-    //   resolve: (_, { companyId }, context: Context) =>
-    //     context.prisma.company.findUnique({
+    //   resolve: (_, { organisationId }, context: Context) =>
+    //     context.prisma.organisation.findUnique({
     //       where: {
-    //         id: companyId,
+    //         id: organisationId,
     //       },
     //     }),
     // });
     // t.list.field('users', {
     //   type: User,
     //   args: {
-    //     companyId: nonNull(idArg()),
+    //     organisationId: nonNull(idArg()),
     //   },
-    //   resolve: (_, { companyId }, context: Context) =>
-    //     context.prisma.company
+    //   resolve: (_, { organisationId }, context: Context) =>
+    //     context.prisma.organisation
     //       .findUnique({
     //         where: {
-    //           id: companyId,
+    //           id: organisationId,
     //         },
     //       })
     //       .users(),
@@ -99,13 +99,13 @@ export const CompanyQuery = extendType({
     // t.list.field('vehicles', {
     //   type: Vehicle,
     //   args: {
-    //     companyId: nonNull(idArg()),
+    //     organisationId: nonNull(idArg()),
     //   },
-    //   resolve: (_, { companyId }, context: Context) =>
-    //     context.prisma.company
+    //   resolve: (_, { organisationId }, context: Context) =>
+    //     context.prisma.organisation
     //       .findUnique({
     //         where: {
-    //           id: companyId,
+    //           id: organisationId,
     //         },
     //       })
     //       .vehicles(),
@@ -113,13 +113,13 @@ export const CompanyQuery = extendType({
     // t.list.field('depots', {
     //   type: Depot,
     //   args: {
-    //     companyId: nonNull(idArg()),
+    //     organisationId: nonNull(idArg()),
     //   },
-    //   resolve: (_, { companyId }, context: Context) =>
-    //     context.prisma.company
+    //   resolve: (_, { organisationId }, context: Context) =>
+    //     context.prisma.organisation
     //       .findUnique({
     //         where: {
-    //           id: companyId,
+    //           id: organisationId,
     //         },
     //       })
     //       .depots(),
@@ -127,13 +127,13 @@ export const CompanyQuery = extendType({
     // t.list.field('fuelCards', {
     //   type: FuelCard,
     //   args: {
-    //     companyId: nonNull(idArg()),
+    //     organisationId: nonNull(idArg()),
     //   },
-    //   resolve: (_, { companyId }, context: Context) =>
-    //     context.prisma.company
+    //   resolve: (_, { organisationId }, context: Context) =>
+    //     context.prisma.organisation
     //       .findUnique({
     //         where: {
-    //           id: companyId,
+    //           id: organisationId,
     //         },
     //       })
     //       .fuelCards(),
@@ -141,13 +141,13 @@ export const CompanyQuery = extendType({
     // t.list.field('tollTags', {
     //   type: TollTag,
     //   args: {
-    //     companyId: nonNull(idArg()),
+    //     organisationId: nonNull(idArg()),
     //   },
-    //   resolve: (_, { companyId }, context: Context) =>
-    //     context.prisma.company
+    //   resolve: (_, { organisationId }, context: Context) =>
+    //     context.prisma.organisation
     //       .findUnique({
     //         where: {
-    //           id: companyId,
+    //           id: organisationId,
     //         },
     //       })
     //       .tollTags(),
@@ -155,8 +155,8 @@ export const CompanyQuery = extendType({
   },
 });
 
-const AddCompanyInput = inputObjectType({
-  name: 'AddCompanyInput',
+const AddOrganisationInput = inputObjectType({
+  name: 'AddOrganisationInput',
   definition(t) {
     t.nonNull.string('name');
     t.nonNull.string('adminName');
@@ -165,11 +165,11 @@ const AddCompanyInput = inputObjectType({
   },
 });
 
-export const AddCompanyPayload = objectType({
-  name: 'AddCompanyPayload',
+export const AddOrganisationPayload = objectType({
+  name: 'AddOrganisationPayload',
   definition(t) {
-    t.field('company', {
-      type: Company,
+    t.field('organisation', {
+      type: Organisation,
     });
     t.field('user', {
       type: UsersPayload,
@@ -178,15 +178,15 @@ export const AddCompanyPayload = objectType({
   },
 });
 
-export const CompanyMutation = extendType({
+export const OrganisationMutation = extendType({
   type: 'Mutation',
   definition(t) {
-    t.nonNull.field('addCompany', {
-      type: AddCompanyPayload,
+    t.nonNull.field('addOrganisation', {
+      type: AddOrganisationPayload,
       args: {
         data: nonNull(
           arg({
-            type: AddCompanyInput,
+            type: AddOrganisationInput,
           })
         ),
       },
@@ -203,7 +203,7 @@ export const CompanyMutation = extendType({
 
         const hashedPassword = await hash(args.data.password, 10);
 
-        const company = await context.prisma.company.create({
+        const organisation = await context.prisma.organisation.create({
           data: {
             name: args.data.name,
             users: {
@@ -231,7 +231,7 @@ export const CompanyMutation = extendType({
             depot: true,
             infringements: true,
             password: false,
-            company: false,
+            organisation: false,
           },
         });
 
@@ -249,7 +249,7 @@ export const CompanyMutation = extendType({
         });
 
         return {
-          company,
+          organisation,
           user,
           accessToken,
         };

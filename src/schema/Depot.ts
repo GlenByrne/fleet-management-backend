@@ -8,7 +8,7 @@ import {
 } from 'nexus';
 import { Context } from '../context';
 import { getUserId } from '../utilities/getUserId';
-import { Company } from './Company';
+import { Organisation } from './Organisation';
 import { Vehicle } from './Vehicle';
 
 export const Depot = objectType({
@@ -16,20 +16,20 @@ export const Depot = objectType({
   definition(t) {
     t.nonNull.id('id');
     t.nonNull.string('name');
-    t.nonNull.field('company', {
-      type: Company,
+    t.nonNull.field('organisation', {
+      type: Organisation,
       resolve: async (parent, _, context: Context) => {
-        const company = await context.prisma.depot
+        const organisation = await context.prisma.depot
           .findUnique({
             where: { id: parent.id },
           })
-          .company();
+          .organisation();
 
-        if (!company) {
-          throw new Error('Company not found');
+        if (!organisation) {
+          throw new Error('Organisation not found');
         }
 
-        return company;
+        return organisation;
       },
     });
     t.nonNull.list.nonNull.field('vehicles', {
@@ -72,17 +72,17 @@ export const DepotQuery = extendType({
             );
           }
 
-          const company = await context.prisma.user
+          const organisation = await context.prisma.user
             .findUnique({
               where: {
                 id: userId != null ? userId : undefined,
               },
             })
-            .company();
+            .organisation();
           return context.prisma.depot.findMany({
             where: {
               AND: [
-                { companyId: company?.id },
+                { organisationId: organisation?.id },
                 {
                   name: {
                     contains:
@@ -168,13 +168,13 @@ export const DepotMutation = extendType({
             throw new Error('Unable to add depot. You are not logged in.');
           }
 
-          const company = await context.prisma.user
+          const organisation = await context.prisma.user
             .findUnique({
               where: {
                 id: userId != null ? userId : undefined,
               },
             })
-            .company();
+            .organisation();
 
           const existingDepot = await context.prisma.depot.findUnique({
             where: {
@@ -189,9 +189,9 @@ export const DepotMutation = extendType({
           return context.prisma.depot.create({
             data: {
               name: args.data.name,
-              company: {
+              organisation: {
                 connect: {
-                  id: company?.id,
+                  id: organisation?.id,
                 },
               },
             },
