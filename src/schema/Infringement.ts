@@ -1,5 +1,6 @@
 import { arg, extendType, inputObjectType, nonNull, objectType } from 'nexus';
 import { Context } from '../context';
+import checkIsLoggedInAndInOrg from '../utilities/checkIsLoggedInAndInOrg';
 import { getUserId } from '../utilities/getUserId';
 import { InfringementStatus } from './Enum';
 import { UsersPayload } from './User';
@@ -25,10 +26,9 @@ const Infringement = objectType({
               id: true,
               name: true,
               email: true,
-              role: true,
-              depot: true,
               infringements: true,
               password: false,
+              organisations: true,
             },
           });
       },
@@ -42,6 +42,7 @@ const AddInfringementInput = inputObjectType({
     t.nonNull.id('driverId');
     t.nonNull.string('description');
     t.nonNull.date('dateOccured');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -106,11 +107,7 @@ export const InfringementMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error('Unable to add fuel card. You are not logged in.');
-        }
+        checkIsLoggedInAndInOrg(context, args.data.organisationId);
 
         const driver = await context.prisma.user.findUnique({
           where: {
@@ -122,7 +119,20 @@ export const InfringementMutation = extendType({
           throw new Error('Unable to add infringemnt. Driver not found.');
         }
 
-        if (driver.role !== 'DRIVER') {
+        const userOrgConnection =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId: args.data.driverId,
+                organisationId: args.data.organisationId,
+              },
+            },
+            select: {
+              role: true,
+            },
+          });
+
+        if (userOrgConnection?.role !== 'DRIVER') {
           throw new Error(
             'Unable to add infringemnt. Infringements can only be added to a driver'
           );

@@ -1,4 +1,11 @@
-import { objectType, nonNull, arg, inputObjectType, extendType } from 'nexus';
+import {
+  objectType,
+  nonNull,
+  arg,
+  inputObjectType,
+  extendType,
+  idArg,
+} from 'nexus';
 import { Context } from '../context';
 import { getUserId } from '../utilities/getUserId';
 import { Organisation } from './Organisation';
@@ -43,6 +50,7 @@ const FuelCardInputFilter = inputObjectType({
   name: 'FuelCardInputFilter',
   definition(t) {
     t.string('searchCriteria');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -52,9 +60,11 @@ export const FuelCardQuery = extendType({
     t.list.field('fuelCards', {
       type: FuelCard,
       args: {
-        data: arg({
-          type: FuelCardInputFilter,
-        }),
+        data: nonNull(
+          arg({
+            type: FuelCardInputFilter,
+          })
+        ),
       },
       resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
@@ -65,18 +75,26 @@ export const FuelCardQuery = extendType({
           );
         }
 
-        const organisation = await context.prisma.user
-          .findUnique({
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
             where: {
-              id: userId != null ? userId : undefined,
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
             },
-          })
-          .organisation();
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add vehicle. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.fuelCard.findMany({
           where: {
             AND: [
-              { organisationId: organisation?.id },
+              { organisationId: args.data.organisationId },
               {
                 cardNumber: {
                   contains:
@@ -97,7 +115,10 @@ export const FuelCardQuery = extendType({
 
     t.list.field('fuelCardsNotAssigned', {
       type: FuelCard,
-      resolve: async (_, __, context: Context) => {
+      args: {
+        organisationId: nonNull(idArg()),
+      },
+      resolve: async (_, args, context: Context) => {
         const userId = getUserId(context);
 
         if (!userId) {
@@ -106,17 +127,25 @@ export const FuelCardQuery = extendType({
           );
         }
 
-        const organisation = await context.prisma.user
-          .findUnique({
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
             where: {
-              id: userId != null ? userId : undefined,
+              userId_organisationId: {
+                userId,
+                organisationId: args.organisationId,
+              },
             },
-          })
-          .organisation();
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add vehicle. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.fuelCard.findMany({
           where: {
-            AND: [{ vehicleId: null }, { organisationId: organisation?.id }],
+            AND: [{ vehicleId: null }, { organisationId: args.organisationId }],
           },
           orderBy: {
             cardNumber: 'asc',
@@ -132,6 +161,7 @@ const AddFuelCardInput = inputObjectType({
   definition(t) {
     t.nonNull.string('cardNumber');
     t.nonNull.string('cardProvider');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -170,13 +200,21 @@ export const FuelCardMutation = extendType({
           throw new Error('Unable to add fuel card. You are not logged in.');
         }
 
-        const organisation = await context.prisma.user
-          .findUnique({
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
             where: {
-              id: userId != null ? userId : undefined,
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
             },
-          })
-          .organisation();
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add vehicle. You are not a member of this organisation'
+          );
+        }
 
         const existingCard = await context.prisma.fuelCard.findUnique({
           where: {
@@ -194,7 +232,7 @@ export const FuelCardMutation = extendType({
             cardProvider: args.data.cardProvider,
             organisation: {
               connect: {
-                id: organisation?.id,
+                id: args.data.organisationId,
               },
             },
           },

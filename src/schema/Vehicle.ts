@@ -17,6 +17,7 @@ import { Depot } from './Depot';
 import { VehicleType } from './Enum';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
+import checkIsLoggedInAndInOrg from '../utilities/checkIsLoggedInAndInOrg';
 
 export const Vehicle = objectType({
   name: 'Vehicle',
@@ -95,6 +96,7 @@ const VehicleInputFilter = inputObjectType({
   name: 'VehicleInputFilter',
   definition(t) {
     t.string('searchCriteria');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -121,31 +123,19 @@ export const VehicleQuery = extendType({
     t.list.field('vehicles', {
       type: Vehicle,
       args: {
-        data: arg({
-          type: VehicleInputFilter,
-        }),
+        data: nonNull(
+          arg({
+            type: VehicleInputFilter,
+          })
+        ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error(
-            'Unable to retrieve vehicles. You are not logged in.'
-          );
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
+        checkIsLoggedInAndInOrg(context, args.data.organisationId);
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { organisationId: organisation?.id },
+              { organisationId: args.data.organisationId },
               {
                 registration: {
                   contains:
@@ -185,27 +175,16 @@ export const VehicleQuery = extendType({
 
     t.list.field('upcomingCVRT', {
       type: Vehicle,
-      resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error(
-            'Unable to retrieve vehicles with upcoming CVRTs. You are not logged in.'
-          );
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
+      args: {
+        organisationId: nonNull(idArg()),
+      },
+      resolve: async (_, args, context: Context) => {
+        checkIsLoggedInAndInOrg(context, args.organisationId);
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { organisationId: organisation?.id },
+              { organisationId: args.organisationId },
               {
                 cvrt: {
                   lte: getDateTwoWeeks(),
@@ -222,27 +201,16 @@ export const VehicleQuery = extendType({
 
     t.list.field('upcomingThirteenWeek', {
       type: Vehicle,
-      resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error(
-            'Unable to retrieve vehicles with upcoming thirteen weeks. You are not logged in.'
-          );
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
+      args: {
+        organisationId: nonNull(idArg()),
+      },
+      resolve: async (_, args, context: Context) => {
+        checkIsLoggedInAndInOrg(context, args.organisationId);
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { organisationId: organisation?.id },
+              { organisationId: args.organisationId },
               {
                 thirteenWeekInspection: {
                   lte: getDateTwoWeeks(),
@@ -259,27 +227,16 @@ export const VehicleQuery = extendType({
 
     t.list.field('upcomingTachoCalibration', {
       type: Vehicle,
-      resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error(
-            'Unable to retrieve vehicles with upcoming tacho calibration. You are not logged in.'
-          );
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
+      args: {
+        organisationId: nonNull(idArg()),
+      },
+      resolve: async (_, args, context: Context) => {
+        checkIsLoggedInAndInOrg(context, args.organisationId);
 
         return context.prisma.vehicle.findMany({
           where: {
             AND: [
-              { organisationId: organisation?.id },
+              { organisationId: args.organisationId },
               {
                 tachoCalibration: {
                   lte: getDateTwoWeeks(),
@@ -310,6 +267,7 @@ const AddVehicleInput = inputObjectType({
     t.string('depotId');
     t.string('fuelCardId');
     t.string('tollTagId');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -366,19 +324,7 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error('Unable to add vehicle. You are not logged in.');
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
+        checkIsLoggedInAndInOrg(context, args.data.organisationId);
 
         const existingVehicle = await context.prisma.vehicle.findUnique({
           where: {
@@ -399,7 +345,7 @@ export const VehicleMutation = extendType({
             owner: args.data.owner,
             organisation: {
               connect: {
-                id: organisation?.id,
+                id: args.data.organisationId,
               },
             },
             cvrt: args.data.cvrt,

@@ -49,6 +49,7 @@ const DepotInputFilter = inputObjectType({
   name: 'DepotInputFilter',
   definition(t) {
     t.string('searchCriteria');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -58,9 +59,11 @@ export const DepotQuery = extendType({
     t.list.field('depots', {
       type: Depot,
       args: {
-        data: arg({
-          type: DepotInputFilter,
-        }),
+        data: nonNull(
+          arg({
+            type: DepotInputFilter,
+          })
+        ),
       },
       resolve: async (_, args, context: Context) => {
         try {
@@ -72,17 +75,26 @@ export const DepotQuery = extendType({
             );
           }
 
-          const organisation = await context.prisma.user
-            .findUnique({
+          const isInOrganisation =
+            await context.prisma.usersOnOrganisations.findUnique({
               where: {
-                id: userId != null ? userId : undefined,
+                userId_organisationId: {
+                  userId,
+                  organisationId: args.data.organisationId,
+                },
               },
-            })
-            .organisation();
+            });
+
+          if (!isInOrganisation) {
+            throw new Error(
+              'Unable to add vehicle. You are not a member of this organisation'
+            );
+          }
+
           return context.prisma.depot.findMany({
             where: {
               AND: [
-                { organisationId: organisation?.id },
+                { organisationId: args.data.organisationId },
                 {
                   name: {
                     contains:
@@ -130,6 +142,7 @@ const AddDepotInput = inputObjectType({
   name: 'AddDepotInput',
   definition(t) {
     t.nonNull.string('name');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -168,13 +181,21 @@ export const DepotMutation = extendType({
             throw new Error('Unable to add depot. You are not logged in.');
           }
 
-          const organisation = await context.prisma.user
-            .findUnique({
+          const isInOrganisation =
+            await context.prisma.usersOnOrganisations.findUnique({
               where: {
-                id: userId != null ? userId : undefined,
+                userId_organisationId: {
+                  userId,
+                  organisationId: args.data.organisationId,
+                },
               },
-            })
-            .organisation();
+            });
+
+          if (!isInOrganisation) {
+            throw new Error(
+              'Unable to add vehicle. You are not a member of this organisation'
+            );
+          }
 
           const existingDepot = await context.prisma.depot.findUnique({
             where: {
@@ -191,7 +212,7 @@ export const DepotMutation = extendType({
               name: args.data.name,
               organisation: {
                 connect: {
-                  id: organisation?.id,
+                  id: args.data.organisationId,
                 },
               },
             },

@@ -18,6 +18,7 @@ import { Role } from './Enum';
 import Infringement from './Infringement';
 import generateRefreshToken from '../utilities/generateRefreshToken';
 import getRefreshUserId from '../utilities/getRefreshUserId';
+import UsersOnOrganisations from './UsersOnOrganisations';
 
 export const User = objectType({
   name: 'User',
@@ -26,33 +27,20 @@ export const User = objectType({
     t.nonNull.string('name');
     t.nonNull.string('email');
     t.nonNull.string('password');
-    t.nonNull.field('role', {
-      type: Role,
-    });
-    t.nonNull.field('organisation', {
-      type: Organisation,
+    t.list.field('organisations', {
+      type: UsersOnOrganisations,
       resolve: async (parent, _, context: Context) => {
         const organisation = await context.prisma.user
           .findUnique({
             where: { id: parent.id },
           })
-          .organisation();
+          .organisations();
 
         if (!organisation) {
           throw new Error('Organisation not found');
         }
 
         return organisation;
-      },
-    });
-    t.field('depot', {
-      type: Depot,
-      resolve(parent, _, context: Context) {
-        return context.prisma.user
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .depot();
       },
     });
     t.nonNull.list.nonNull.field('infringements', {
@@ -67,18 +55,18 @@ export const User = objectType({
     });
   },
 });
+
 export const UsersPayload = objectType({
   name: 'UsersPayload',
   definition(t) {
     t.nonNull.string('id');
     t.nonNull.string('name');
     t.nonNull.string('email');
-    t.nonNull.field('role', { type: Role });
-    t.field('depot', {
-      type: Depot,
-    });
     t.nonNull.list.nonNull.field('infringements', {
       type: Infringement,
+    });
+    t.nonNull.list.nonNull.field('organisations', {
+      type: UsersOnOrganisations,
     });
   },
 });
@@ -119,6 +107,16 @@ const UsersInputFilter = inputObjectType({
   name: 'UsersInputFilter',
   definition(t) {
     t.string('searchCriteria');
+    t.nonNull.string('organisationId');
+  },
+});
+
+const RegisterInput = inputObjectType({
+  name: 'RegisterInput',
+  definition(t) {
+    t.nonNull.string('name');
+    t.nonNull.string('email');
+    t.nonNull.string('password');
   },
 });
 
@@ -169,11 +167,9 @@ export const UserQuery = extendType({
               id: true,
               name: true,
               email: true,
-              role: true,
-              depot: true,
               infringements: true,
               password: false,
-              organisation: false,
+              organisations: true,
             },
           });
         } catch {
@@ -192,121 +188,47 @@ export const UserQuery = extendType({
         }
         return context.prisma.user.findUnique({
           where: {
-            id: String(userId),
+            id: userId,
           },
           select: {
             id: true,
             name: true,
             email: true,
-            role: true,
-            depot: true,
             infringements: true,
             password: false,
-            organisation: false,
+            organisations: true,
           },
         });
       },
     });
-
-    t.list.field('users', {
-      type: UsersPayload,
-      args: {
-        data: arg({
-          type: UsersInputFilter,
-        }),
-      },
-      resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error('Unable to retrieve users. You are not logged in.');
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
-
-        return context.prisma.user.findMany({
-          where: {
-            AND: [
-              { organisationId: organisation?.id },
-              {
-                role: {
-                  not: 'ADMIN',
-                },
-              },
-              {
-                name: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
-              },
-            ],
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            depot: true,
-            infringements: true,
-            password: false,
-            organisation: false,
-          },
-          orderBy: {
-            name: 'asc',
-          },
-        });
-      },
-    });
-
-    t.nonNull.list.nonNull.field('drivers', {
-      type: UsersPayload,
+    t.list.field('currentUsersOrganisations', {
+      type: UsersOnOrganisations,
       resolve: async (_, __, context: Context) => {
         const userId = getUserId(context);
 
         if (!userId) {
-          throw new Error('Unable to retrieve users. You are not logged in.');
+          throw new Error(
+            'Unable to retrieve your account info. You are not logged in.'
+          );
         }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
-
-        return context.prisma.user.findMany({
+        const user = await context.prisma.user.findUnique({
           where: {
-            AND: [
-              { organisationId: organisation?.id },
-              {
-                role: 'DRIVER',
+            id: userId,
+          },
+          include: {
+            organisations: {
+              include: {
+                organisation: true,
               },
-            ],
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            depot: true,
-            infringements: true,
-            password: false,
-            organisation: false,
-          },
-          orderBy: {
-            name: 'asc',
+            },
           },
         });
+
+        if (!user) {
+          throw new Error('User not found');
+        }
+
+        return user.organisations;
       },
     });
   },
@@ -330,8 +252,8 @@ export const UserMutation = extendType({
             email: args.data.email,
           },
           include: {
-            depot: true,
             infringements: true,
+            organisations: true,
           },
         });
 
@@ -359,9 +281,8 @@ export const UserMutation = extendType({
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
-            depot: user.depot,
             infringements: user.infringements,
+            organisations: user.organisations,
           },
           accessToken,
         };
@@ -407,75 +328,16 @@ export const UserMutation = extendType({
       },
     });
 
-    // t.nonNull.field('register', {
-    //   type: AuthPayload,
-    //   args: {
-    //     data: nonNull(
-    //       arg({
-    //         type: RegisterInput,
-    //       })
-    //     ),
-    //   },
-    //   resolve: async (_, args, context: Context) => {
-    //     const existingUser = await context.prisma.user.findUnique({
-    //       where: {
-    //         email: args.data.email,
-    //       },
-    //     });
-
-    //     if (existingUser) {
-    //       throw new Error('ERROR: Account already exists with this email');
-    //     }
-
-    //     const hashedPassword = await hash(args.data.password, 10);
-
-    //     const user = await context.prisma.user.create({
-    //       data: {
-    //         email: args.data.email,
-    //         password: hashedPassword,
-    //         name: args.data.name,
-    //         role: 'USER',
-    //         organisation: {
-    //           connect: {
-    //             id: args.data.organisationId,
-    //           },
-    //         },
-    //       },
-    //     });
-
-    //     if (!user) {
-    //       throw new Error('Error');
-    //     }
-
-    //     const token = generateToken(user.id);
-
-    //     return {
-    //       token,
-    //       user,
-    //     };
-    //   },
-    // });
-
-    t.nonNull.field('addUser', {
-      type: UsersPayload,
+    t.nonNull.field('register', {
+      type: AuthPayload,
       args: {
         data: nonNull(
           arg({
-            type: AddUserInput,
+            type: RegisterInput,
           })
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
-
         const existingUser = await context.prisma.user.findUnique({
           where: {
             email: args.data.email,
@@ -483,7 +345,7 @@ export const UserMutation = extendType({
         });
 
         if (existingUser) {
-          throw new Error('Account already exists with this email');
+          throw new Error('ERROR: Account already exists with this email');
         }
 
         const hashedPassword = await hash(args.data.password, 10);
@@ -493,109 +355,177 @@ export const UserMutation = extendType({
             email: args.data.email,
             password: hashedPassword,
             name: args.data.name,
-            role: args.data.role,
-            ...createConnection('depot', args.data.depotId),
-            organisation: {
-              connect: {
-                id: organisation?.id,
-              },
-            },
           },
-          include: {
-            depot: true,
+          select: {
+            id: true,
+            name: true,
+            email: true,
             infringements: true,
+            password: false,
+            organisations: true,
           },
         });
 
+        if (!user) {
+          throw new Error('Error');
+        }
+
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = generateRefreshToken(user.id);
+
+        context.res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+        });
+
         return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          depot: user.depot,
-          infringements: user.infringements,
+          accessToken,
+          user,
         };
       },
     });
 
-    t.nonNull.field('deleteUser', {
-      type: User,
-      args: {
-        data: nonNull(
-          arg({
-            type: DeleteUserInput,
-          })
-        ),
-      },
-      resolve: (_, args, context: Context) => {
-        try {
-          return context.prisma.user.delete({
-            where: {
-              id: args.data.id,
-            },
-          });
-        } catch (error) {
-          throw new Error('Error deleting user');
-        }
-      },
-    });
+    // t.nonNull.field('addUser', {
+    //   type: UsersPayload,
+    //   args: {
+    //     data: nonNull(
+    //       arg({
+    //         type: AddUserInput,
+    //       })
+    //     ),
+    //   },
+    //   resolve: async (_, args, context: Context) => {
+    //     const userId = getUserId(context);
 
-    t.nonNull.field('updateUser', {
-      type: UsersPayload,
-      args: {
-        data: nonNull(
-          arg({
-            type: UpdateUserInput,
-          })
-        ),
-      },
-      resolve: async (_, args, context: Context) => {
-        try {
-          const oldUser = await context.prisma.user.findUnique({
-            where: {
-              id: args.data.id,
-            },
-            include: {
-              depot: {
-                select: {
-                  id: true,
-                },
-              },
-            },
-          });
+    //     const organisation = await context.prisma.user
+    //       .findUnique({
+    //         where: {
+    //           id: userId != null ? userId : undefined,
+    //         },
+    //       })
+    //       .organisation();
 
-          const user = await context.prisma.user.update({
-            where: {
-              id: args.data.id,
-            },
-            data: {
-              name: args.data.name,
-              email: args.data.email,
-              role: args.data.role,
-              ...upsertConnection(
-                'depot',
-                oldUser?.depot?.id,
-                args.data.depotId
-              ),
-            },
-            include: {
-              depot: true,
-              infringements: true,
-            },
-          });
+    //     const existingUser = await context.prisma.user.findUnique({
+    //       where: {
+    //         email: args.data.email,
+    //       },
+    //     });
 
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            depot: user.depot,
-            infringements: user.infringements,
-          };
-        } catch (error) {
-          throw new Error('Error updating user');
-        }
-      },
-    });
+    //     if (existingUser) {
+    //       throw new Error('Account already exists with this email');
+    //     }
+
+    //     const hashedPassword = await hash(args.data.password, 10);
+
+    //     const user = await context.prisma.user.create({
+    //       data: {
+    //         email: args.data.email,
+    //         password: hashedPassword,
+    //         name: args.data.name,
+    //         role: args.data.role,
+    //         ...createConnection('depot', args.data.depotId),
+    //         organisation: {
+    //           connect: {
+    //             id: organisation?.id,
+    //           },
+    //         },
+    //       },
+    //       include: {
+    //         depot: true,
+    //         infringements: true,
+    //       },
+    //     });
+
+    //     return {
+    //       id: user.id,
+    //       name: user.name,
+    //       email: user.email,
+    //       role: user.role,
+    //       depot: user.depot,
+    //       infringements: user.infringements,
+    //     };
+    //   },
+    // });
+
+    // t.nonNull.field('deleteUser', {
+    //   type: User,
+    //   args: {
+    //     data: nonNull(
+    //       arg({
+    //         type: DeleteUserInput,
+    //       })
+    //     ),
+    //   },
+    //   resolve: (_, args, context: Context) => {
+    //     try {
+    //       return context.prisma.user.delete({
+    //         where: {
+    //           id: args.data.id,
+    //         },
+    //       });
+    //     } catch (error) {
+    //       throw new Error('Error deleting user');
+    //     }
+    //   },
+    // });
+
+    // t.nonNull.field('updateUser', {
+    //   type: UsersPayload,
+    //   args: {
+    //     data: nonNull(
+    //       arg({
+    //         type: UpdateUserInput,
+    //       })
+    //     ),
+    //   },
+    //   resolve: async (_, args, context: Context) => {
+    //     try {
+    //       const oldUser = await context.prisma.user.findUnique({
+    //         where: {
+    //           id: args.data.id,
+    //         },
+    //         include: {
+    //           depot: {
+    //             select: {
+    //               id: true,
+    //             },
+    //           },
+    //         },
+    //       });
+
+    //       const user = await context.prisma.user.update({
+    //         where: {
+    //           id: args.data.id,
+    //         },
+    //         data: {
+    //           name: args.data.name,
+    //           email: args.data.email,
+    //           role: args.data.role,
+    //           ...upsertConnection(
+    //             'depot',
+    //             oldUser?.depot?.id,
+    //             args.data.depotId
+    //           ),
+    //         },
+    //         include: {
+    //           depot: true,
+    //           infringements: true,
+    //         },
+    //       });
+
+    //       return {
+    //         id: user.id,
+    //         name: user.name,
+    //         email: user.email,
+    //         role: user.role,
+    //         depot: user.depot,
+    //         infringements: user.infringements,
+    //       };
+    //     } catch (error) {
+    //       throw new Error('Error updating user');
+    //     }
+    //   },
+    // });
   },
 });

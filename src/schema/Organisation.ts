@@ -8,6 +8,8 @@ import { Vehicle } from './Vehicle';
 import { User, UsersPayload } from './User';
 import generateAccessToken from '../utilities/generateAccessToken';
 import generateRefreshToken from '../utilities/generateRefreshToken';
+import UsersOnOrganisations from './UsersOnOrganisations';
+import getUserId from '../utilities/getUserId';
 
 export const Organisation = objectType({
   name: 'Organisation',
@@ -15,7 +17,7 @@ export const Organisation = objectType({
     t.nonNull.id('id');
     t.nonNull.string('name');
     t.nonNull.list.nonNull.field('users', {
-      type: User,
+      type: UsersOnOrganisations,
       resolve(parent, _, context: Context) {
         return context.prisma.organisation
           .findUnique({
@@ -159,22 +161,6 @@ const AddOrganisationInput = inputObjectType({
   name: 'AddOrganisationInput',
   definition(t) {
     t.nonNull.string('name');
-    t.nonNull.string('adminName');
-    t.nonNull.string('email');
-    t.nonNull.string('password');
-  },
-});
-
-export const AddOrganisationPayload = objectType({
-  name: 'AddOrganisationPayload',
-  definition(t) {
-    t.field('organisation', {
-      type: Organisation,
-    });
-    t.field('user', {
-      type: UsersPayload,
-    });
-    t.nonNull.string('accessToken');
   },
 });
 
@@ -182,7 +168,7 @@ export const OrganisationMutation = extendType({
   type: 'Mutation',
   definition(t) {
     t.nonNull.field('addOrganisation', {
-      type: AddOrganisationPayload,
+      type: Organisation,
       args: {
         data: nonNull(
           arg({
@@ -191,17 +177,14 @@ export const OrganisationMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const existingUser = await context.prisma.user.findUnique({
-          where: {
-            email: args.data.email,
-          },
-        });
+        const userId = getUserId(context);
 
-        if (existingUser) {
-          throw new Error('ERROR: Account already exists with this email');
+        if (!userId) {
+          throw new Error('Unable to retrieve users. You are not logged in.');
         }
 
-        const hashedPassword = await hash(args.data.password, 10);
+        const organisationCount =
+          await context.prisma.usersOnOrganisations.count();
 
         const organisation = await context.prisma.organisation.create({
           data: {
@@ -209,50 +192,20 @@ export const OrganisationMutation = extendType({
             users: {
               create: [
                 {
-                  name: args.data.adminName,
-                  email: args.data.email,
-                  password: hashedPassword,
-                  role: 'ADMIN',
+                  user: {
+                    connect: {
+                      id: userId,
+                    },
+                  },
+                  role: 'OWNER',
+                  isDefault: organisationCount === 0,
                 },
               ],
             },
           },
         });
 
-        const user = await context.prisma.user.findUnique({
-          where: {
-            email: args.data.email,
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            depot: true,
-            infringements: true,
-            password: false,
-            organisation: false,
-          },
-        });
-
-        if (!user) {
-          throw new Error('Error');
-        }
-
-        const accessToken = generateAccessToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
-
-        context.res.cookie('refreshToken', refreshToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'strict',
-        });
-
-        return {
-          organisation,
-          user,
-          accessToken,
-        };
+        return organisation;
       },
     });
   },

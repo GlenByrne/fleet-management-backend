@@ -9,6 +9,7 @@ import * as vehicleTypes from './schema/Vehicle';
 import * as userTypes from './schema/User';
 import * as organisationTypes from './schema/Organisation';
 import * as infringementTypes from './schema/Infringement';
+import * as usersOnOrganisationsTypes from './schema/UsersOnOrganisations';
 import * as enumTypes from './schema/Enum';
 
 import permissions from './permissions';
@@ -25,6 +26,7 @@ const schemaWithoutPermissions = makeSchema({
     userTypes,
     organisationTypes,
     infringementTypes,
+    usersOnOrganisationsTypes,
     enumTypes,
     DateTimeScalar,
   ],
