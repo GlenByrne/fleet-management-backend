@@ -1,7 +1,9 @@
 import { arg, extendType, inputObjectType, nonNull, objectType } from 'nexus';
 import { Context } from '../context';
 import checkIsLoggedInAndInOrg from '../utilities/checkIsLoggedInAndInOrg';
+import createConnection from '../utilities/createConnection';
 import getUserId from '../utilities/getUserId';
+import upsertConnection from '../utilities/upsertConnection';
 import { Depot } from './Depot';
 import { Role } from './Enum';
 import Infringement from './Infringement';
@@ -106,6 +108,42 @@ export const UsersInOrganisationPayload = objectType({
     });
     t.nonNull.field('role', {
       type: Role,
+    });
+  },
+});
+
+export const AddUserToOrganisationPayload = objectType({
+  name: 'AddUserToOrganisationPayload',
+  definition(t) {
+    t.nonNull.string('id');
+    t.nonNull.string('name');
+    t.nonNull.string('email');
+    t.nonNull.list.nonNull.field('infringements', {
+      type: Infringement,
+    });
+    t.nonNull.field('role', {
+      type: Role,
+    });
+    t.field('depot', {
+      type: Depot,
+    });
+  },
+});
+
+export const UpdateUserOrgDetailsPayload = objectType({
+  name: 'UpdateUserOrgDetailsPayload',
+  definition(t) {
+    t.nonNull.string('id');
+    t.nonNull.string('name');
+    t.nonNull.string('email');
+    t.nonNull.list.nonNull.field('infringements', {
+      type: Infringement,
+    });
+    t.nonNull.field('role', {
+      type: Role,
+    });
+    t.field('depot', {
+      type: Depot,
     });
   },
 });
@@ -226,4 +264,193 @@ export const UserQuery = extendType({
   },
 });
 
-export default UsersOnOrganisations;
+const AddUserToOrganisationInput = inputObjectType({
+  name: 'AddUserToOrganisationInput',
+  definition(t) {
+    t.nonNull.id('userId');
+    t.nonNull.string('organisationId');
+    t.nonNull.field('role', {
+      type: Role,
+    });
+    t.nonNull.string('depotId');
+  },
+});
+
+const UpdateUserOrgDetailsInput = inputObjectType({
+  name: 'UpdateUserOrgDetailsInput',
+  definition(t) {
+    t.nonNull.id('userId');
+    t.nonNull.string('organisationId');
+    t.nonNull.string('depotId');
+    t.nonNull.field('role', { type: Role });
+  },
+});
+
+const RemoveUserFromOrganisationInput = inputObjectType({
+  name: 'RemoveUserFromOrganisationInput',
+  definition(t) {
+    t.nonNull.id('userId');
+    t.nonNull.string('organisationId');
+  },
+});
+
+export const UsersOnOrganisationsMutation = extendType({
+  type: 'Mutation',
+  definition(t) {
+    t.nonNull.field('updateUserOrgDetails', {
+      type: UpdateUserOrgDetailsPayload,
+      args: {
+        data: nonNull(
+          arg({
+            type: UpdateUserOrgDetailsInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        try {
+          const oldUserOrgDetails =
+            await context.prisma.usersOnOrganisations.findUnique({
+              where: {
+                userId_organisationId: {
+                  userId: args.data.userId,
+                  organisationId: args.data.organisationId,
+                },
+              },
+              include: {
+                depot: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            });
+
+          const userOrgDetails =
+            await context.prisma.usersOnOrganisations.update({
+              where: {
+                userId_organisationId: {
+                  userId: args.data.userId,
+                  organisationId: args.data.organisationId,
+                },
+              },
+              data: {
+                role: args.data.role,
+                ...upsertConnection(
+                  'depot',
+                  oldUserOrgDetails?.depot?.id,
+                  args.data.depotId
+                ),
+              },
+              include: {
+                depot: true,
+                user: {
+                  include: {
+                    infringements: true,
+                  },
+                },
+              },
+            });
+
+          return {
+            id: userOrgDetails.user.id,
+            name: userOrgDetails.user.name,
+            email: userOrgDetails.user.email,
+            role: userOrgDetails.role,
+            depot: userOrgDetails.depot,
+            infringements: userOrgDetails.user.infringements,
+          };
+        } catch (error) {
+          throw new Error('Error updating user');
+        }
+      },
+    });
+
+    t.nonNull.field('removeUserFromOrganisation', {
+      type: UsersOnOrganisations,
+      args: {
+        data: nonNull(
+          arg({
+            type: RemoveUserFromOrganisationInput,
+          })
+        ),
+      },
+      resolve: (_, args, context: Context) => {
+        try {
+          return context.prisma.usersOnOrganisations.delete({
+            where: {
+              userId_organisationId: {
+                userId: args.data.userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+        } catch (error) {
+          throw new Error('Error removing user from organisation');
+        }
+      },
+    });
+
+    t.nonNull.field('addUserToOrganisation', {
+      type: AddUserToOrganisationPayload,
+      args: {
+        data: nonNull(
+          arg({
+            type: AddUserToOrganisationInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+
+        const existingUser =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId: args.data.userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (existingUser) {
+          throw new Error('User has already been added to this organisation');
+        }
+
+        const newUserToOrgLink =
+          await context.prisma.usersOnOrganisations.create({
+            data: {
+              user: {
+                connect: {
+                  id: args.data.userId,
+                },
+              },
+              organisation: {
+                connect: {
+                  id: args.data.organisationId,
+                },
+              },
+              ...createConnection('depot', args.data.depotId),
+              role: args.data.role,
+            },
+            include: {
+              depot: true,
+              user: {
+                include: {
+                  infringements: true,
+                },
+              },
+            },
+          });
+
+        return {
+          id: newUserToOrgLink.user.id,
+          name: newUserToOrgLink.user.name,
+          email: newUserToOrgLink.user.email,
+          role: newUserToOrgLink.role,
+          depot: newUserToOrgLink.depot,
+          infringements: newUserToOrgLink.user.infringements,
+        };
+      },
+    });
+  },
+});

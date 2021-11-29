@@ -18,7 +18,7 @@ import { Role } from './Enum';
 import Infringement from './Infringement';
 import generateRefreshToken from '../utilities/generateRefreshToken';
 import getRefreshUserId from '../utilities/getRefreshUserId';
-import UsersOnOrganisations from './UsersOnOrganisations';
+import { UsersOnOrganisations } from './UsersOnOrganisations';
 
 export const User = objectType({
   name: 'User',

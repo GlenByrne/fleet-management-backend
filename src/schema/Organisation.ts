@@ -8,8 +8,8 @@ import { Vehicle } from './Vehicle';
 import { User, UsersPayload } from './User';
 import generateAccessToken from '../utilities/generateAccessToken';
 import generateRefreshToken from '../utilities/generateRefreshToken';
-import UsersOnOrganisations from './UsersOnOrganisations';
 import getUserId from '../utilities/getUserId';
+import { UsersOnOrganisations } from './UsersOnOrganisations';
 
 export const Organisation = objectType({
   name: 'Organisation',
