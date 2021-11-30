@@ -8,6 +8,7 @@ interface Token {
 
 export const getUserId = (context: Context) => {
   const authHeader = context.req.get('Authorization');
+
   if (authHeader) {
     const token = authHeader.replace('Bearer ', '');
     const verifiedToken = verify(token, ACCESS_TOKEN_SECRET) as Token;

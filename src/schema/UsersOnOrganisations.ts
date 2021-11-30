@@ -1,6 +1,5 @@
 import { arg, extendType, inputObjectType, nonNull, objectType } from 'nexus';
 import { Context } from '../context';
-import checkIsLoggedInAndInOrg from '../utilities/checkIsLoggedInAndInOrg';
 import createConnection from '../utilities/createConnection';
 import getUserId from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
@@ -112,6 +111,27 @@ export const UsersInOrganisationPayload = objectType({
   },
 });
 
+export const OrganisationsListPayload = objectType({
+  name: 'OrganisationsListPayload',
+  definition(t) {
+    t.field('role', {
+      type: Role,
+    });
+    t.field('organisation', {
+      type: Organisation,
+    });
+  },
+});
+
+export const UsersOrganisationsPayload = objectType({
+  name: 'UsersOrganisationsPayload',
+  definition(t) {
+    t.list.field('organisations', {
+      type: OrganisationsListPayload,
+    });
+  },
+});
+
 export const AddUserToOrganisationPayload = objectType({
   name: 'AddUserToOrganisationPayload',
   definition(t) {
@@ -166,6 +186,30 @@ export const DriversInOrganisationPayload = objectType({
 export const UserQuery = extendType({
   type: 'Query',
   definition(t) {
+    t.list.field('usersOrganisations', {
+      type: UsersOnOrganisations,
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve your organisations. You are not logged in.'
+          );
+        }
+
+        return context.prisma.usersOnOrganisations.findMany({
+          where: {
+            userId,
+          },
+          orderBy: {
+            organisation: {
+              name: 'asc',
+            },
+          },
+        });
+      },
+    });
+
     t.list.field('usersInOrganisation', {
       type: UsersInOrganisationPayload,
       args: {
@@ -176,7 +220,29 @@ export const UserQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to get organisations users. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to get organisations users. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.usersOnOrganisations.findMany({
           where: {
@@ -228,7 +294,29 @@ export const UserQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to get organisations drivers. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to get organisations drivers. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.usersOnOrganisations.findMany({
           where: {
@@ -400,7 +488,29 @@ export const UsersOnOrganisationsMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to add user to organisation. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add user to organisation. You are not a member of this organisation'
+          );
+        }
 
         const existingUser =
           await context.prisma.usersOnOrganisations.findUnique({

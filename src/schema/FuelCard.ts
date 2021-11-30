@@ -87,7 +87,7 @@ export const FuelCardQuery = extendType({
 
         if (!isInOrganisation) {
           throw new Error(
-            'Unable to add vehicle. You are not a member of this organisation'
+            'Unable to retrieve fuel cards. You are not a member of this organisation'
           );
         }
 
@@ -139,7 +139,7 @@ export const FuelCardQuery = extendType({
 
         if (!isInOrganisation) {
           throw new Error(
-            'Unable to add vehicle. You are not a member of this organisation'
+            'Unable to retrieve fuel cards. You are not a member of this organisation'
           );
         }
 
@@ -212,7 +212,7 @@ export const FuelCardMutation = extendType({
 
         if (!isInOrganisation) {
           throw new Error(
-            'Unable to add vehicle. You are not a member of this organisation'
+            'Unable to add fuel card. You are not a member of this organisation'
           );
         }
 

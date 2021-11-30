@@ -17,7 +17,6 @@ import { Depot } from './Depot';
 import { VehicleType } from './Enum';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
-import checkIsLoggedInAndInOrg from '../utilities/checkIsLoggedInAndInOrg';
 
 export const Vehicle = objectType({
   name: 'Vehicle',
@@ -130,7 +129,29 @@ export const VehicleQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve vehicles. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retrieve vehicles. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.vehicle.findMany({
           where: {
@@ -179,7 +200,27 @@ export const VehicleQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to retrieve depots. You are not logged in.');
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retrieve depots. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.vehicle.findMany({
           where: {
@@ -205,7 +246,27 @@ export const VehicleQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to retrieve depots. You are not logged in.');
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retrieve depots. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.vehicle.findMany({
           where: {
@@ -231,7 +292,29 @@ export const VehicleQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve upcoming tacho cals. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retrieve upcoming tacho cals. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.vehicle.findMany({
           where: {
@@ -324,7 +407,27 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to add vehicle. You are not logged in.');
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add vehicle. You are not a member of this organisation'
+          );
+        }
 
         const existingVehicle = await context.prisma.vehicle.findUnique({
           where: {

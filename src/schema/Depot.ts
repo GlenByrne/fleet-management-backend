@@ -66,53 +66,47 @@ export const DepotQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = getUserId(context);
 
-          if (!userId) {
-            throw new Error(
-              'Unable to retrieve depots. You are not logged in.'
-            );
-          }
+        if (!userId) {
+          throw new Error('Unable to retrieve depots. You are not logged in.');
+        }
 
-          const isInOrganisation =
-            await context.prisma.usersOnOrganisations.findUnique({
-              where: {
-                userId_organisationId: {
-                  userId,
-                  organisationId: args.data.organisationId,
-                },
-              },
-            });
-
-          if (!isInOrganisation) {
-            throw new Error(
-              'Unable to add vehicle. You are not a member of this organisation'
-            );
-          }
-
-          return context.prisma.depot.findMany({
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
             where: {
-              AND: [
-                { organisationId: args.data.organisationId },
-                {
-                  name: {
-                    contains:
-                      args.data?.searchCriteria != null
-                        ? args.data.searchCriteria
-                        : undefined,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            },
-            orderBy: {
-              name: 'asc',
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
             },
           });
-        } catch (error) {
-          throw new Error('Error retrieving depots');
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retrieve depots. You are not a member of this organisation'
+          );
         }
+
+        return context.prisma.depot.findMany({
+          where: {
+            AND: [
+              { organisationId: args.data.organisationId },
+              {
+                name: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+          orderBy: {
+            name: 'asc',
+          },
+        });
       },
     });
 
@@ -193,7 +187,7 @@ export const DepotMutation = extendType({
 
           if (!isInOrganisation) {
             throw new Error(
-              'Unable to add vehicle. You are not a member of this organisation'
+              'Unable to add depot. You are not a member of this organisation'
             );
           }
 

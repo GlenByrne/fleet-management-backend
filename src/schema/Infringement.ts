@@ -1,6 +1,5 @@
 import { arg, extendType, inputObjectType, nonNull, objectType } from 'nexus';
 import { Context } from '../context';
-import checkIsLoggedInAndInOrg from '../utilities/checkIsLoggedInAndInOrg';
 import { getUserId } from '../utilities/getUserId';
 import { InfringementStatus } from './Enum';
 import { UsersPayload } from './User';
@@ -107,7 +106,27 @@ export const InfringementMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to add infringement. You are not logged in.');
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add infringement. You are not a member of this organisation'
+          );
+        }
 
         const driver = await context.prisma.user.findUnique({
           where: {

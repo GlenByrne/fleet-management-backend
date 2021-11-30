@@ -7,7 +7,6 @@ import {
   idArg,
 } from 'nexus';
 import { Context } from '../context';
-import checkIsLoggedInAndInOrg from '../utilities/checkIsLoggedInAndInOrg';
 import { getUserId } from '../utilities/getUserId';
 import { Organisation } from './Organisation';
 import { Vehicle } from './Vehicle';
@@ -68,7 +67,29 @@ export const TollTagQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retreive toll tags. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retreive toll tags. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.tollTag.findMany({
           where: {
@@ -98,7 +119,29 @@ export const TollTagQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve unassigned toll tags. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retrieve unassigned toll tags. You are not a member of this organisation'
+          );
+        }
 
         return context.prisma.tollTag.findMany({
           where: {
@@ -151,7 +194,27 @@ export const TollTagMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        checkIsLoggedInAndInOrg(context, args.data.organisationId);
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to add toll tag. You are not logged in.');
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add toll tag. You are not a member of this organisation'
+          );
+        }
 
         const existingTag = await context.prisma.tollTag.findUnique({
           where: {
