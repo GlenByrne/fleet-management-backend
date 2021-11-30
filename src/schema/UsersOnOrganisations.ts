@@ -108,6 +108,9 @@ export const UsersInOrganisationPayload = objectType({
     t.nonNull.field('role', {
       type: Role,
     });
+    t.field('depot', {
+      type: Depot,
+    });
   },
 });
 
@@ -263,6 +266,7 @@ export const UserQuery = extendType({
           },
           select: {
             role: true,
+            depot: true,
             user: {
               select: {
                 id: true,
