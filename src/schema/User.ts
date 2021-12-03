@@ -201,36 +201,6 @@ export const UserQuery = extendType({
         });
       },
     });
-    t.list.field('currentUsersOrganisations', {
-      type: UsersOnOrganisations,
-      resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error(
-            'Unable to retrieve your account info. You are not logged in.'
-          );
-        }
-        const user = await context.prisma.user.findUnique({
-          where: {
-            id: userId,
-          },
-          include: {
-            organisations: {
-              include: {
-                organisation: true,
-              },
-            },
-          },
-        });
-
-        if (!user) {
-          throw new Error('User not found');
-        }
-
-        return user.organisations;
-      },
-    });
   },
 });
 

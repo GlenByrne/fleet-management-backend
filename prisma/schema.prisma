@@ -43,7 +43,7 @@ model UsersOnOrganisations {
   role           Role
   depot          Depot?       @relation(fields: [depotId], references: [id])
   depotId        String?
-  isDefault      Boolean      @default(false)
+  inviteAccepted Boolean      @default(false)
 
   @@id([userId, organisationId])
 }

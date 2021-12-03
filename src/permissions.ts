@@ -37,10 +37,10 @@ const permissions = shield(
       usersOrganisations: rules.isAuthenticatedUser,
       user: rules.isAuthenticatedUser,
       me: rules.isAuthenticatedUser,
-      currentUsersOrganisations: rules.isAuthenticatedUser,
       infringements: rules.isAuthenticatedUser,
       usersInOrganisation: rules.isAuthenticatedUser,
       driversInOrganisation: rules.isAuthenticatedUser,
+      usersOrganisationInvites: rules.isAuthenticatedUser,
     },
     Mutation: {
       addVehicle: rules.isAuthenticatedUser,
@@ -67,8 +67,10 @@ const permissions = shield(
       deleteInfringement: rules.isAuthenticatedUser,
       updateInfringementStatus: rules.isAuthenticatedUser,
       updateUserOrgDetails: rules.isAuthenticatedUser,
-      addUserToOrganisation: rules.isAuthenticatedUser,
+      inviteUserToOrganisation: rules.isAuthenticatedUser,
       removeUserFromOrganisation: rules.isAuthenticatedUser,
+      acceptInvite: rules.isAuthenticatedUser,
+      declineInvite: rules.isAuthenticatedUser,
     },
   },
   { allowExternalErrors: true }

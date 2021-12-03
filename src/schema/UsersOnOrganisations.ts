@@ -15,7 +15,7 @@ export const UsersOnOrganisations = objectType({
     t.nonNull.field('role', {
       type: Role,
     });
-    t.nonNull.boolean('isDefault');
+    t.nonNull.boolean('inviteAccepted');
     t.nonNull.id('userId');
     t.nonNull.id('organisationId');
     t.nonNull.field('user', {
@@ -135,24 +135,6 @@ export const UsersOrganisationsPayload = objectType({
   },
 });
 
-export const AddUserToOrganisationPayload = objectType({
-  name: 'AddUserToOrganisationPayload',
-  definition(t) {
-    t.nonNull.string('id');
-    t.nonNull.string('name');
-    t.nonNull.string('email');
-    t.nonNull.list.nonNull.field('infringements', {
-      type: Infringement,
-    });
-    t.nonNull.field('role', {
-      type: Role,
-    });
-    t.field('depot', {
-      type: Depot,
-    });
-  },
-});
-
 export const UpdateUserOrgDetailsPayload = objectType({
   name: 'UpdateUserOrgDetailsPayload',
   definition(t) {
@@ -202,7 +184,38 @@ export const UserQuery = extendType({
 
         return context.prisma.usersOnOrganisations.findMany({
           where: {
-            userId,
+            AND: [{ userId }, { inviteAccepted: true }],
+          },
+          orderBy: {
+            organisation: {
+              name: 'asc',
+            },
+          },
+        });
+      },
+    });
+
+    t.list.field('usersOrganisationInvites', {
+      type: UsersOnOrganisations,
+      resolve: async (_, __, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to retrieve your invites. You are not logged in.'
+          );
+        }
+
+        return context.prisma.usersOnOrganisations.findMany({
+          where: {
+            AND: [
+              {
+                userId,
+              },
+              {
+                inviteAccepted: false,
+              },
+            ],
           },
           orderBy: {
             organisation: {
@@ -251,6 +264,7 @@ export const UserQuery = extendType({
           where: {
             AND: [
               { organisationId: args.data.organisationId },
+              { inviteAccepted: true },
               {
                 user: {
                   name: {
@@ -356,18 +370,6 @@ export const UserQuery = extendType({
   },
 });
 
-const AddUserToOrganisationInput = inputObjectType({
-  name: 'AddUserToOrganisationInput',
-  definition(t) {
-    t.nonNull.id('userId');
-    t.nonNull.string('organisationId');
-    t.nonNull.field('role', {
-      type: Role,
-    });
-    t.nonNull.string('depotId');
-  },
-});
-
 const UpdateUserOrgDetailsInput = inputObjectType({
   name: 'UpdateUserOrgDetailsInput',
   definition(t) {
@@ -382,6 +384,20 @@ const RemoveUserFromOrganisationInput = inputObjectType({
   name: 'RemoveUserFromOrganisationInput',
   definition(t) {
     t.nonNull.id('userId');
+    t.nonNull.string('organisationId');
+  },
+});
+
+const AcceptInviteInput = inputObjectType({
+  name: 'AcceptInviteInput',
+  definition(t) {
+    t.nonNull.string('organisationId');
+  },
+});
+
+const DeclineInviteInput = inputObjectType({
+  name: 'DeclineInviteInput',
+  definition(t) {
     t.nonNull.string('organisationId');
   },
 });
@@ -482,12 +498,12 @@ export const UsersOnOrganisationsMutation = extendType({
       },
     });
 
-    t.nonNull.field('addUserToOrganisation', {
-      type: AddUserToOrganisationPayload,
+    t.nonNull.field('acceptInvite', {
+      type: UsersOnOrganisations,
       args: {
         data: nonNull(
           arg({
-            type: AddUserToOrganisationInput,
+            type: AcceptInviteInput,
           })
         ),
       },
@@ -500,8 +516,40 @@ export const UsersOnOrganisationsMutation = extendType({
           );
         }
 
-        const isInOrganisation =
-          await context.prisma.usersOnOrganisations.findUnique({
+        return context.prisma.usersOnOrganisations.update({
+          where: {
+            userId_organisationId: {
+              userId,
+              organisationId: args.data.organisationId,
+            },
+          },
+          data: {
+            inviteAccepted: true,
+          },
+        });
+      },
+    });
+
+    t.nonNull.field('declineInvite', {
+      type: UsersOnOrganisations,
+      args: {
+        data: nonNull(
+          arg({
+            type: DeclineInviteInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to add user to organisation. You are not logged in.'
+          );
+        }
+
+        const usersOnOrganisations =
+          await context.prisma.usersOnOrganisations.delete({
             where: {
               userId_organisationId: {
                 userId,
@@ -510,60 +558,7 @@ export const UsersOnOrganisationsMutation = extendType({
             },
           });
 
-        if (!isInOrganisation) {
-          throw new Error(
-            'Unable to add user to organisation. You are not a member of this organisation'
-          );
-        }
-
-        const existingUser =
-          await context.prisma.usersOnOrganisations.findUnique({
-            where: {
-              userId_organisationId: {
-                userId: args.data.userId,
-                organisationId: args.data.organisationId,
-              },
-            },
-          });
-
-        if (existingUser) {
-          throw new Error('User has already been added to this organisation');
-        }
-
-        const newUserToOrgLink =
-          await context.prisma.usersOnOrganisations.create({
-            data: {
-              user: {
-                connect: {
-                  id: args.data.userId,
-                },
-              },
-              organisation: {
-                connect: {
-                  id: args.data.organisationId,
-                },
-              },
-              ...createConnection('depot', args.data.depotId),
-              role: args.data.role,
-            },
-            include: {
-              depot: true,
-              user: {
-                include: {
-                  infringements: true,
-                },
-              },
-            },
-          });
-
-        return {
-          id: newUserToOrgLink.user.id,
-          name: newUserToOrgLink.user.name,
-          email: newUserToOrgLink.user.email,
-          role: newUserToOrgLink.role,
-          depot: newUserToOrgLink.depot,
-          infringements: newUserToOrgLink.user.infringements,
-        };
+        return usersOnOrganisations;
       },
     });
   },
