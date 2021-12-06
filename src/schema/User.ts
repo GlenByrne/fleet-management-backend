@@ -5,20 +5,21 @@ import {
   inputObjectType,
   nonNull,
   objectType,
+  stringArg,
 } from 'nexus';
 import { compare, hash } from 'bcrypt';
+import { verify } from 'jsonwebtoken';
 import { Context } from '../context';
-import { Depot } from './Depot';
-import { Organisation } from './Organisation';
 import { getUserId } from '../utilities/getUserId';
-import createConnection from '../utilities/createConnection';
-import upsertConnection from '../utilities/upsertConnection';
 import generateAccessToken from '../utilities/generateAccessToken';
 import { Role } from './Enum';
 import Infringement from './Infringement';
 import generateRefreshToken from '../utilities/generateRefreshToken';
 import getRefreshUserId from '../utilities/getRefreshUserId';
 import { UsersOnOrganisations } from './UsersOnOrganisations';
+import sendEmail, { activationEmail } from '../utilities/sendEmail';
+import generateActivationToken from '../utilities/generateActivationToken';
+import { ACTIVATION_TOKEN_SECRET } from '../server';
 
 export const User = objectType({
   name: 'User',
@@ -26,7 +27,6 @@ export const User = objectType({
     t.nonNull.id('id');
     t.nonNull.string('name');
     t.nonNull.string('email');
-    t.nonNull.string('password');
     t.list.field('organisations', {
       type: UsersOnOrganisations,
       resolve: async (parent, _, context: Context) => {
@@ -78,6 +78,13 @@ export const AuthPayload = objectType({
       type: UsersPayload,
     });
     t.nonNull.string('accessToken');
+  },
+});
+
+export const MessagePayload = objectType({
+  name: 'MessagePayload',
+  definition(t) {
+    t.nonNull.string('message');
   },
 });
 
@@ -168,7 +175,6 @@ export const UserQuery = extendType({
               name: true,
               email: true,
               infringements: true,
-              password: false,
               organisations: true,
             },
           });
@@ -195,7 +201,6 @@ export const UserQuery = extendType({
             name: true,
             email: true,
             infringements: true,
-            password: false,
             organisations: true,
           },
         });
@@ -299,7 +304,7 @@ export const UserMutation = extendType({
     });
 
     t.nonNull.field('register', {
-      type: AuthPayload,
+      type: MessagePayload,
       args: {
         data: nonNull(
           arg({
@@ -320,18 +325,89 @@ export const UserMutation = extendType({
 
         const hashedPassword = await hash(args.data.password, 10);
 
+        // const user = await context.prisma.user.create({
+        //   data: {
+        //     email: args.data.email,
+        //     password: hashedPassword,
+        //     name: args.data.name,
+        //   },
+        //   select: {
+        //     id: true,
+        //     name: true,
+        //     email: true,
+        //     infringements: true,
+        //     password: false,
+        //     organisations: true,
+        //   },
+        // });
+
+        // if (!user) {
+        //   throw new Error('Error');
+        // }
+
+        const token = generateActivationToken({
+          name: args.data.name,
+          email: args.data.email,
+          password: hashedPassword,
+        });
+
+        const html = activationEmail(token);
+
+        await sendEmail({
+          from: '"Fred Foo 👻" <foo@example.com>',
+          to: args.data.email,
+          subject: 'Account Activation',
+          html,
+        });
+
+        return {
+          message: `Email has been sent to ${args.data.email}. Follow the instructions to activate your account`,
+        };
+        // const accessToken = generateAccessToken(user.id);
+        // const refreshToken = generateRefreshToken(user.id);
+
+        // context.res.cookie('refreshToken', refreshToken, {
+        //   httpOnly: true,
+        //   secure: true,
+        //   sameSite: 'strict',
+        // });
+
+        // return {
+        //   accessToken,
+        //   user,
+        // };
+      },
+    });
+
+    t.nonNull.field('activateAccount', {
+      type: MessagePayload,
+      args: {
+        token: stringArg(),
+      },
+      resolve: async (_, args, context: Context) => {
+        if (!args.token) {
+          throw new Error('No token for activation');
+        }
+
+        const decoded = verify(args.token, ACTIVATION_TOKEN_SECRET);
+
+        const { name, email, password } = decoded as {
+          name: string;
+          email: string;
+          password: string;
+        };
+
         const user = await context.prisma.user.create({
           data: {
-            email: args.data.email,
-            password: hashedPassword,
-            name: args.data.name,
+            email,
+            password,
+            name,
           },
           select: {
             id: true,
             name: true,
             email: true,
             infringements: true,
-            password: false,
             organisations: true,
           },
         });
@@ -340,19 +416,23 @@ export const UserMutation = extendType({
           throw new Error('Error');
         }
 
-        const accessToken = generateAccessToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
-
-        context.res.cookie('refreshToken', refreshToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'strict',
-        });
-
         return {
-          accessToken,
-          user,
+          message: 'Signup successful. Please sign in.',
         };
+
+        // const accessToken = generateAccessToken(user.id);
+        // const refreshToken = generateRefreshToken(user.id);
+
+        // context.res.cookie('refreshToken', refreshToken, {
+        //   httpOnly: true,
+        //   secure: true,
+        //   sameSite: 'strict',
+        // });
+
+        // return {
+        //   accessToken,
+        //   user,
+        // };
       },
     });
 

@@ -36,7 +36,6 @@ export const UsersOnOrganisations = objectType({
               name: true,
               email: true,
               infringements: true,
-              password: false,
               organisations: true,
             },
           });
@@ -287,7 +286,6 @@ export const UserQuery = extendType({
                 name: true,
                 email: true,
                 infringements: true,
-                password: false,
                 organisations: false,
               },
             },
@@ -354,7 +352,6 @@ export const UserQuery = extendType({
                 name: true,
                 email: true,
                 infringements: true,
-                password: false,
                 organisations: false,
               },
             },

@@ -9,6 +9,7 @@ import { context } from './context';
 
 export const ACCESS_TOKEN_SECRET = 'xudvholxjekszefvsuvosuegv';
 export const REFRESH_TOKEN_SECRET = 'akjwdhliuawdlUWladuhawud';
+export const ACTIVATION_TOKEN_SECRET = 'jnxlkjvelkvlsgvsdkvbsve';
 
 // const corsOptions = {
 //   origin: 'http://localhost:3000',

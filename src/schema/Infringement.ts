@@ -26,7 +26,6 @@ const Infringement = objectType({
               name: true,
               email: true,
               infringements: true,
-              password: false,
               organisations: true,
             },
           });
