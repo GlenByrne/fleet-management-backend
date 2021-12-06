@@ -47,3 +47,10 @@ export const activationEmail = (token: string) => {
       Have a pleasant day.`;
   return html;
 };
+
+export const resetPasswordEmail = (token: string) => {
+  const html = `
+      <h1>Please use the following link to reset your password</h1>
+      <a target="_blank" href="localhost:3000/passwordReset/${token}">localhost:3000/passwordReset/${token}</a>`;
+  return html;
+};

@@ -17,9 +17,16 @@ import Infringement from './Infringement';
 import generateRefreshToken from '../utilities/generateRefreshToken';
 import getRefreshUserId from '../utilities/getRefreshUserId';
 import { UsersOnOrganisations } from './UsersOnOrganisations';
-import sendEmail, { activationEmail } from '../utilities/sendEmail';
+import sendEmail, {
+  activationEmail,
+  resetPasswordEmail,
+} from '../utilities/sendEmail';
 import generateActivationToken from '../utilities/generateActivationToken';
-import { ACTIVATION_TOKEN_SECRET } from '../server';
+import {
+  ACTIVATION_TOKEN_SECRET,
+  RESET_PASSWORD_TOKEN_SECRET,
+} from '../server';
+import generateResetPasswordToken from '../utilities/generateResetPasswordToken';
 
 export const User = objectType({
   name: 'User',
@@ -124,6 +131,28 @@ const RegisterInput = inputObjectType({
     t.nonNull.string('name');
     t.nonNull.string('email');
     t.nonNull.string('password');
+  },
+});
+
+const ActivateAccountInput = inputObjectType({
+  name: 'ActivateAccountInput',
+  definition(t) {
+    t.nonNull.string('token');
+  },
+});
+
+const ForgotPasswordInput = inputObjectType({
+  name: 'ForgotPasswordInput',
+  definition(t) {
+    t.nonNull.string('email');
+  },
+});
+
+const ResetPasswordInput = inputObjectType({
+  name: 'ResetPasswordInput',
+  definition(t) {
+    t.nonNull.string('resetPasswordToken');
+    t.nonNull.string('newPassword');
   },
 });
 
@@ -380,16 +409,20 @@ export const UserMutation = extendType({
     });
 
     t.nonNull.field('activateAccount', {
-      type: MessagePayload,
+      type: 'Boolean',
       args: {
-        token: stringArg(),
+        data: nonNull(
+          arg({
+            type: ActivateAccountInput,
+          })
+        ),
       },
       resolve: async (_, args, context: Context) => {
-        if (!args.token) {
-          throw new Error('No token for activation');
+        if (!args.data.token) {
+          return false;
         }
 
-        const decoded = verify(args.token, ACTIVATION_TOKEN_SECRET);
+        const decoded = verify(args.data.token, ACTIVATION_TOKEN_SECRET);
 
         const { name, email, password } = decoded as {
           name: string;
@@ -416,9 +449,7 @@ export const UserMutation = extendType({
           throw new Error('Error');
         }
 
-        return {
-          message: 'Signup successful. Please sign in.',
-        };
+        return true;
 
         // const accessToken = generateAccessToken(user.id);
         // const refreshToken = generateRefreshToken(user.id);
@@ -436,146 +467,81 @@ export const UserMutation = extendType({
       },
     });
 
-    // t.nonNull.field('addUser', {
-    //   type: UsersPayload,
-    //   args: {
-    //     data: nonNull(
-    //       arg({
-    //         type: AddUserInput,
-    //       })
-    //     ),
-    //   },
-    //   resolve: async (_, args, context: Context) => {
-    //     const userId = getUserId(context);
+    t.nonNull.field('forgotPassword', {
+      type: 'Boolean',
+      args: {
+        data: nonNull(
+          arg({
+            type: ForgotPasswordInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        const user = await context.prisma.user.findUnique({
+          where: {
+            email: args.data.email,
+          },
+        });
 
-    //     const organisation = await context.prisma.user
-    //       .findUnique({
-    //         where: {
-    //           id: userId != null ? userId : undefined,
-    //         },
-    //       })
-    //       .organisation();
+        if (!user) {
+          return true;
+        }
 
-    //     const existingUser = await context.prisma.user.findUnique({
-    //       where: {
-    //         email: args.data.email,
-    //       },
-    //     });
+        const token = generateResetPasswordToken({
+          userId: user.id,
+        });
 
-    //     if (existingUser) {
-    //       throw new Error('Account already exists with this email');
-    //     }
+        const html = resetPasswordEmail(token);
 
-    //     const hashedPassword = await hash(args.data.password, 10);
+        await sendEmail({
+          from: '"Fred Foo 👻" <foo@example.com>',
+          to: user.email,
+          subject: 'Password Reset',
+          html,
+        });
 
-    //     const user = await context.prisma.user.create({
-    //       data: {
-    //         email: args.data.email,
-    //         password: hashedPassword,
-    //         name: args.data.name,
-    //         role: args.data.role,
-    //         ...createConnection('depot', args.data.depotId),
-    //         organisation: {
-    //           connect: {
-    //             id: organisation?.id,
-    //           },
-    //         },
-    //       },
-    //       include: {
-    //         depot: true,
-    //         infringements: true,
-    //       },
-    //     });
+        return true;
+      },
+    });
 
-    //     return {
-    //       id: user.id,
-    //       name: user.name,
-    //       email: user.email,
-    //       role: user.role,
-    //       depot: user.depot,
-    //       infringements: user.infringements,
-    //     };
-    //   },
-    // });
+    t.nonNull.field('resetPassword', {
+      type: MessagePayload,
+      args: {
+        data: nonNull(
+          arg({
+            type: ResetPasswordInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        if (!args.data.resetPasswordToken) {
+          throw new Error('No token found');
+        }
 
-    // t.nonNull.field('deleteUser', {
-    //   type: User,
-    //   args: {
-    //     data: nonNull(
-    //       arg({
-    //         type: DeleteUserInput,
-    //       })
-    //     ),
-    //   },
-    //   resolve: (_, args, context: Context) => {
-    //     try {
-    //       return context.prisma.user.delete({
-    //         where: {
-    //           id: args.data.id,
-    //         },
-    //       });
-    //     } catch (error) {
-    //       throw new Error('Error deleting user');
-    //     }
-    //   },
-    // });
+        const decoded = verify(
+          args.data.resetPasswordToken,
+          RESET_PASSWORD_TOKEN_SECRET
+        );
 
-    // t.nonNull.field('updateUser', {
-    //   type: UsersPayload,
-    //   args: {
-    //     data: nonNull(
-    //       arg({
-    //         type: UpdateUserInput,
-    //       })
-    //     ),
-    //   },
-    //   resolve: async (_, args, context: Context) => {
-    //     try {
-    //       const oldUser = await context.prisma.user.findUnique({
-    //         where: {
-    //           id: args.data.id,
-    //         },
-    //         include: {
-    //           depot: {
-    //             select: {
-    //               id: true,
-    //             },
-    //           },
-    //         },
-    //       });
+        const { userId } = decoded as {
+          userId: string;
+        };
 
-    //       const user = await context.prisma.user.update({
-    //         where: {
-    //           id: args.data.id,
-    //         },
-    //         data: {
-    //           name: args.data.name,
-    //           email: args.data.email,
-    //           role: args.data.role,
-    //           ...upsertConnection(
-    //             'depot',
-    //             oldUser?.depot?.id,
-    //             args.data.depotId
-    //           ),
-    //         },
-    //         include: {
-    //           depot: true,
-    //           infringements: true,
-    //         },
-    //       });
+        const hashedPassword = await hash(args.data.newPassword, 10);
 
-    //       return {
-    //         id: user.id,
-    //         name: user.name,
-    //         email: user.email,
-    //         role: user.role,
-    //         depot: user.depot,
-    //         infringements: user.infringements,
-    //       };
-    //     } catch (error) {
-    //       throw new Error('Error updating user');
-    //     }
-    //   },
-    // });
+        await context.prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            password: hashedPassword,
+          },
+        });
+
+        return {
+          message: `Password reset! you can now log in with your new password`,
+        };
+      },
+    });
   },
 });
