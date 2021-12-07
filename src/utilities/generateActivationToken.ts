@@ -11,8 +11,8 @@ const generateActivationToken = ({
   name,
   email,
   password,
-}: ActivationTokenInput) =>
-  sign(
+}: ActivationTokenInput) => {
+  const token = sign(
     {
       name,
       email,
@@ -23,5 +23,8 @@ const generateActivationToken = ({
       expiresIn: '10m',
     }
   );
+
+  return token;
+};
 
 export default generateActivationToken;

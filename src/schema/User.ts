@@ -7,8 +7,8 @@ import {
   objectType,
   stringArg,
 } from 'nexus';
-import { compare, hash } from 'bcrypt';
 import { verify } from 'jsonwebtoken';
+import argon2 from 'argon2';
 import { Context } from '../context';
 import { getUserId } from '../utilities/getUserId';
 import generateAccessToken from '../utilities/generateAccessToken';
@@ -244,7 +244,7 @@ export const UserMutation = extendType({
           throw new Error('Email or password is incorrect');
         }
 
-        const valid = await compare(args.data.password, user.password);
+        const valid = await argon2.verify(user.password, args.data.password);
 
         if (!valid) {
           throw new Error('Email or password is incorrect');
@@ -328,10 +328,10 @@ export const UserMutation = extendType({
         });
 
         if (existingUser) {
-          throw new Error('ERROR: Account already exists with this email');
+          throw new Error('Account already exists with this email');
         }
 
-        const hashedPassword = await hash(args.data.password, 10);
+        const hashedPassword = await argon2.hash(args.data.password);
 
         // const user = await context.prisma.user.create({
         //   data: {
@@ -408,6 +408,16 @@ export const UserMutation = extendType({
           email: string;
           password: string;
         };
+
+        const existingUser = await context.prisma.user.findUnique({
+          where: {
+            email,
+          },
+        });
+
+        if (existingUser) {
+          return true;
+        }
 
         const user = await context.prisma.user.create({
           data: {
@@ -506,7 +516,7 @@ export const UserMutation = extendType({
           userId: string;
         };
 
-        const hashedPassword = await hash(args.data.newPassword, 10);
+        const hashedPassword = await argon2.hash(args.data.newPassword);
 
         await context.prisma.user.update({
           where: {
@@ -549,13 +559,16 @@ export const UserMutation = extendType({
           throw new Error('User not found');
         }
 
-        const valid = await compare(args.data.currentPassword, user?.password);
+        const valid = await argon2.verify(
+          user.password,
+          args.data.currentPassword
+        );
 
         if (!valid) {
           throw new Error('Current password is incorrect');
         }
 
-        const hashedPassword = await hash(args.data.newPassword, 10);
+        const hashedPassword = await argon2.hash(args.data.newPassword);
 
         await context.prisma.user.update({
           where: {

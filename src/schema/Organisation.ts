@@ -1,4 +1,3 @@
-import { hash } from 'bcrypt';
 import { objectType, nonNull, extendType, arg, inputObjectType } from 'nexus';
 import { Context } from '../context';
 import { Depot } from './Depot';
