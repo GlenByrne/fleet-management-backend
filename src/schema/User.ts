@@ -331,7 +331,9 @@ export const UserMutation = extendType({
           throw new Error('Account already exists with this email');
         }
 
-        const hashedPassword = await argon2.hash(args.data.password);
+        const hashedPassword = await argon2.hash(args.data.password, {
+          type: argon2.argon2id,
+        });
 
         // const user = await context.prisma.user.create({
         //   data: {
@@ -516,7 +518,9 @@ export const UserMutation = extendType({
           userId: string;
         };
 
-        const hashedPassword = await argon2.hash(args.data.newPassword);
+        const hashedPassword = await argon2.hash(args.data.newPassword, {
+          type: argon2.argon2id,
+        });
 
         await context.prisma.user.update({
           where: {
