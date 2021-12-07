@@ -27,6 +27,7 @@ import {
   RESET_PASSWORD_TOKEN_SECRET,
 } from '../server';
 import generateResetPasswordToken from '../utilities/generateResetPasswordToken';
+import hashPassword from '../utilities/hashPassword';
 
 export const User = objectType({
   name: 'User',
@@ -331,8 +332,8 @@ export const UserMutation = extendType({
           throw new Error('Account already exists with this email');
         }
 
-        const hashedPassword = await argon2.hash(args.data.password, {
-          type: argon2.argon2id,
+        const hashedPassword = await hashPassword({
+          password: args.data.password,
         });
 
         // const user = await context.prisma.user.create({
@@ -518,8 +519,8 @@ export const UserMutation = extendType({
           userId: string;
         };
 
-        const hashedPassword = await argon2.hash(args.data.newPassword, {
-          type: argon2.argon2id,
+        const hashedPassword = await hashPassword({
+          password: args.data.newPassword,
         });
 
         await context.prisma.user.update({
@@ -572,7 +573,9 @@ export const UserMutation = extendType({
           throw new Error('Current password is incorrect');
         }
 
-        const hashedPassword = await argon2.hash(args.data.newPassword);
+        const hashedPassword = await hashPassword({
+          password: args.data.newPassword,
+        });
 
         await context.prisma.user.update({
           where: {
