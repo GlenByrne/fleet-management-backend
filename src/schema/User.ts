@@ -156,32 +156,11 @@ const ResetPasswordInput = inputObjectType({
   },
 });
 
-const AddUserInput = inputObjectType({
-  name: 'AddUserInput',
+const ChangePasswordInput = inputObjectType({
+  name: 'ChangePasswordInput',
   definition(t) {
-    t.nonNull.string('email');
-    t.nonNull.string('password');
-    t.nonNull.string('name');
-    t.nonNull.string('depotId');
-    t.nonNull.field('role', { type: Role });
-  },
-});
-
-const DeleteUserInput = inputObjectType({
-  name: 'DeleteUserInput',
-  definition(t) {
-    t.nonNull.id('id');
-  },
-});
-
-const UpdateUserInput = inputObjectType({
-  name: 'UpdateUserInput',
-  definition(t) {
-    t.nonNull.id('id');
-    t.nonNull.string('email');
-    t.nonNull.string('name');
-    t.nonNull.string('depotId');
-    t.nonNull.field('role', { type: Role });
+    t.nonNull.string('currentPassword');
+    t.nonNull.string('newPassword');
   },
 });
 
@@ -540,6 +519,55 @@ export const UserMutation = extendType({
 
         return {
           message: `Password reset! you can now log in with your new password`,
+        };
+      },
+    });
+
+    t.nonNull.field('changePassword', {
+      type: MessagePayload,
+      args: {
+        data: nonNull(
+          arg({
+            type: ChangePasswordInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        const userId = getUserId(context);
+
+        if (!userId) {
+          throw new Error('Unable to change password. You are not logged in.');
+        }
+
+        const user = await context.prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        });
+
+        if (!user) {
+          throw new Error('User not found');
+        }
+
+        const valid = await compare(args.data.currentPassword, user?.password);
+
+        if (!valid) {
+          throw new Error('Current password is incorrect');
+        }
+
+        const hashedPassword = await hash(args.data.newPassword, 10);
+
+        await context.prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            password: hashedPassword,
+          },
+        });
+
+        return {
+          message: `Password changed! Please log back in to your account.`,
         };
       },
     });

@@ -71,6 +71,7 @@ const permissions = shield(
       removeUserFromOrganisation: rules.isAuthenticatedUser,
       acceptInvite: rules.isAuthenticatedUser,
       declineInvite: rules.isAuthenticatedUser,
+      changePassword: rules.isAuthenticatedUser,
     },
   },
   { allowExternalErrors: true }
