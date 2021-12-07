@@ -232,7 +232,7 @@ export const UserMutation = extendType({
       resolve: async (_, args, context: Context) => {
         const user = await context.prisma.user.findUnique({
           where: {
-            email: args.data.email,
+            email: args.data.email.toLowerCase(),
           },
           include: {
             infringements: true,
@@ -355,7 +355,7 @@ export const UserMutation = extendType({
 
         const token = generateActivationToken({
           name: args.data.name,
-          email: args.data.email,
+          email: args.data.email.toLowerCase(),
           password: hashedPassword,
         });
 
