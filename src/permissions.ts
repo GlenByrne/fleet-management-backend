@@ -1,10 +1,10 @@
 import { and, rule, shield } from 'graphql-shield';
 import { Context } from './context';
-import { getUserId } from './utilities/getUserId';
+import verifyAccessToken from './utilities/verifyAccessToken';
 
 const rules = {
   isAuthenticatedUser: rule()((_, __, context: Context) => {
-    const userId = getUserId(context);
+    const userId = verifyAccessToken(context);
     return Boolean(userId);
   }),
   // isAdmin: rule()(async (_, __, context: Context) => {

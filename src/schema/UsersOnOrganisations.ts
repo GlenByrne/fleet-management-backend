@@ -1,7 +1,7 @@
 import { arg, extendType, inputObjectType, nonNull, objectType } from 'nexus';
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
-import getUserId from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import upsertConnection from '../utilities/upsertConnection';
 import { Depot } from './Depot';
 import { Role } from './Enum';
@@ -173,7 +173,7 @@ export const UserQuery = extendType({
     t.list.field('usersOrganisations', {
       type: UsersOnOrganisations,
       resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -197,7 +197,7 @@ export const UserQuery = extendType({
     t.list.field('usersOrganisationInvites', {
       type: UsersOnOrganisations,
       resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -235,7 +235,7 @@ export const UserQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -310,7 +310,7 @@ export const UserQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -505,7 +505,7 @@ export const UsersOnOrganisationsMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -537,7 +537,7 @@ export const UsersOnOrganisationsMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(

@@ -7,7 +7,7 @@ import {
   extendType,
 } from 'nexus';
 import { Context } from '../context';
-import { getUserId } from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import { Organisation } from './Organisation';
 import { Vehicle } from './Vehicle';
 
@@ -66,7 +66,7 @@ export const DepotQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to retrieve depots. You are not logged in.');
@@ -169,7 +169,7 @@ export const DepotMutation = extendType({
       },
       resolve: async (_, args, context: Context) => {
         try {
-          const userId = getUserId(context);
+          const userId = verifyAccessToken(context);
 
           if (!userId) {
             throw new Error('Unable to add depot. You are not logged in.');

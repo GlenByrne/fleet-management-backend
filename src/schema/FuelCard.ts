@@ -7,7 +7,7 @@ import {
   idArg,
 } from 'nexus';
 import { Context } from '../context';
-import { getUserId } from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import { Organisation } from './Organisation';
 import { Vehicle } from './Vehicle';
 
@@ -67,7 +67,7 @@ export const FuelCardQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -119,7 +119,7 @@ export const FuelCardQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -194,7 +194,7 @@ export const FuelCardMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to add fuel card. You are not logged in.');

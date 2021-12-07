@@ -1,6 +1,6 @@
 import { arg, extendType, inputObjectType, nonNull, objectType } from 'nexus';
 import { Context } from '../context';
-import { getUserId } from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import { InfringementStatus } from './Enum';
 import { UsersPayload } from './User';
 
@@ -74,7 +74,7 @@ export const UserQuery = extendType({
     t.list.field('infringements', {
       type: Infringement,
       resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -105,7 +105,7 @@ export const InfringementMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to add infringement. You are not logged in.');

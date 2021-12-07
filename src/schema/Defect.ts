@@ -7,7 +7,7 @@ import {
   inputObjectType,
 } from 'nexus';
 import { Context } from '../context';
-import { getUserId } from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import { DefectStatus } from './Enum';
 
 export const Defect = objectType({
@@ -88,7 +88,7 @@ export const DefectMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to add defect. You are not logged in.');

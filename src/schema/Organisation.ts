@@ -4,10 +4,7 @@ import { Depot } from './Depot';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
-import { User, UsersPayload } from './User';
-import generateAccessToken from '../utilities/generateAccessToken';
-import generateRefreshToken from '../utilities/generateRefreshToken';
-import getUserId from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import { UsersOnOrganisations } from './UsersOnOrganisations';
 import Infringement from './Infringement';
 import { Role } from './Enum';
@@ -209,7 +206,7 @@ export const OrganisationMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to retrieve users. You are not logged in.');
@@ -246,7 +243,7 @@ export const OrganisationMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(

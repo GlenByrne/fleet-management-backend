@@ -9,7 +9,6 @@ import {
 import { Context } from '../context';
 import createConnection from '../utilities/createConnection';
 import getDateTwoWeeks from '../utilities/getDateTwoWeeks';
-import { getUserId } from '../utilities/getUserId';
 import upsertConnection from '../utilities/upsertConnection';
 import { Organisation } from './Organisation';
 import { Defect } from './Defect';
@@ -17,6 +16,7 @@ import { Depot } from './Depot';
 import { VehicleType } from './Enum';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 
 export const Vehicle = objectType({
   name: 'Vehicle',
@@ -129,7 +129,7 @@ export const VehicleQuery = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -200,7 +200,7 @@ export const VehicleQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to retrieve depots. You are not logged in.');
@@ -246,7 +246,7 @@ export const VehicleQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to retrieve depots. You are not logged in.');
@@ -292,7 +292,7 @@ export const VehicleQuery = extendType({
         organisationId: nonNull(idArg()),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -407,7 +407,7 @@ export const VehicleMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to add vehicle. You are not logged in.');

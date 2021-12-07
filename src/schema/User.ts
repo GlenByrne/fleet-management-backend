@@ -10,7 +10,6 @@ import {
 import { verify } from 'jsonwebtoken';
 import argon2 from 'argon2';
 import { Context } from '../context';
-import { getUserId } from '../utilities/getUserId';
 import generateAccessToken from '../utilities/generateAccessToken';
 import { Role } from './Enum';
 import Infringement from './Infringement';
@@ -28,6 +27,7 @@ import {
 } from '../server';
 import generateResetPasswordToken from '../utilities/generateResetPasswordToken';
 import hashPassword from '../utilities/hashPassword';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 
 export const User = objectType({
   name: 'User',
@@ -195,7 +195,7 @@ export const UserQuery = extendType({
     t.field('me', {
       type: UsersPayload,
       resolve: (_, __, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
         if (!userId) {
           throw new Error(
             'Unable to retrieve your account info. You are not logged in.'
@@ -390,8 +390,7 @@ export const UserMutation = extendType({
       },
     });
 
-    t.nonNull.field('activateAccount', {
-      type: 'Boolean',
+    t.nonNull.boolean('activateAccount', {
       args: {
         data: nonNull(
           arg({
@@ -400,48 +399,49 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        if (!args.data.token) {
+        try {
+          if (!args.data.token) {
+            return false;
+          }
+
+          const decoded = verify(args.data.token, ACTIVATION_TOKEN_SECRET);
+
+          const { name, email, password } = decoded as {
+            name: string;
+            email: string;
+            password: string;
+            exp: number;
+          };
+
+          const existingUser = await context.prisma.user.findUnique({
+            where: {
+              email,
+            },
+          });
+
+          if (existingUser) {
+            return true;
+          }
+
+          await context.prisma.user.create({
+            data: {
+              email,
+              password,
+              name,
+            },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              infringements: true,
+              organisations: true,
+            },
+          });
+
+          return true;
+        } catch (error) {
           return false;
         }
-
-        const decoded = verify(args.data.token, ACTIVATION_TOKEN_SECRET);
-
-        const { name, email, password } = decoded as {
-          name: string;
-          email: string;
-          password: string;
-        };
-
-        const existingUser = await context.prisma.user.findUnique({
-          where: {
-            email,
-          },
-        });
-
-        if (existingUser) {
-          return true;
-        }
-
-        const user = await context.prisma.user.create({
-          data: {
-            email,
-            password,
-            name,
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            infringements: true,
-            organisations: true,
-          },
-        });
-
-        if (!user) {
-          throw new Error('Error');
-        }
-
-        return true;
 
         // const accessToken = generateAccessToken(user.id);
         // const refreshToken = generateRefreshToken(user.id);
@@ -459,8 +459,7 @@ export const UserMutation = extendType({
       },
     });
 
-    t.nonNull.field('forgotPassword', {
-      type: 'Boolean',
+    t.nonNull.boolean('forgotPassword', {
       args: {
         data: nonNull(
           arg({
@@ -548,7 +547,7 @@ export const UserMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error('Unable to change password. You are not logged in.');
