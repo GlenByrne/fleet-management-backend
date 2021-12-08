@@ -39,6 +39,7 @@ const startApolloServer = async () => {
   });
 
   await new Promise<void>((resolve) =>
+    // eslint-disable-next-line no-promise-executor-return
     httpServer.listen({ port: 4000 }, resolve)
   );
 

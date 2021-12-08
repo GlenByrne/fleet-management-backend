@@ -1,6 +1,7 @@
 import { DateTimeResolver } from 'graphql-scalars';
 import { asNexusMethod, makeSchema } from 'nexus';
 import { applyMiddleware } from 'graphql-middleware';
+import { GraphQLSchema } from 'graphql';
 import * as defectTypes from './schema/Defect';
 import * as depotTypes from './schema/Depot';
 import * as fuelCardTypes from './schema/FuelCard';
@@ -46,7 +47,7 @@ const schemaWithoutPermissions = makeSchema({
       },
     ],
   },
-});
+}) as unknown as GraphQLSchema;
 
 const schema = applyMiddleware(schemaWithoutPermissions, permissions);
 
