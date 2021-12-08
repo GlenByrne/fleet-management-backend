@@ -1,13 +1,14 @@
-import { hash } from 'bcrypt';
 import { objectType, nonNull, extendType, arg, inputObjectType } from 'nexus';
 import { Context } from '../context';
 import { Depot } from './Depot';
 import { FuelCard } from './FuelCard';
 import { TollTag } from './TollTag';
 import { Vehicle } from './Vehicle';
-import { User, UsersPayload } from './User';
-import generateAccessToken from '../utilities/generateAccessToken';
-import generateRefreshToken from '../utilities/generateRefreshToken';
+import verifyAccessToken from '../utilities/verifyAccessToken';
+import { UsersOnOrganisations } from './UsersOnOrganisations';
+import Infringement from './Infringement';
+import { Role } from './Enum';
+import createConnection from '../utilities/createConnection';
 
 export const Organisation = objectType({
   name: 'Organisation',
@@ -15,7 +16,7 @@ export const Organisation = objectType({
     t.nonNull.id('id');
     t.nonNull.string('name');
     t.nonNull.list.nonNull.field('users', {
-      type: User,
+      type: UsersOnOrganisations,
       resolve(parent, _, context: Context) {
         return context.prisma.organisation
           .findUnique({
@@ -159,22 +160,36 @@ const AddOrganisationInput = inputObjectType({
   name: 'AddOrganisationInput',
   definition(t) {
     t.nonNull.string('name');
-    t.nonNull.string('adminName');
-    t.nonNull.string('email');
-    t.nonNull.string('password');
   },
 });
 
-export const AddOrganisationPayload = objectType({
-  name: 'AddOrganisationPayload',
+export const InviteUserToOrganisationPayload = objectType({
+  name: 'InviteUserToOrganisationPayload',
   definition(t) {
-    t.field('organisation', {
-      type: Organisation,
+    t.nonNull.string('id');
+    t.nonNull.string('name');
+    t.nonNull.string('email');
+    t.nonNull.list.nonNull.field('infringements', {
+      type: Infringement,
     });
-    t.field('user', {
-      type: UsersPayload,
+    t.nonNull.field('role', {
+      type: Role,
     });
-    t.nonNull.string('accessToken');
+    t.field('depot', {
+      type: Depot,
+    });
+  },
+});
+
+const InviteUserToOrganisationInput = inputObjectType({
+  name: 'InviteUserToOrganisationInput',
+  definition(t) {
+    t.nonNull.string('email');
+    t.nonNull.string('organisationId');
+    t.nonNull.field('role', {
+      type: Role,
+    });
+    t.nonNull.string('depotId');
   },
 });
 
@@ -182,7 +197,7 @@ export const OrganisationMutation = extendType({
   type: 'Mutation',
   definition(t) {
     t.nonNull.field('addOrganisation', {
-      type: AddOrganisationPayload,
+      type: Organisation,
       args: {
         data: nonNull(
           arg({
@@ -191,68 +206,111 @@ export const OrganisationMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const existingUser = await context.prisma.user.findUnique({
-          where: {
-            email: args.data.email,
-          },
-        });
+        const userId = verifyAccessToken(context);
 
-        if (existingUser) {
-          throw new Error('ERROR: Account already exists with this email');
+        if (!userId) {
+          throw new Error('Unable to retrieve users. You are not logged in.');
         }
 
-        const hashedPassword = await hash(args.data.password, 10);
-
-        const organisation = await context.prisma.organisation.create({
+        return context.prisma.organisation.create({
           data: {
             name: args.data.name,
             users: {
               create: [
                 {
-                  name: args.data.adminName,
-                  email: args.data.email,
-                  password: hashedPassword,
-                  role: 'ADMIN',
+                  user: {
+                    connect: {
+                      id: userId,
+                    },
+                  },
+                  role: 'OWNER',
+                  inviteAccepted: true,
                 },
               ],
             },
           },
         });
+      },
+    });
 
-        const user = await context.prisma.user.findUnique({
+    t.nonNull.field('inviteUserToOrganisation', {
+      type: Organisation,
+      args: {
+        data: nonNull(
+          arg({
+            type: InviteUserToOrganisationInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        const userId = verifyAccessToken(context);
+
+        if (!userId) {
+          throw new Error(
+            'Unable to add user to organisation. You are not logged in.'
+          );
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add user to organisation. You are not a member of this organisation'
+          );
+        }
+
+        const invitedUser = await context.prisma.user.findUnique({
           where: {
             email: args.data.email,
           },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            depot: true,
-            infringements: true,
-            password: false,
-            organisation: false,
-          },
         });
 
-        if (!user) {
-          throw new Error('Error');
+        if (!invitedUser) {
+          throw new Error("This user doesn't exist");
         }
 
-        const accessToken = generateAccessToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
+        const alreadyInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId: invitedUser.id,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
 
-        context.res.cookie('refreshToken', refreshToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'strict',
+        if (alreadyInOrganisation) {
+          throw new Error('User has already been added to this organisation');
+        }
+
+        return context.prisma.organisation.update({
+          where: {
+            id: args.data.organisationId,
+          },
+          data: {
+            users: {
+              create: [
+                {
+                  user: {
+                    connect: {
+                      id: invitedUser.id,
+                    },
+                  },
+                  role: args.data.role,
+                  ...createConnection('depot', args.data.depotId),
+                },
+              ],
+            },
+          },
         });
-
-        return {
-          organisation,
-          user,
-          accessToken,
-        };
       },
     });
   },

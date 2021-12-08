@@ -1,6 +1,6 @@
 import { arg, extendType, inputObjectType, nonNull, objectType } from 'nexus';
 import { Context } from '../context';
-import { getUserId } from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import { InfringementStatus } from './Enum';
 import { UsersPayload } from './User';
 
@@ -25,10 +25,8 @@ const Infringement = objectType({
               id: true,
               name: true,
               email: true,
-              role: true,
-              depot: true,
               infringements: true,
-              password: false,
+              organisations: true,
             },
           });
       },
@@ -42,6 +40,7 @@ const AddInfringementInput = inputObjectType({
     t.nonNull.id('driverId');
     t.nonNull.string('description');
     t.nonNull.date('dateOccured');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -75,7 +74,7 @@ export const UserQuery = extendType({
     t.list.field('infringements', {
       type: Infringement,
       resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
           throw new Error(
@@ -106,10 +105,26 @@ export const InfringementMutation = extendType({
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
         if (!userId) {
-          throw new Error('Unable to add fuel card. You are not logged in.');
+          throw new Error('Unable to add infringement. You are not logged in.');
+        }
+
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
+            },
+          });
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to add infringement. You are not a member of this organisation'
+          );
         }
 
         const driver = await context.prisma.user.findUnique({
@@ -122,7 +137,20 @@ export const InfringementMutation = extendType({
           throw new Error('Unable to add infringemnt. Driver not found.');
         }
 
-        if (driver.role !== 'DRIVER') {
+        const userOrgConnection =
+          await context.prisma.usersOnOrganisations.findUnique({
+            where: {
+              userId_organisationId: {
+                userId: args.data.driverId,
+                organisationId: args.data.organisationId,
+              },
+            },
+            select: {
+              role: true,
+            },
+          });
+
+        if (userOrgConnection?.role !== 'DRIVER') {
           throw new Error(
             'Unable to add infringemnt. Infringements can only be added to a driver'
           );

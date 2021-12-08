@@ -8,9 +8,9 @@ generator client {
 }
 
 model Organisation {
-  id        String     @id @default(uuid())
+  id        String                 @id @default(uuid())
   name      String
-  users     User[]
+  users     UsersOnOrganisations[]
   vehicles  Vehicle[]
   depots    Depot[]
   fuelCards FuelCard[]
@@ -18,16 +18,34 @@ model Organisation {
 }
 
 model User {
-  id             String         @id @default(uuid())
-  name           String
-  email          String         @unique
-  password       String
-  role           Role           @default(USER)
-  depot          Depot?         @relation(fields: [depotId], references: [id])
-  depotId        String?
-  organisation   Organisation   @relation(fields: [organisationId], references: [id])
+  id            String                 @id @default(uuid())
+  name          String
+  email         String                 @unique
+  password      String
+  organisations UsersOnOrganisations[]
+  infringements Infringement[]
+}
+
+model Depot {
+  id                   String                 @id @default(uuid())
+  name                 String                 @unique
+  vehicles             Vehicle[]
+  organisation         Organisation           @relation(fields: [organisationId], references: [id])
+  organisationId       String
+  UsersOnOrganisations UsersOnOrganisations[]
+}
+
+model UsersOnOrganisations {
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  organisation   Organisation @relation(fields: [organisationId], references: [id])
   organisationId String
-  infringements  Infringement[]
+  role           Role
+  depot          Depot?       @relation(fields: [depotId], references: [id])
+  depotId        String?
+  inviteAccepted Boolean      @default(false)
+
+  @@id([userId, organisationId])
 }
 
 model Vehicle {
@@ -47,15 +65,6 @@ model Vehicle {
   defects                Defect[]
   organisation           Organisation @relation(fields: [organisationId], references: [id])
   organisationId         String
-}
-
-model Depot {
-  id             String       @id @default(uuid())
-  name           String       @unique
-  vehicles       Vehicle[]
-  User           User[]
-  organisation   Organisation @relation(fields: [organisationId], references: [id])
-  organisationId String
 }
 
 model FuelCard {

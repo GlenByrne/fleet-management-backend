@@ -7,7 +7,7 @@ import {
   extendType,
 } from 'nexus';
 import { Context } from '../context';
-import { getUserId } from '../utilities/getUserId';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 import { Organisation } from './Organisation';
 import { Vehicle } from './Vehicle';
 
@@ -49,6 +49,7 @@ const DepotInputFilter = inputObjectType({
   name: 'DepotInputFilter',
   definition(t) {
     t.string('searchCriteria');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -58,49 +59,54 @@ export const DepotQuery = extendType({
     t.list.field('depots', {
       type: Depot,
       args: {
-        data: arg({
-          type: DepotInputFilter,
-        }),
+        data: nonNull(
+          arg({
+            type: DepotInputFilter,
+          })
+        ),
       },
       resolve: async (_, args, context: Context) => {
-        try {
-          const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
 
-          if (!userId) {
-            throw new Error(
-              'Unable to retrieve depots. You are not logged in.'
-            );
-          }
+        if (!userId) {
+          throw new Error('Unable to retrieve depots. You are not logged in.');
+        }
 
-          const organisation = await context.prisma.user
-            .findUnique({
-              where: {
-                id: userId != null ? userId : undefined,
-              },
-            })
-            .organisation();
-          return context.prisma.depot.findMany({
+        const isInOrganisation =
+          await context.prisma.usersOnOrganisations.findUnique({
             where: {
-              AND: [
-                { organisationId: organisation?.id },
-                {
-                  name: {
-                    contains:
-                      args.data?.searchCriteria != null
-                        ? args.data.searchCriteria
-                        : undefined,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            },
-            orderBy: {
-              name: 'asc',
+              userId_organisationId: {
+                userId,
+                organisationId: args.data.organisationId,
+              },
             },
           });
-        } catch (error) {
-          throw new Error('Error retrieving depots');
+
+        if (!isInOrganisation) {
+          throw new Error(
+            'Unable to retrieve depots. You are not a member of this organisation'
+          );
         }
+
+        return context.prisma.depot.findMany({
+          where: {
+            AND: [
+              { organisationId: args.data.organisationId },
+              {
+                name: {
+                  contains:
+                    args.data?.searchCriteria != null
+                      ? args.data.searchCriteria
+                      : undefined,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+          orderBy: {
+            name: 'asc',
+          },
+        });
       },
     });
 
@@ -130,6 +136,7 @@ const AddDepotInput = inputObjectType({
   name: 'AddDepotInput',
   definition(t) {
     t.nonNull.string('name');
+    t.nonNull.string('organisationId');
   },
 });
 
@@ -162,19 +169,27 @@ export const DepotMutation = extendType({
       },
       resolve: async (_, args, context: Context) => {
         try {
-          const userId = getUserId(context);
+          const userId = verifyAccessToken(context);
 
           if (!userId) {
             throw new Error('Unable to add depot. You are not logged in.');
           }
 
-          const organisation = await context.prisma.user
-            .findUnique({
+          const isInOrganisation =
+            await context.prisma.usersOnOrganisations.findUnique({
               where: {
-                id: userId != null ? userId : undefined,
+                userId_organisationId: {
+                  userId,
+                  organisationId: args.data.organisationId,
+                },
               },
-            })
-            .organisation();
+            });
+
+          if (!isInOrganisation) {
+            throw new Error(
+              'Unable to add depot. You are not a member of this organisation'
+            );
+          }
 
           const existingDepot = await context.prisma.depot.findUnique({
             where: {
@@ -191,7 +206,7 @@ export const DepotMutation = extendType({
               name: args.data.name,
               organisation: {
                 connect: {
-                  id: organisation?.id,
+                  id: args.data.organisationId,
                 },
               },
             },

@@ -5,19 +5,29 @@ import {
   inputObjectType,
   nonNull,
   objectType,
+  stringArg,
 } from 'nexus';
-import { compare, hash } from 'bcrypt';
+import { verify } from 'jsonwebtoken';
+import argon2 from 'argon2';
 import { Context } from '../context';
-import { Depot } from './Depot';
-import { Organisation } from './Organisation';
-import { getUserId } from '../utilities/getUserId';
-import createConnection from '../utilities/createConnection';
-import upsertConnection from '../utilities/upsertConnection';
 import generateAccessToken from '../utilities/generateAccessToken';
 import { Role } from './Enum';
 import Infringement from './Infringement';
 import generateRefreshToken from '../utilities/generateRefreshToken';
 import getRefreshUserId from '../utilities/getRefreshUserId';
+import { UsersOnOrganisations } from './UsersOnOrganisations';
+import sendEmail, {
+  activationEmail,
+  resetPasswordEmail,
+} from '../utilities/sendEmail';
+import generateActivationToken from '../utilities/generateActivationToken';
+import {
+  ACTIVATION_TOKEN_SECRET,
+  RESET_PASSWORD_TOKEN_SECRET,
+} from '../server';
+import generateResetPasswordToken from '../utilities/generateResetPasswordToken';
+import hashPassword from '../utilities/hashPassword';
+import verifyAccessToken from '../utilities/verifyAccessToken';
 
 export const User = objectType({
   name: 'User',
@@ -25,34 +35,20 @@ export const User = objectType({
     t.nonNull.id('id');
     t.nonNull.string('name');
     t.nonNull.string('email');
-    t.nonNull.string('password');
-    t.nonNull.field('role', {
-      type: Role,
-    });
-    t.nonNull.field('organisation', {
-      type: Organisation,
+    t.list.field('organisations', {
+      type: UsersOnOrganisations,
       resolve: async (parent, _, context: Context) => {
         const organisation = await context.prisma.user
           .findUnique({
             where: { id: parent.id },
           })
-          .organisation();
+          .organisations();
 
         if (!organisation) {
           throw new Error('Organisation not found');
         }
 
         return organisation;
-      },
-    });
-    t.field('depot', {
-      type: Depot,
-      resolve(parent, _, context: Context) {
-        return context.prisma.user
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .depot();
       },
     });
     t.nonNull.list.nonNull.field('infringements', {
@@ -67,18 +63,18 @@ export const User = objectType({
     });
   },
 });
+
 export const UsersPayload = objectType({
   name: 'UsersPayload',
   definition(t) {
     t.nonNull.string('id');
     t.nonNull.string('name');
     t.nonNull.string('email');
-    t.nonNull.field('role', { type: Role });
-    t.field('depot', {
-      type: Depot,
-    });
     t.nonNull.list.nonNull.field('infringements', {
       type: Infringement,
+    });
+    t.nonNull.list.nonNull.field('organisations', {
+      type: UsersOnOrganisations,
     });
   },
 });
@@ -90,6 +86,13 @@ export const AuthPayload = objectType({
       type: UsersPayload,
     });
     t.nonNull.string('accessToken');
+  },
+});
+
+export const MessagePayload = objectType({
+  name: 'MessagePayload',
+  definition(t) {
+    t.nonNull.string('message');
   },
 });
 
@@ -119,35 +122,46 @@ const UsersInputFilter = inputObjectType({
   name: 'UsersInputFilter',
   definition(t) {
     t.string('searchCriteria');
+    t.nonNull.string('organisationId');
   },
 });
 
-const AddUserInput = inputObjectType({
-  name: 'AddUserInput',
+const RegisterInput = inputObjectType({
+  name: 'RegisterInput',
   definition(t) {
+    t.nonNull.string('name');
     t.nonNull.string('email');
     t.nonNull.string('password');
-    t.nonNull.string('name');
-    t.nonNull.string('depotId');
-    t.nonNull.field('role', { type: Role });
   },
 });
 
-const DeleteUserInput = inputObjectType({
-  name: 'DeleteUserInput',
+const ActivateAccountInput = inputObjectType({
+  name: 'ActivateAccountInput',
   definition(t) {
-    t.nonNull.id('id');
+    t.nonNull.string('token');
   },
 });
 
-const UpdateUserInput = inputObjectType({
-  name: 'UpdateUserInput',
+const ForgotPasswordInput = inputObjectType({
+  name: 'ForgotPasswordInput',
   definition(t) {
-    t.nonNull.id('id');
     t.nonNull.string('email');
-    t.nonNull.string('name');
-    t.nonNull.string('depotId');
-    t.nonNull.field('role', { type: Role });
+  },
+});
+
+const ResetPasswordInput = inputObjectType({
+  name: 'ResetPasswordInput',
+  definition(t) {
+    t.nonNull.string('resetPasswordToken');
+    t.nonNull.string('newPassword');
+  },
+});
+
+const ChangePasswordInput = inputObjectType({
+  name: 'ChangePasswordInput',
+  definition(t) {
+    t.nonNull.string('currentPassword');
+    t.nonNull.string('newPassword');
   },
 });
 
@@ -169,11 +183,8 @@ export const UserQuery = extendType({
               id: true,
               name: true,
               email: true,
-              role: true,
-              depot: true,
               infringements: true,
-              password: false,
-              organisation: false,
+              organisations: true,
             },
           });
         } catch {
@@ -184,7 +195,7 @@ export const UserQuery = extendType({
     t.field('me', {
       type: UsersPayload,
       resolve: (_, __, context: Context) => {
-        const userId = getUserId(context);
+        const userId = verifyAccessToken(context);
         if (!userId) {
           throw new Error(
             'Unable to retrieve your account info. You are not logged in.'
@@ -192,119 +203,14 @@ export const UserQuery = extendType({
         }
         return context.prisma.user.findUnique({
           where: {
-            id: String(userId),
+            id: userId,
           },
           select: {
             id: true,
             name: true,
             email: true,
-            role: true,
-            depot: true,
             infringements: true,
-            password: false,
-            organisation: false,
-          },
-        });
-      },
-    });
-
-    t.list.field('users', {
-      type: UsersPayload,
-      args: {
-        data: arg({
-          type: UsersInputFilter,
-        }),
-      },
-      resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error('Unable to retrieve users. You are not logged in.');
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
-
-        return context.prisma.user.findMany({
-          where: {
-            AND: [
-              { organisationId: organisation?.id },
-              {
-                role: {
-                  not: 'ADMIN',
-                },
-              },
-              {
-                name: {
-                  contains:
-                    args.data?.searchCriteria != null
-                      ? args.data.searchCriteria
-                      : undefined,
-                  mode: 'insensitive',
-                },
-              },
-            ],
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            depot: true,
-            infringements: true,
-            password: false,
-            organisation: false,
-          },
-          orderBy: {
-            name: 'asc',
-          },
-        });
-      },
-    });
-
-    t.nonNull.list.nonNull.field('drivers', {
-      type: UsersPayload,
-      resolve: async (_, __, context: Context) => {
-        const userId = getUserId(context);
-
-        if (!userId) {
-          throw new Error('Unable to retrieve users. You are not logged in.');
-        }
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
-
-        return context.prisma.user.findMany({
-          where: {
-            AND: [
-              { organisationId: organisation?.id },
-              {
-                role: 'DRIVER',
-              },
-            ],
-          },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            depot: true,
-            infringements: true,
-            password: false,
-            organisation: false,
-          },
-          orderBy: {
-            name: 'asc',
+            organisations: true,
           },
         });
       },
@@ -327,11 +233,11 @@ export const UserMutation = extendType({
       resolve: async (_, args, context: Context) => {
         const user = await context.prisma.user.findUnique({
           where: {
-            email: args.data.email,
+            email: args.data.email.toLowerCase(),
           },
           include: {
-            depot: true,
             infringements: true,
+            organisations: true,
           },
         });
 
@@ -339,7 +245,7 @@ export const UserMutation = extendType({
           throw new Error('Email or password is incorrect');
         }
 
-        const valid = await compare(args.data.password, user.password);
+        const valid = await argon2.verify(user.password, args.data.password);
 
         if (!valid) {
           throw new Error('Email or password is incorrect');
@@ -359,9 +265,8 @@ export const UserMutation = extendType({
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
-            depot: user.depot,
             infringements: user.infringements,
+            organisations: user.organisations,
           },
           accessToken,
         };
@@ -407,75 +312,16 @@ export const UserMutation = extendType({
       },
     });
 
-    // t.nonNull.field('register', {
-    //   type: AuthPayload,
-    //   args: {
-    //     data: nonNull(
-    //       arg({
-    //         type: RegisterInput,
-    //       })
-    //     ),
-    //   },
-    //   resolve: async (_, args, context: Context) => {
-    //     const existingUser = await context.prisma.user.findUnique({
-    //       where: {
-    //         email: args.data.email,
-    //       },
-    //     });
-
-    //     if (existingUser) {
-    //       throw new Error('ERROR: Account already exists with this email');
-    //     }
-
-    //     const hashedPassword = await hash(args.data.password, 10);
-
-    //     const user = await context.prisma.user.create({
-    //       data: {
-    //         email: args.data.email,
-    //         password: hashedPassword,
-    //         name: args.data.name,
-    //         role: 'USER',
-    //         organisation: {
-    //           connect: {
-    //             id: args.data.organisationId,
-    //           },
-    //         },
-    //       },
-    //     });
-
-    //     if (!user) {
-    //       throw new Error('Error');
-    //     }
-
-    //     const token = generateToken(user.id);
-
-    //     return {
-    //       token,
-    //       user,
-    //     };
-    //   },
-    // });
-
-    t.nonNull.field('addUser', {
-      type: UsersPayload,
+    t.nonNull.field('register', {
+      type: MessagePayload,
       args: {
         data: nonNull(
           arg({
-            type: AddUserInput,
+            type: RegisterInput,
           })
         ),
       },
       resolve: async (_, args, context: Context) => {
-        const userId = getUserId(context);
-
-        const organisation = await context.prisma.user
-          .findUnique({
-            where: {
-              id: userId != null ? userId : undefined,
-            },
-          })
-          .organisation();
-
         const existingUser = await context.prisma.user.findUnique({
           where: {
             email: args.data.email,
@@ -486,115 +332,262 @@ export const UserMutation = extendType({
           throw new Error('Account already exists with this email');
         }
 
-        const hashedPassword = await hash(args.data.password, 10);
+        const hashedPassword = await hashPassword({
+          password: args.data.password,
+        });
 
-        const user = await context.prisma.user.create({
-          data: {
-            email: args.data.email,
-            password: hashedPassword,
-            name: args.data.name,
-            role: args.data.role,
-            ...createConnection('depot', args.data.depotId),
-            organisation: {
-              connect: {
-                id: organisation?.id,
-              },
-            },
-          },
-          include: {
-            depot: true,
-            infringements: true,
-          },
+        // const user = await context.prisma.user.create({
+        //   data: {
+        //     email: args.data.email,
+        //     password: hashedPassword,
+        //     name: args.data.name,
+        //   },
+        //   select: {
+        //     id: true,
+        //     name: true,
+        //     email: true,
+        //     infringements: true,
+        //     password: false,
+        //     organisations: true,
+        //   },
+        // });
+
+        // if (!user) {
+        //   throw new Error('Error');
+        // }
+
+        const token = generateActivationToken({
+          name: args.data.name,
+          email: args.data.email.toLowerCase(),
+          password: hashedPassword,
+        });
+
+        const html = activationEmail(token);
+
+        await sendEmail({
+          from: '"Fred Foo 👻" <foo@example.com>',
+          to: args.data.email,
+          subject: 'Account Activation',
+          html,
         });
 
         return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          depot: user.depot,
-          infringements: user.infringements,
+          message: `Email has been sent to ${args.data.email}. Follow the instructions to activate your account`,
         };
+        // const accessToken = generateAccessToken(user.id);
+        // const refreshToken = generateRefreshToken(user.id);
+
+        // context.res.cookie('refreshToken', refreshToken, {
+        //   httpOnly: true,
+        //   secure: true,
+        //   sameSite: 'strict',
+        // });
+
+        // return {
+        //   accessToken,
+        //   user,
+        // };
       },
     });
 
-    t.nonNull.field('deleteUser', {
-      type: User,
+    t.nonNull.boolean('activateAccount', {
       args: {
         data: nonNull(
           arg({
-            type: DeleteUserInput,
-          })
-        ),
-      },
-      resolve: (_, args, context: Context) => {
-        try {
-          return context.prisma.user.delete({
-            where: {
-              id: args.data.id,
-            },
-          });
-        } catch (error) {
-          throw new Error('Error deleting user');
-        }
-      },
-    });
-
-    t.nonNull.field('updateUser', {
-      type: UsersPayload,
-      args: {
-        data: nonNull(
-          arg({
-            type: UpdateUserInput,
+            type: ActivateAccountInput,
           })
         ),
       },
       resolve: async (_, args, context: Context) => {
         try {
-          const oldUser = await context.prisma.user.findUnique({
-            where: {
-              id: args.data.id,
-            },
-            include: {
-              depot: {
-                select: {
-                  id: true,
-                },
-              },
-            },
-          });
+          if (!args.data.token) {
+            return false;
+          }
 
-          const user = await context.prisma.user.update({
-            where: {
-              id: args.data.id,
-            },
-            data: {
-              name: args.data.name,
-              email: args.data.email,
-              role: args.data.role,
-              ...upsertConnection(
-                'depot',
-                oldUser?.depot?.id,
-                args.data.depotId
-              ),
-            },
-            include: {
-              depot: true,
-              infringements: true,
-            },
-          });
+          const decoded = verify(args.data.token, ACTIVATION_TOKEN_SECRET);
 
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            depot: user.depot,
-            infringements: user.infringements,
+          const { name, email, password } = decoded as {
+            name: string;
+            email: string;
+            password: string;
+            exp: number;
           };
+
+          const existingUser = await context.prisma.user.findUnique({
+            where: {
+              email,
+            },
+          });
+
+          if (existingUser) {
+            return true;
+          }
+
+          await context.prisma.user.create({
+            data: {
+              email,
+              password,
+              name,
+            },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              infringements: true,
+              organisations: true,
+            },
+          });
+
+          return true;
         } catch (error) {
-          throw new Error('Error updating user');
+          return false;
         }
+
+        // const accessToken = generateAccessToken(user.id);
+        // const refreshToken = generateRefreshToken(user.id);
+
+        // context.res.cookie('refreshToken', refreshToken, {
+        //   httpOnly: true,
+        //   secure: true,
+        //   sameSite: 'strict',
+        // });
+
+        // return {
+        //   accessToken,
+        //   user,
+        // };
+      },
+    });
+
+    t.nonNull.boolean('forgotPassword', {
+      args: {
+        data: nonNull(
+          arg({
+            type: ForgotPasswordInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        const user = await context.prisma.user.findUnique({
+          where: {
+            email: args.data.email,
+          },
+        });
+
+        if (!user) {
+          return true;
+        }
+
+        const token = generateResetPasswordToken({
+          userId: user.id,
+        });
+
+        const html = resetPasswordEmail(token);
+
+        await sendEmail({
+          from: '"Fred Foo 👻" <foo@example.com>',
+          to: user.email,
+          subject: 'Password Reset',
+          html,
+        });
+
+        return true;
+      },
+    });
+
+    t.nonNull.field('resetPassword', {
+      type: MessagePayload,
+      args: {
+        data: nonNull(
+          arg({
+            type: ResetPasswordInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        if (!args.data.resetPasswordToken) {
+          throw new Error('No token found');
+        }
+
+        const decoded = verify(
+          args.data.resetPasswordToken,
+          RESET_PASSWORD_TOKEN_SECRET
+        );
+
+        const { userId } = decoded as {
+          userId: string;
+        };
+
+        const hashedPassword = await hashPassword({
+          password: args.data.newPassword,
+        });
+
+        await context.prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            password: hashedPassword,
+          },
+        });
+
+        return {
+          message: `Password reset! you can now log in with your new password`,
+        };
+      },
+    });
+
+    t.nonNull.field('changePassword', {
+      type: MessagePayload,
+      args: {
+        data: nonNull(
+          arg({
+            type: ChangePasswordInput,
+          })
+        ),
+      },
+      resolve: async (_, args, context: Context) => {
+        const userId = verifyAccessToken(context);
+
+        if (!userId) {
+          throw new Error('Unable to change password. You are not logged in.');
+        }
+
+        const user = await context.prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        });
+
+        if (!user) {
+          throw new Error('User not found');
+        }
+
+        const valid = await argon2.verify(
+          user.password,
+          args.data.currentPassword
+        );
+
+        if (!valid) {
+          throw new Error('Current password is incorrect');
+        }
+
+        const hashedPassword = await hashPassword({
+          password: args.data.newPassword,
+        });
+
+        await context.prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            password: hashedPassword,
+          },
+        });
+
+        return {
+          message: `Password changed! Please log back in to your account.`,
+        };
       },
     });
   },

@@ -1,22 +1,22 @@
 import { and, rule, shield } from 'graphql-shield';
 import { Context } from './context';
-import { getUserId } from './utilities/getUserId';
+import verifyAccessToken from './utilities/verifyAccessToken';
 
 const rules = {
   isAuthenticatedUser: rule()((_, __, context: Context) => {
-    const userId = getUserId(context);
+    const userId = verifyAccessToken(context);
     return Boolean(userId);
   }),
-  isAdmin: rule()(async (_, __, context: Context) => {
-    const userId = getUserId(context);
-    const user = await context.prisma.user.findUnique({
-      where: {
-        id: String(userId),
-      },
-    });
+  // isAdmin: rule()(async (_, __, context: Context) => {
+  //   const userId = getUserId(context);
+  //   const user = await context.prisma.user.findUnique({
+  //     where: {
+  //       id: String(userId),
+  //     },
+  //   });
 
-    return user?.role === 'ADMIN';
-  }),
+  //   return user?.role === 'ADMIN';
+  // }),
 };
 
 const permissions = shield(
@@ -26,30 +26,52 @@ const permissions = shield(
       vehicles: rules.isAuthenticatedUser,
       defectsForVehicle: rules.isAuthenticatedUser,
       upcomingCVRT: rules.isAuthenticatedUser,
+      upcomingThirteenWeek: rules.isAuthenticatedUser,
+      upcomingTachoCalibration: rules.isAuthenticatedUser,
       tollTags: rules.isAuthenticatedUser,
       tollTagsNotAssigned: rules.isAuthenticatedUser,
       fuelCards: rules.isAuthenticatedUser,
       fuelCardsNotAssigned: rules.isAuthenticatedUser,
-      depots: and(rules.isAuthenticatedUser, rules.isAdmin),
+      depots: rules.isAuthenticatedUser,
       vehiclesInDepot: rules.isAuthenticatedUser,
-      users: and(rules.isAuthenticatedUser, rules.isAdmin),
+      usersOrganisations: rules.isAuthenticatedUser,
+      user: rules.isAuthenticatedUser,
+      me: rules.isAuthenticatedUser,
+      infringements: rules.isAuthenticatedUser,
+      usersInOrganisation: rules.isAuthenticatedUser,
+      driversInOrganisation: rules.isAuthenticatedUser,
+      usersOrganisationInvites: rules.isAuthenticatedUser,
     },
     Mutation: {
-      addVehicle: and(rules.isAuthenticatedUser, rules.isAdmin),
-      updateVehicle: and(rules.isAuthenticatedUser, rules.isAdmin),
-      deleteVehicle: and(rules.isAuthenticatedUser, rules.isAdmin),
-      addTollTag: and(rules.isAuthenticatedUser, rules.isAdmin),
-      updateTollTag: and(rules.isAuthenticatedUser, rules.isAdmin),
-      deleteTollTag: and(rules.isAuthenticatedUser, rules.isAdmin),
-      addFuelCard: and(rules.isAuthenticatedUser, rules.isAdmin),
-      updateFuelCard: and(rules.isAuthenticatedUser, rules.isAdmin),
-      deleteFuelCard: and(rules.isAuthenticatedUser, rules.isAdmin),
-      addDepot: and(rules.isAuthenticatedUser, rules.isAdmin),
-      updateDepot: and(rules.isAuthenticatedUser, rules.isAdmin),
-      deleteDepot: and(rules.isAuthenticatedUser, rules.isAdmin),
+      addVehicle: rules.isAuthenticatedUser,
+      updateVehicle: rules.isAuthenticatedUser,
+      deleteVehicle: rules.isAuthenticatedUser,
+      updateVehicleCVRT: rules.isAuthenticatedUser,
+      updateVehicleThirteenWeekInspection: rules.isAuthenticatedUser,
+      updateVehicleTachoCalibration: rules.isAuthenticatedUser,
+      addTollTag: rules.isAuthenticatedUser,
+      updateTollTag: rules.isAuthenticatedUser,
+      deleteTollTag: rules.isAuthenticatedUser,
+      addFuelCard: rules.isAuthenticatedUser,
+      updateFuelCard: rules.isAuthenticatedUser,
+      deleteFuelCard: rules.isAuthenticatedUser,
+      addDepot: rules.isAuthenticatedUser,
+      updateDepot: rules.isAuthenticatedUser,
+      deleteDepot: rules.isAuthenticatedUser,
       addDefect: rules.isAuthenticatedUser,
-      addUser: and(rules.isAuthenticatedUser, rules.isAdmin),
-      deleteUser: and(rules.isAuthenticatedUser, rules.isAdmin),
+      updateDefect: rules.isAuthenticatedUser,
+      deleteDefect: rules.isAuthenticatedUser,
+      addOrganisation: rules.isAuthenticatedUser,
+      addInfringement: rules.isAuthenticatedUser,
+      updateInfringement: rules.isAuthenticatedUser,
+      deleteInfringement: rules.isAuthenticatedUser,
+      updateInfringementStatus: rules.isAuthenticatedUser,
+      updateUserOrgDetails: rules.isAuthenticatedUser,
+      inviteUserToOrganisation: rules.isAuthenticatedUser,
+      removeUserFromOrganisation: rules.isAuthenticatedUser,
+      acceptInvite: rules.isAuthenticatedUser,
+      declineInvite: rules.isAuthenticatedUser,
+      changePassword: rules.isAuthenticatedUser,
     },
   },
   { allowExternalErrors: true }
