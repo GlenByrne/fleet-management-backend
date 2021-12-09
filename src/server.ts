@@ -4,7 +4,7 @@ import http from 'http';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import schema from './schema';
+import { schema } from './schema';
 import { context } from './context';
 
 export const ACCESS_TOKEN_SECRET = 'xudvholxjekszefvsuvosuegv';

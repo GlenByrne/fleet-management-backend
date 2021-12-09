@@ -1,6 +1,6 @@
-import { and, rule, shield } from 'graphql-shield';
+import { rule, shield } from 'graphql-shield';
 import { Context } from './context';
-import verifyAccessToken from './utilities/verifyAccessToken';
+import { verifyAccessToken } from './utilities/verifyAccessToken';
 
 const rules = {
   isAuthenticatedUser: rule()((_, __, context: Context) => {
@@ -19,7 +19,7 @@ const rules = {
   // }),
 };
 
-const permissions = shield(
+export const permissions = shield(
   {
     Query: {
       vehicle: rules.isAuthenticatedUser,
@@ -76,5 +76,3 @@ const permissions = shield(
   },
   { allowExternalErrors: true }
 );
-
-export default permissions;

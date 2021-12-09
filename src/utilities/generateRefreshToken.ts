@@ -1,7 +1,7 @@
 import { sign } from 'jsonwebtoken';
 import { REFRESH_TOKEN_SECRET } from '../server';
 
-const generateRefreshToken = (userId: string) => {
+export const generateRefreshToken = (userId: string) => {
   const token = sign(
     {
       userId,
@@ -13,5 +13,3 @@ const generateRefreshToken = (userId: string) => {
   );
   return token;
 };
-
-export default generateRefreshToken;

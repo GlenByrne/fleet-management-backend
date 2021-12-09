@@ -16,5 +16,3 @@ export const getRefreshUserId = (context: Context) => {
   }
   return null;
 };
-
-export default getRefreshUserId;

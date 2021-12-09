@@ -5,5 +5,3 @@ export const getDateTwoWeeks = () => {
 
   return date;
 };
-
-export default getDateTwoWeeks;

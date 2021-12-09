@@ -6,7 +6,7 @@ interface Token {
   userId: string;
 }
 
-const verifyAccessToken = (context: Context) => {
+export const verifyAccessToken = (context: Context) => {
   const authHeader = context.req.get('Authorization');
 
   if (authHeader) {
@@ -16,5 +16,3 @@ const verifyAccessToken = (context: Context) => {
   }
   return null;
 };
-
-export default verifyAccessToken;

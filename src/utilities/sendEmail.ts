@@ -7,7 +7,12 @@ type SendEmailInputs = {
   html: string;
 };
 
-const sendEmail = async ({ from, to, subject, html }: SendEmailInputs) => {
+export const sendEmail = async ({
+  from,
+  to,
+  subject,
+  html,
+}: SendEmailInputs) => {
   const testAccount = await nodemailer.createTestAccount();
 
   const transporter = nodemailer.createTransport({
@@ -31,8 +36,6 @@ const sendEmail = async ({ from, to, subject, html }: SendEmailInputs) => {
 
   console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
 };
-
-export default sendEmail;
 
 export const activationEmail = (token: string) => {
   const html = `Hi there,

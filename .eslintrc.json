@@ -13,8 +13,9 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "import"],
   "rules": {
+    "import/prefer-default-export": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
