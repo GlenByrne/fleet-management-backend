@@ -1,7 +1,7 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { TollTag } from '@/schema/TollTag/TollTag';
+import { TollTag } from '@/schema/schemaExports';
 
 export const AddTollTagInput = inputObjectType({
   name: 'AddTollTagInput',

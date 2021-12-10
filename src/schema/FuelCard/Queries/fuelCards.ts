@@ -1,7 +1,7 @@
 import { inputObjectType, queryField, nonNull, arg, list } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { FuelCard } from '@/schema/FuelCard/FuelCard';
+import { FuelCard } from '@/schema/schemaExports';
 
 export const FuelCardInputFilter = inputObjectType({
   name: 'FuelCardInputFilter',

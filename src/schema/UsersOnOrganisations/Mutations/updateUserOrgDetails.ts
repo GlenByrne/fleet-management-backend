@@ -7,9 +7,8 @@ import {
 } from 'nexus';
 import { Context } from 'src/context';
 import { upsertConnection } from '@/utilities/upsertConnection';
+import { Infringement, Depot } from '@/schema/schemaExports';
 import { Role } from '@/schema/Enum';
-import { Depot } from '@/schema/Depot/Depot';
-import { Infringement } from '@/schema/Infringements/Infringement';
 
 export const UpdateUserOrgDetailsInput = inputObjectType({
   name: 'UpdateUserOrgDetailsInput',

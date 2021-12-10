@@ -1,7 +1,7 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
+import { Infringement } from '@/schema/schemaExports';
 import { InfringementStatus } from '@/schema/Enum';
-import { Infringement } from '@/schema/Infringements/Infringement';
 
 export const UpdateInfringementInput = inputObjectType({
   name: 'UpdateInfringementInput',

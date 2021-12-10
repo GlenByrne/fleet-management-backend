@@ -1,11 +1,13 @@
 import { objectType } from 'nexus';
 import { Context } from 'src/context';
 import { VehicleType } from '@/schema/Enum';
-import { Defect } from '@/schema/Defect/Defect';
-import { Depot } from '@/schema/Depot/Depot';
-import { FuelCard } from '@/schema/FuelCard/FuelCard';
-import { Organisation } from '@/schema/Organisation/Organisation';
-import { TollTag } from '@/schema/TollTag/TollTag';
+import {
+  Organisation,
+  Depot,
+  Defect,
+  FuelCard,
+  TollTag,
+} from '@/schema/schemaExports';
 
 export const Vehicle = objectType({
   name: 'Vehicle',

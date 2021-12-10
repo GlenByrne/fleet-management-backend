@@ -1,7 +1,7 @@
 import { queryField, nonNull, idArg, list } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { FuelCard } from '@/schema/FuelCard/FuelCard';
+import { FuelCard } from '@/schema/schemaExports';
 
 export const fuelCardsNotAssigned = queryField('fuelCardsNotAssigned', {
   type: list(FuelCard),

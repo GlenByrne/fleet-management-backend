@@ -1,6 +1,6 @@
 import { queryField, nonNull, idArg, list } from 'nexus';
 import { Context } from 'src/context';
-import { Defect } from '@/schema/Defect/Defect';
+import { Defect } from '@/schema/schemaExports';
 
 export const defectsForVehicle = queryField('defectsForVehicle', {
   type: list(Defect),

@@ -1,7 +1,7 @@
 import { queryField } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { User } from '@/schema/User/User';
+import { User } from '@/schema/schemaExports';
 
 export const me = queryField('me', {
   type: User,

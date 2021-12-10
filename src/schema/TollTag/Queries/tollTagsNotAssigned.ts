@@ -1,7 +1,7 @@
 import { queryField, nonNull, idArg, list } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { TollTag } from '@/schema/TollTag/TollTag';
+import { TollTag } from '@/schema/schemaExports';
 
 export const tollTagsNotAssigned = queryField('tollTagsNotAssigned', {
   type: list(TollTag),

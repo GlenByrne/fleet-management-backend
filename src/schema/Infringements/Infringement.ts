@@ -1,7 +1,7 @@
 import { objectType } from 'nexus';
 import { Context } from 'src/context';
+import { User } from '@/schema/schemaExports';
 import { InfringementStatus } from '@/schema/Enum';
-import { User } from '@/schema/User/User';
 
 export const Infringement = objectType({
   name: 'Infringement',

@@ -1,7 +1,7 @@
 import { inputObjectType, queryField, nonNull, arg, list } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Depot } from '@/schema/Depot/Depot';
+import { Depot } from '@/schema/schemaExports';
 
 export const DepotInputFilter = inputObjectType({
   name: 'DepotInputFilter',

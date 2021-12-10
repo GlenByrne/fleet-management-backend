@@ -2,7 +2,7 @@ import { queryField, nonNull, idArg, list } from 'nexus';
 import { Context } from 'src/context';
 import { getDateTwoWeeks } from '@/utilities/getDateTwoWeeks';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import { Vehicle } from '@/schema/schemaExports';
 
 export const upcomingCVRT = queryField('upcomingCVRT', {
   type: list(Vehicle),

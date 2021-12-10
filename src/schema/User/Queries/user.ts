@@ -1,6 +1,6 @@
 import { queryField, nonNull, idArg } from 'nexus';
 import { Context } from 'src/context';
-import { User } from '@/schema/User/User';
+import { User } from '@/schema/schemaExports';
 
 export const user = queryField('user', {
   type: User,

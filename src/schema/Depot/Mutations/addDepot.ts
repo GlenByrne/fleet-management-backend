@@ -1,7 +1,7 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Depot } from '@/schema/Depot/Depot';
+import { Depot } from '@/schema/schemaExports';
 
 export const AddDepotInput = inputObjectType({
   name: 'AddDepotInput',

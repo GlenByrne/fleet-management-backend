@@ -1,6 +1,6 @@
 import { queryField, nonNull, idArg } from 'nexus';
 import { Context } from 'src/context';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import { Vehicle } from '@/schema/schemaExports';
 
 export const vehicle = queryField('vehicle', {
   type: Vehicle,

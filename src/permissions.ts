@@ -33,7 +33,6 @@ export const permissions = shield(
       fuelCards: rules.isAuthenticatedUser,
       fuelCardsNotAssigned: rules.isAuthenticatedUser,
       depots: rules.isAuthenticatedUser,
-      vehiclesInDepot: rules.isAuthenticatedUser,
       usersOrganisations: rules.isAuthenticatedUser,
       user: rules.isAuthenticatedUser,
       me: rules.isAuthenticatedUser,

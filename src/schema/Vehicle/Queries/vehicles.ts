@@ -1,7 +1,7 @@
 import { inputObjectType, queryField, nonNull, arg, list } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import { Vehicle } from '@/schema/schemaExports';
 
 export const VehicleInputFilter = inputObjectType({
   name: 'VehicleInputFilter',

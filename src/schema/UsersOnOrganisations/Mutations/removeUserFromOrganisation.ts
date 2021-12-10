@@ -1,6 +1,6 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
-import { UsersOnOrganisations } from '@/schema/UsersOnOrganisations/UsersOnOrganisations';
+import { UsersOnOrganisations } from '@/schema/schemaExports';
 
 export const RemoveUserFromOrganisationInput = inputObjectType({
   name: 'RemoveUserFromOrganisationInput',

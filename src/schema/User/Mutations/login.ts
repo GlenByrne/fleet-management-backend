@@ -9,7 +9,7 @@ import { Context } from 'src/context';
 import argon2 from 'argon2';
 import { generateAccessToken } from '@/utilities/generateAccessToken';
 import { generateRefreshToken } from '@/utilities/generateRefreshToken';
-import { User } from '@/schema/User/User';
+import { User } from '@/schema/schemaExports';
 
 export const LoginInput = inputObjectType({
   name: 'LoginInput',

@@ -1,7 +1,7 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { FuelCard } from '@/schema/FuelCard/FuelCard';
+import { FuelCard } from '@/schema/schemaExports';
 
 export const AddFuelCardInput = inputObjectType({
   name: 'AddFuelCardInput',

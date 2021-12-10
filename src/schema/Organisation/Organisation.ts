@@ -1,10 +1,12 @@
 import { objectType } from 'nexus';
 import { Context } from 'src/context';
-import { Depot } from '@/schema/Depot/Depot';
-import { FuelCard } from '@/schema/FuelCard/FuelCard';
-import { TollTag } from '@/schema/TollTag/TollTag';
-import { UsersOnOrganisations } from '@/schema/UsersOnOrganisations/UsersOnOrganisations';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import {
+  UsersOnOrganisations,
+  Vehicle,
+  Depot,
+  FuelCard,
+  TollTag,
+} from '@/schema/schemaExports';
 
 export const Organisation = objectType({
   name: 'Organisation',

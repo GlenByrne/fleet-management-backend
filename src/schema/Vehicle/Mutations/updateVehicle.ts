@@ -2,7 +2,7 @@ import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { upsertConnection } from '@/utilities/upsertConnection';
 import { VehicleType } from '@/schema/Enum';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import { Vehicle } from '@/schema/schemaExports';
 
 export const UpdateVehicleInput = inputObjectType({
   name: 'UpdateVehicleInput',

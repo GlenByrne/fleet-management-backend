@@ -1,7 +1,7 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Defect } from '@/schema/Defect/Defect';
+import { Defect } from '@/schema/schemaExports';
 
 export const AddDefectInput = inputObjectType({
   name: 'AddDefectInput',

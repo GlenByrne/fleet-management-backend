@@ -9,8 +9,7 @@ import {
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Role } from '@/schema/Enum';
-import { Depot } from '@/schema/Depot/Depot';
-import { Infringement } from '@/schema/Infringements/Infringement';
+import { Infringement, Depot } from '@/schema/schemaExports';
 
 const UsersInOrganisationInputFilter = inputObjectType({
   name: 'UsersInOrganisationInputFilter',

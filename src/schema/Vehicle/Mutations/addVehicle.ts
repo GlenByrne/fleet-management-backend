@@ -3,7 +3,7 @@ import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { createConnection } from '@/utilities/createConnection';
 import { VehicleType } from '@/schema/Enum';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import { Vehicle } from '@/schema/schemaExports';
 
 export const AddVehicleInput = inputObjectType({
   name: 'AddVehicleInput',

@@ -1,6 +1,6 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
-import { Depot } from '@/schema/Depot/Depot';
+import { Depot } from '@/schema/schemaExports';
 
 export const DeleteDepotInput = inputObjectType({
   name: 'DeleteDepotInput',

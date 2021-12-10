@@ -1,6 +1,6 @@
-import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
+import { arg, inputObjectType, mutationField, nonNull } from 'nexus';
 import { Context } from 'src/context';
-import { Defect } from '@/schema/Defect/Defect';
+import { Defect } from '@/schema/schemaExports';
 
 export const DeleteDefectInput = inputObjectType({
   name: 'DeleteDefectInput',

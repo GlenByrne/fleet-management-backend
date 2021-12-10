@@ -1,6 +1,6 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
-import { FuelCard } from '@/schema/FuelCard/FuelCard';
+import { FuelCard } from '@/schema/schemaExports';
 
 export const DeleteFuelCardInput = inputObjectType({
   name: 'DeleteFuelCardInput',

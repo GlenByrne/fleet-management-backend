@@ -12,7 +12,6 @@ export * from '@/schema/Depot/Mutations/addDepot';
 export * from '@/schema/Depot/Mutations/deleteDepot';
 export * from '@/schema/Depot/Mutations/updateDepot';
 export * from '@/schema/Depot/Queries/depots';
-export * from '@/schema/Depot/Queries/vehiclesInDepot';
 
 export * from '@/schema/FuelCard/FuelCard';
 export * from '@/schema/FuelCard/Mutations/addFuelCard';

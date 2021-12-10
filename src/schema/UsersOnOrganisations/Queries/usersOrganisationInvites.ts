@@ -1,7 +1,7 @@
 import { list, queryField } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { UsersOnOrganisations } from '@/schema/UsersOnOrganisations/UsersOnOrganisations';
+import { UsersOnOrganisations } from '@/schema/schemaExports';
 
 export const usersOrganisationInvites = queryField('usersOrganisationInvites', {
   type: list(UsersOnOrganisations),

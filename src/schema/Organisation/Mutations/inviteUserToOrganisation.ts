@@ -3,7 +3,7 @@ import { Context } from 'src/context';
 import { createConnection } from '@/utilities/createConnection';
 import { Role } from '@/schema/Enum';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Organisation } from '@/schema/Organisation/Organisation';
+import { Organisation } from '@/schema/schemaExports';
 
 export const InviteUserToOrganisationInput = inputObjectType({
   name: 'InviteUserToOrganisationInput',

@@ -1,6 +1,6 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import { Vehicle } from '@/schema/schemaExports';
 
 export const updateVehicleThirteenWeekInspectionInput = inputObjectType({
   name: 'updateVehicleThirteenWeekInspectionInput',

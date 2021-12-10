@@ -1,7 +1,7 @@
 import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Organisation } from '@/schema/Organisation/Organisation';
+import { Organisation } from '@/schema/schemaExports';
 
 export const AddOrganisationInput = inputObjectType({
   name: 'AddOrganisationInput',

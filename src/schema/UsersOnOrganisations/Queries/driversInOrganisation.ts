@@ -8,9 +8,8 @@ import {
 } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
+import { Infringement, Depot } from '@/schema/schemaExports';
 import { Role } from '@/schema/Enum';
-import { Depot } from '@/schema/Depot/Depot';
-import { Infringement } from '@/schema/Infringements/Infringement';
 
 const DriversInOrganisationInputFilter = inputObjectType({
   name: 'DriversInOrganisationInputFilter',

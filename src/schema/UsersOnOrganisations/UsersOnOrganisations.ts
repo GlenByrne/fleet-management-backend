@@ -1,8 +1,7 @@
 import { objectType } from 'nexus';
 import { Context } from 'src/context';
 import { Role } from '@/schema/Enum';
-import { Organisation } from '@/schema/Organisation/Organisation';
-import { User } from '@/schema/User/User';
+import { User, Organisation } from '@/schema/schemaExports';
 
 export const UsersOnOrganisations = objectType({
   name: 'UsersOnOrganisations',
@@ -15,8 +14,8 @@ export const UsersOnOrganisations = objectType({
     t.nonNull.id('organisationId');
     t.nonNull.field('user', {
       type: User,
-      resolve(parent, _, context: Context) {
-        return context.prisma.usersOnOrganisations
+      resolve: async (parent, _, context: Context) => {
+        const user = await context.prisma.usersOnOrganisations
           .findUnique({
             where: {
               userId_organisationId: {
@@ -26,6 +25,12 @@ export const UsersOnOrganisations = objectType({
             },
           })
           .user();
+
+        if (!user) {
+          throw new Error('User not found');
+        }
+
+        return user;
       },
     });
     t.nonNull.field('organisation', {

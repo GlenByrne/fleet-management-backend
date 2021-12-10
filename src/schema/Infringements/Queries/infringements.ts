@@ -1,7 +1,7 @@
 import { list, queryField } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { Infringement } from '@/schema/Infringements/Infringement';
+import { Infringement } from '@/schema/schemaExports';
 
 export const infringements = queryField('infringements', {
   type: list(Infringement),

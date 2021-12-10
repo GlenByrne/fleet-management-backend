@@ -1,7 +1,6 @@
 import { objectType } from 'nexus';
 import { Context } from 'src/context';
-import { Organisation } from '@/schema/Organisation/Organisation';
-import { Vehicle } from '@/schema/Vehicle/Vehicle';
+import { Organisation, Vehicle } from '@/schema/schemaExports';
 
 export const Depot = objectType({
   name: 'Depot',
