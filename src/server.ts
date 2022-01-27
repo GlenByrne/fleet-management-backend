@@ -4,6 +4,16 @@ import http from 'http';
 import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import fastify from 'fastify';
+import mercurius from 'mercurius';
+import {
+  getGraphQLParameters,
+  processRequest,
+  renderGraphiQL,
+  Request,
+  sendResult,
+  shouldRenderGraphiQL,
+} from 'graphql-helix';
 import { schema } from './schema';
 import { context } from './context';
 
@@ -18,36 +28,84 @@ export const RESET_PASSWORD_TOKEN_SECRET = 'lknxoevs;ehnvshleslefh';
 // };
 
 const startApolloServer = async () => {
-  const app = express();
-  app.use(cookieParser());
-  app.use(cors());
+  // const app = express();
+  // app.use(cookieParser());
+  // app.use(cors());
 
-  const httpServer = http.createServer(app);
+  // const httpServer = http.createServer(app);
 
-  const server = new ApolloServer({
+  // const server = new ApolloServer({
+  //   schema,
+  //   context,
+  //   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  // });
+
+  // await server.start();
+
+  // server.applyMiddleware({
+  //   app,
+  //   path: '/',
+  //   cors: false,
+  // });
+
+  // await new Promise<void>((resolve) =>
+  //   // eslint-disable-next-line no-promise-executor-return
+  //   httpServer.listen({ port: 4000 }, resolve)
+  // );
+
+  const app = fastify();
+
+  app.route({
+    method: ['POST', 'GET'],
+    url: '/',
+    handler: async (req, res) => {
+      const request: Request = {
+        headers: req.headers,
+        method: req.method,
+        query: req.query,
+        body: req.body,
+      };
+
+      if (shouldRenderGraphiQL(request)) {
+        res.type('text/html');
+        res.send(
+          renderGraphiQL({
+            endpoint: '/',
+          })
+        );
+
+        return;
+      }
+
+      const { operationName, query, variables } = getGraphQLParameters(request);
+
+      const result = await processRequest({
+        request,
+        schema,
+        operationName,
+        // contextFactory: context,
+        query,
+        variables,
+      });
+
+      sendResult(result, res.raw);
+
+      res.sent = true;
+    },
+  });
+
+  app.register(mercurius, {
     schema,
-    context,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    jit: 1,
   });
 
-  await server.start();
-
-  server.applyMiddleware({
-    app,
-    path: '/',
-    cors: false,
-  });
-
-  await new Promise<void>((resolve) =>
-    // eslint-disable-next-line no-promise-executor-return
-    httpServer.listen({ port: 4000 }, resolve)
-  );
-
-  console.log(`
+  app.listen(4000, () => {
+    console.log(`
     🚀  Server is running!
     🔉  Listening on port 4000
     📭  Query at https://studio.apollographql.com/dev
   `);
+  });
 };
 
 startApolloServer();
