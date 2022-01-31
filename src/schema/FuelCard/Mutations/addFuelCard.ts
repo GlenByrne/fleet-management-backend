@@ -54,6 +54,8 @@ export const addFuelCard = mutationField('addFuelCard', {
       throw new Error('Card already exists with this registration');
     }
 
+    // context.pubsSub.publish('newCard', { createdCard: newCard });
+
     return context.prisma.fuelCard.create({
       data: {
         cardNumber: args.data.cardNumber,

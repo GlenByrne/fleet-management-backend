@@ -1,18 +1,28 @@
-import { PrismaClient } from '@prisma/client';
-import { Request, Response } from 'express';
+import { FuelCard, PrismaClient } from '@prisma/client';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { PubSub } from 'graphql-subscriptions';
+import { TypedPubSub } from 'typed-graphql-subscriptions';
 
 const prisma = new PrismaClient();
 
+export type PubSubChannels = {
+  newCard: [{ createdCard: FuelCard }];
+};
+
+const pubSub = new TypedPubSub<PubSubChannels>(new PubSub());
+
 export interface Context {
   prisma: PrismaClient;
-  req: Request;
-  res: Response;
+  req: FastifyRequest;
+  res: FastifyReply;
+  pubsSub: typeof pubSub;
 }
 
-export function context(req: Request, response: Response) {
+export async function contextFactory(req: FastifyRequest, res: FastifyReply) {
   return {
-    ...req,
-    ...response,
     prisma,
+    req,
+    res,
+    pubSub,
   };
 }

@@ -1,11 +1,6 @@
-import { ApolloServer } from 'apollo-server-express';
-import express from 'express';
-import http from 'http';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
 import fastify from 'fastify';
-import mercurius from 'mercurius';
+import fastifyCors from 'fastify-cors';
+import fastifyCookie from 'fastify-cookie';
 import {
   getGraphQLParameters,
   processRequest,
@@ -14,8 +9,9 @@ import {
   sendResult,
   shouldRenderGraphiQL,
 } from 'graphql-helix';
+import { envelop, useSchema } from '@envelop/core';
 import { schema } from './schema';
-import { context } from './context';
+import { contextFactory } from './context';
 
 export const ACCESS_TOKEN_SECRET = 'xudvholxjekszefvsuvosuegv';
 export const REFRESH_TOKEN_SECRET = 'akjwdhliuawdlUWladuhawud';
@@ -27,38 +23,20 @@ export const RESET_PASSWORD_TOKEN_SECRET = 'lknxoevs;ehnvshleslefh';
 //   credentials: true,
 // };
 
-const startApolloServer = async () => {
-  // const app = express();
-  // app.use(cookieParser());
-  // app.use(cors());
+async function createServer() {
+  const getEnveloped = envelop({
+    plugins: [useSchema(schema)],
+  });
 
-  // const httpServer = http.createServer(app);
+  const server = fastify();
 
-  // const server = new ApolloServer({
-  //   schema,
-  //   context,
-  //   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  // });
+  server.register(fastifyCookie);
+  server.register(fastifyCors);
 
-  // await server.start();
-
-  // server.applyMiddleware({
-  //   app,
-  //   path: '/',
-  //   cors: false,
-  // });
-
-  // await new Promise<void>((resolve) =>
-  //   // eslint-disable-next-line no-promise-executor-return
-  //   httpServer.listen({ port: 4000 }, resolve)
-  // );
-
-  const app = fastify();
-
-  app.route({
+  server.route({
     method: ['POST', 'GET'],
-    url: '/',
-    handler: async (req, res) => {
+    url: '/graphql',
+    handler: async (req, reply) => {
       const request: Request = {
         headers: req.headers,
         method: req.method,
@@ -67,10 +45,10 @@ const startApolloServer = async () => {
       };
 
       if (shouldRenderGraphiQL(request)) {
-        res.type('text/html');
-        res.send(
+        reply.header('Content-Type', 'text/html');
+        reply.send(
           renderGraphiQL({
-            endpoint: '/',
+            endpoint: '/graphql',
           })
         );
 
@@ -83,29 +61,27 @@ const startApolloServer = async () => {
         request,
         schema,
         operationName,
-        // contextFactory: context,
+        contextFactory: () => contextFactory(req, reply),
         query,
         variables,
       });
 
-      sendResult(result, res.raw);
-
-      res.sent = true;
+      sendResult(result, reply.raw);
     },
   });
 
-  app.register(mercurius, {
-    schema,
-    jit: 1,
-  });
+  return server;
+}
 
-  app.listen(4000, () => {
+export const startServer = async () => {
+  const server = await createServer();
+
+  const port = 4000;
+  await server.listen(port, () => {
     console.log(`
-    🚀  Server is running!
-    🔉  Listening on port 4000
-    📭  Query at https://studio.apollographql.com/dev
-  `);
+      🚀  Server is running!
+      🔉  Listening on port 4000
+      📭  Query at http://localhost:4000/graphql
+    `);
   });
 };
-
-startApolloServer();

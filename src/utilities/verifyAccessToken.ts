@@ -7,7 +7,7 @@ interface Token {
 }
 
 export const verifyAccessToken = (context: Context) => {
-  const authHeader = context.req.get('Authorization');
+  const authHeader = context.req.headers.authorization;
 
   if (authHeader) {
     const token = authHeader.replace('Bearer ', '');
