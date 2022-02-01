@@ -3,7 +3,7 @@ import { Context } from 'src/context';
 import { Infringement } from '@/schema/schemaExports';
 
 export const UpdateInfringementStatusInput = inputObjectType({
-  name: 'UpdateInfringementStasusInput',
+  name: 'UpdateInfringementStatusInput',
   definition(t) {
     t.nonNull.string('id');
   },

@@ -19,6 +19,7 @@ export * from '@/schema/FuelCard/Mutations/deleteFuelCard';
 export * from '@/schema/FuelCard/Mutations/updateFuelCard';
 export * from '@/schema/FuelCard/Queries/fuelCards';
 export * from '@/schema/FuelCard/Queries/fuelCardsNotAssigned';
+export * from '@/schema/FuelCard/Subscriptions/fuelCardAdded';
 
 export * from '@/schema/Infringements/Infringement';
 export * from '@/schema/Infringements/Mutations/addInfringement';

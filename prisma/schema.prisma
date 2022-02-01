@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = "postgres://ngkrtbylzcryjh:0f06d528b4b492d6fe6a4f59c1d576e3a19077f8dfe8d823491c030baabc0bd4@ec2-176-34-116-203.eu-west-1.compute.amazonaws.com:5432/ddt8nlq9uijdkn"
+  url      = "postgres://ipncesyjkvaxxs:2aca018526222919ac46937e9dbc44fc7f35748d233e7cc8415d8425564d175f@ec2-52-31-217-108.eu-west-1.compute.amazonaws.com:5432/d4397tshe1ctdo"
 }
 
 generator client {

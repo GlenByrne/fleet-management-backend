@@ -2,8 +2,8 @@ import { inputObjectType, mutationField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { Vehicle } from '@/schema/schemaExports';
 
-export const updateVehicleThirteenWeekInspectionInput = inputObjectType({
-  name: 'updateVehicleThirteenWeekInspectionInput',
+export const UpdateVehicleThirteenWeekInspectionInput = inputObjectType({
+  name: 'UpdateVehicleThirteenWeekInspectionInput',
   definition(t) {
     t.nonNull.string('id');
     t.nonNull.date('completionDate');
@@ -17,7 +17,7 @@ export const updateVehicleThirteenWeekInspection = mutationField(
     args: {
       data: nonNull(
         arg({
-          type: updateVehicleThirteenWeekInspectionInput,
+          type: UpdateVehicleThirteenWeekInspectionInput,
         })
       ),
     },
