@@ -66,7 +66,7 @@ export const addFuelCard = mutationField('addFuelCard', {
       },
     });
 
-    context.pubsSub.publish('newCard', { createdCard: newCard });
+    context.pubSub.publish('FUEL_CARD_ADDED', newCard);
 
     return newCard;
   },

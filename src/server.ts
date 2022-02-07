@@ -91,6 +91,7 @@ const getEnveloped = envelop({
 const app = express();
 
 app.use(express.json());
+
 app.use(cookieParser());
 app.use(cors());
 
@@ -108,30 +109,32 @@ app.use('/graphql', async (req, res) => {
         subscriptionsEndpoint: 'ws://localhost:4000/graphql',
       })
     );
+
+    return;
+  }
+
+  const { operationName, query, variables } = getGraphQLParameters(request);
+
+  const result = await processRequest({
+    operationName,
+    query,
+    variables,
+    request,
+    schema: schemaWithPermissions,
+    contextFactory: () => contextFactory(req, res),
+  });
+
+  if (result.type === 'RESPONSE') {
+    sendResponseResult(result, res);
+  } else if (result.type === 'MULTIPART_RESPONSE') {
+    sendMultipartResponseResult(result, res);
   } else {
-    const { operationName, query, variables } = getGraphQLParameters(request);
-
-    const result = await processRequest({
-      operationName,
-      query,
-      variables,
-      request,
-      schema: schemaWithPermissions,
-      contextFactory: () => contextFactory(req, res),
+    res.status(422);
+    res.json({
+      errors: [
+        new GraphQLError('Subscriptions should be sent over WebSocket.'),
+      ],
     });
-
-    if (result.type === 'RESPONSE') {
-      sendResponseResult(result, res);
-    } else if (result.type === 'MULTIPART_RESPONSE') {
-      sendMultipartResponseResult(result, res);
-    } else {
-      res.status(422);
-      res.json({
-        errors: [
-          new GraphQLError('Subscriptions should be sent over WebSocket.'),
-        ],
-      });
-    }
   }
 });
 

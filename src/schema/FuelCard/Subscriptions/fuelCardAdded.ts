@@ -1,10 +1,10 @@
 import { subscriptionField } from 'nexus';
-import { Context, PubSubChannels } from 'src/context';
+import { Context } from 'src/context';
 import { FuelCard } from '../FuelCard';
 
-export const FuelCardAdded = subscriptionField('newCard', {
+export const FuelCardAdded = subscriptionField('fuelCardAdded', {
   type: FuelCard,
+  resolve: (payload) => payload,
   subscribe: (_, __, context: Context) =>
-    context.pubsSub.asyncIterator('newCard'),
-  resolve: (payload: PubSubChannels['newCard'][0]) => payload.createdCard,
+    context.pubSub.asyncIterator('FUEL_CARD_ADDED'),
 });
