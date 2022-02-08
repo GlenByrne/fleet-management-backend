@@ -1,12 +1,23 @@
-import { queryField, nonNull, idArg, list } from 'nexus';
+import { queryField, nonNull, list, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { FuelCard } from '@/schema/schemaExports';
 
+export const FuelCardsNotAssignedInput = inputObjectType({
+  name: 'FuelCardsNotAssignedInput',
+  definition(t) {
+    t.nonNull.id('organisationId');
+  },
+});
+
 export const fuelCardsNotAssigned = queryField('fuelCardsNotAssigned', {
   type: list(FuelCard),
   args: {
-    organisationId: nonNull(idArg()),
+    data: nonNull(
+      arg({
+        type: FuelCardsNotAssignedInput,
+      })
+    ),
   },
   resolve: async (_, args, context: Context) => {
     const userId = verifyAccessToken(context);
@@ -22,7 +33,7 @@ export const fuelCardsNotAssigned = queryField('fuelCardsNotAssigned', {
         where: {
           userId_organisationId: {
             userId,
-            organisationId: args.organisationId,
+            organisationId: args.data.organisationId,
           },
         },
       });
@@ -35,7 +46,10 @@ export const fuelCardsNotAssigned = queryField('fuelCardsNotAssigned', {
 
     return context.prisma.fuelCard.findMany({
       where: {
-        AND: [{ vehicleId: null }, { organisationId: args.organisationId }],
+        AND: [
+          { vehicleId: null },
+          { organisationId: args.data.organisationId },
+        ],
       },
       orderBy: {
         cardNumber: 'asc',

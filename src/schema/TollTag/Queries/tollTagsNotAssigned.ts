@@ -1,12 +1,23 @@
-import { queryField, nonNull, idArg, list } from 'nexus';
+import { queryField, nonNull, idArg, list, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { TollTag } from '@/schema/schemaExports';
 
+export const TollTagsNotAssignedInput = inputObjectType({
+  name: 'TollTagsNotAssignedInput',
+  definition(t) {
+    t.nonNull.id('organisationId');
+  },
+});
+
 export const tollTagsNotAssigned = queryField('tollTagsNotAssigned', {
   type: list(TollTag),
   args: {
-    organisationId: nonNull(idArg()),
+    data: nonNull(
+      arg({
+        type: TollTagsNotAssignedInput,
+      })
+    ),
   },
   resolve: async (_, args, context: Context) => {
     const userId = verifyAccessToken(context);
@@ -22,7 +33,7 @@ export const tollTagsNotAssigned = queryField('tollTagsNotAssigned', {
         where: {
           userId_organisationId: {
             userId,
-            organisationId: args.organisationId,
+            organisationId: args.data.organisationId,
           },
         },
       });
@@ -35,7 +46,10 @@ export const tollTagsNotAssigned = queryField('tollTagsNotAssigned', {
 
     return context.prisma.tollTag.findMany({
       where: {
-        AND: [{ vehicleId: null }, { organisationId: args.organisationId }],
+        AND: [
+          { vehicleId: null },
+          { organisationId: args.data.organisationId },
+        ],
       },
       orderBy: {
         tagNumber: 'asc',

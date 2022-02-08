@@ -1,18 +1,29 @@
-import { queryField, nonNull, idArg, list } from 'nexus';
+import { queryField, nonNull, list, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { Defect } from '@/schema/schemaExports';
+
+export const DefectsForVehicleInput = inputObjectType({
+  name: 'DefectsForVehicleInput',
+  definition(t) {
+    t.nonNull.id('vehicleId');
+  },
+});
 
 export const defectsForVehicle = queryField('defectsForVehicle', {
   type: list(Defect),
   args: {
-    vehicleId: nonNull(idArg()),
+    data: nonNull(
+      arg({
+        type: DefectsForVehicleInput,
+      })
+    ),
   },
-  resolve: (_, { vehicleId }, context: Context) => {
+  resolve: (_, { data }, context: Context) => {
     try {
       return context.prisma.vehicle
         .findUnique({
           where: {
-            id: vehicleId,
+            id: data.vehicleId,
           },
         })
         .defects();

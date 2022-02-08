@@ -1,13 +1,24 @@
-import { queryField, nonNull, idArg, list } from 'nexus';
+import { queryField, nonNull, list, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { getDateTwoWeeks } from '@/utilities/getDateTwoWeeks';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Vehicle } from '@/schema/schemaExports';
 
+export const UpcomingThirteenWeekInput = inputObjectType({
+  name: 'UpcomingThirteenWeekInput',
+  definition(t) {
+    t.nonNull.id('organisationId');
+  },
+});
+
 export const upcomingThirteenWeek = queryField('upcomingThirteenWeek', {
   type: list(Vehicle),
   args: {
-    organisationId: nonNull(idArg()),
+    data: nonNull(
+      arg({
+        type: UpcomingThirteenWeekInput,
+      })
+    ),
   },
   resolve: async (_, args, context: Context) => {
     const userId = verifyAccessToken(context);
@@ -21,7 +32,7 @@ export const upcomingThirteenWeek = queryField('upcomingThirteenWeek', {
         where: {
           userId_organisationId: {
             userId,
-            organisationId: args.organisationId,
+            organisationId: args.data.organisationId,
           },
         },
       });
@@ -35,7 +46,7 @@ export const upcomingThirteenWeek = queryField('upcomingThirteenWeek', {
     return context.prisma.vehicle.findMany({
       where: {
         AND: [
-          { organisationId: args.organisationId },
+          { organisationId: args.data.organisationId },
           {
             thirteenWeekInspection: {
               lte: getDateTwoWeeks(),

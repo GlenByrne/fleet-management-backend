@@ -1,13 +1,24 @@
-import { queryField, nonNull, idArg, list } from 'nexus';
+import { queryField, nonNull, list, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { getDateTwoWeeks } from '@/utilities/getDateTwoWeeks';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Vehicle } from '@/schema/schemaExports';
 
+export const UpcomingTachoCalibrationInput = inputObjectType({
+  name: 'UpcomingTachoCalibrationInput',
+  definition(t) {
+    t.nonNull.id('organisationId');
+  },
+});
+
 export const upcomingTachoCalibration = queryField('upcomingTachoCalibration', {
   type: list(Vehicle),
   args: {
-    organisationId: nonNull(idArg()),
+    data: nonNull(
+      arg({
+        type: UpcomingTachoCalibrationInput,
+      })
+    ),
   },
   resolve: async (_, args, context: Context) => {
     const userId = verifyAccessToken(context);
@@ -23,7 +34,7 @@ export const upcomingTachoCalibration = queryField('upcomingTachoCalibration', {
         where: {
           userId_organisationId: {
             userId,
-            organisationId: args.organisationId,
+            organisationId: args.data.organisationId,
           },
         },
       });
@@ -37,7 +48,7 @@ export const upcomingTachoCalibration = queryField('upcomingTachoCalibration', {
     return context.prisma.vehicle.findMany({
       where: {
         AND: [
-          { organisationId: args.organisationId },
+          { organisationId: args.data.organisationId },
           {
             tachoCalibration: {
               lte: getDateTwoWeeks(),

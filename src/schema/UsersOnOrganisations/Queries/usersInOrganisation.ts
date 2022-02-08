@@ -11,8 +11,8 @@ import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Role } from '@/schema/Enum';
 import { Infringement, Depot } from '@/schema/schemaExports';
 
-const UsersInOrganisationInputFilter = inputObjectType({
-  name: 'UsersInOrganisationInputFilter',
+const UsersInOrganisationInput = inputObjectType({
+  name: 'UsersInOrganisationInput',
   definition(t) {
     t.string('searchCriteria');
     t.nonNull.string('organisationId');
@@ -51,7 +51,7 @@ export const usersInOrganisation = queryField('usersInOrganisation', {
   args: {
     data: nonNull(
       arg({
-        type: UsersInOrganisationInputFilter,
+        type: UsersInOrganisationInput,
       })
     ),
   },

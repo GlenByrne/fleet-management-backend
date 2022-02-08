@@ -11,8 +11,8 @@ import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Infringement, Depot } from '@/schema/schemaExports';
 import { Role } from '@/schema/Enum';
 
-const DriversInOrganisationInputFilter = inputObjectType({
-  name: 'DriversInOrganisationInputFilter',
+const DriversInOrganisationInput = inputObjectType({
+  name: 'DriversInOrganisationInput',
   definition(t) {
     t.nonNull.string('organisationId');
   },
@@ -50,7 +50,7 @@ export const driversInOrganisation = queryField('driversInOrganisation', {
   args: {
     data: nonNull(
       arg({
-        type: DriversInOrganisationInputFilter,
+        type: DriversInOrganisationInput,
       })
     ),
   },

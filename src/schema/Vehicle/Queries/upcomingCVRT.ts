@@ -1,13 +1,24 @@
-import { queryField, nonNull, idArg, list } from 'nexus';
+import { queryField, nonNull, idArg, list, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { getDateTwoWeeks } from '@/utilities/getDateTwoWeeks';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Vehicle } from '@/schema/schemaExports';
 
+export const UpcomingCVRTInput = inputObjectType({
+  name: 'UpcomingCVRTInput',
+  definition(t) {
+    t.nonNull.id('organisationId');
+  },
+});
+
 export const upcomingCVRT = queryField('upcomingCVRT', {
   type: list(Vehicle),
   args: {
-    organisationId: nonNull(idArg()),
+    data: nonNull(
+      arg({
+        type: UpcomingCVRTInput,
+      })
+    ),
   },
   resolve: async (_, args, context: Context) => {
     const userId = verifyAccessToken(context);
@@ -21,7 +32,7 @@ export const upcomingCVRT = queryField('upcomingCVRT', {
         where: {
           userId_organisationId: {
             userId,
-            organisationId: args.organisationId,
+            organisationId: args.data.organisationId,
           },
         },
       });
@@ -35,7 +46,7 @@ export const upcomingCVRT = queryField('upcomingCVRT', {
     return context.prisma.vehicle.findMany({
       where: {
         AND: [
-          { organisationId: args.organisationId },
+          { organisationId: args.data.organisationId },
           {
             cvrt: {
               lte: getDateTwoWeeks(),
