@@ -3058,6 +3058,11 @@ graphql-middleware@^6.1.13:
     "@graphql-tools/delegate" "^8.4.3"
     "@graphql-tools/schema" "^8.3.1"
 
+graphql-relay@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/graphql-relay/-/graphql-relay-0.10.0.tgz#3b661432edf1cb414cd4a132cf595350e524db2b"
+  integrity sha512-44yBuw2/DLNEiMypbNZBt1yMDbBmyVPVesPywnteGGALiBmdyy1JP8jSg8ClLePg8ZZxk0O4BLhd1a6U/1jDOQ==
+
 graphql-scalars@^1.14.1:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/graphql-scalars/-/graphql-scalars-1.14.1.tgz#546a12ac2901e17202f354c71e336942feb9afa2"
