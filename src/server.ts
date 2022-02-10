@@ -8,17 +8,18 @@ import {
   renderGraphiQL,
   sendMultipartResponseResult,
   sendResponseResult,
-  sendResult,
   shouldRenderGraphiQL,
 } from 'graphql-helix';
 import { envelop, useSchema } from '@envelop/core';
 import * as ws from 'ws';
-import { contextFactory } from 'src/context';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import { GraphQLError, execute, subscribe } from 'graphql';
+import { GraphQLError } from 'graphql';
 import { useServer } from 'graphql-ws/lib/use/ws';
+import { PrismaClient } from '@prisma/client';
+import { PubSub } from 'graphql-subscriptions';
+import { useDepthLimit } from '@envelop/depth-limit';
 import { schemaWithPermissions } from './schema';
 
 export const ACCESS_TOKEN_SECRET = 'xudvholxjekszefvsuvosuegv';
@@ -31,9 +32,19 @@ export const RESET_PASSWORD_TOKEN_SECRET = 'lknxoevs;ehnvshleslefh';
 //   credentials: true,
 // };
 
+const prisma = new PrismaClient();
+export const pubSub = new PubSub();
+
 const getEnveloped = envelop({
-  plugins: [useSchema(schemaWithPermissions)],
+  plugins: [
+    useSchema(schemaWithPermissions),
+    useDepthLimit({
+      maxDepth: 4,
+    }),
+  ],
 });
+
+const { execute, subscribe } = getEnveloped({});
 
 // const server = fastify();
 
@@ -96,6 +107,13 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/graphql', async (req, res) => {
+  const { parse, validate, contextFactory, schema } = getEnveloped({
+    req,
+    res,
+    prisma,
+    pubSub,
+  });
+
   const request = {
     body: req.body,
     headers: req.headers,
@@ -120,8 +138,11 @@ app.use('/graphql', async (req, res) => {
     query,
     variables,
     request,
-    schema: schemaWithPermissions,
-    contextFactory: () => contextFactory(req, res),
+    schema,
+    parse,
+    validate,
+    execute,
+    contextFactory,
   });
 
   if (result.type === 'RESPONSE') {
