@@ -15,6 +15,7 @@ export const VehiclesInput = inputObjectType({
 export const vehicles = queryField((t) => {
   t.connectionField('vehicles', {
     type: Vehicle,
+    nullable: false,
     additionalArgs: {
       data: nonNull(
         arg({

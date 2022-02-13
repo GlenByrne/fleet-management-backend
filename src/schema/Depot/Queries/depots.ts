@@ -15,6 +15,7 @@ export const DepotsInput = inputObjectType({
 export const depots = queryField((t) => {
   t.connectionField('depots', {
     type: Depot,
+    nullable: false,
     additionalArgs: {
       data: nonNull(
         arg({

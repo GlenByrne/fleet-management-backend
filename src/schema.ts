@@ -6,7 +6,13 @@ import { permissions } from './permissions';
 
 const schemaWithoutPermissions = makeSchema({
   types: allTypes,
-  plugins: [connectionPlugin()],
+  plugins: [
+    connectionPlugin({
+      nonNullDefaults: {
+        output: true,
+      },
+    }),
+  ],
   outputs: {
     schema: `${__dirname}/../generated/schema.graphql`,
     typegen: `${__dirname}/../generated/types.ts`,

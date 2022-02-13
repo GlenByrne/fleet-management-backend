@@ -15,6 +15,7 @@ export const FuelCardsInput = inputObjectType({
 export const fuelCards = queryField((t) => {
   t.connectionField('fuelCards', {
     type: FuelCard,
+    nullable: false,
     additionalArgs: {
       data: nonNull(
         arg({
