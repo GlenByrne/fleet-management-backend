@@ -15,6 +15,7 @@ export const TollTagsInput = inputObjectType({
 export const tollTags = queryField((t) => {
   t.connectionField('tollTags', {
     type: TollTag,
+    nullable: false,
     additionalArgs: {
       data: nonNull(
         arg({
