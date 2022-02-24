@@ -1,4 +1,4 @@
-import { queryField, nonNull, idArg, inputObjectType, arg } from 'nexus';
+import { queryField, nonNull, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { Vehicle } from '@/schema/schemaExports';
 

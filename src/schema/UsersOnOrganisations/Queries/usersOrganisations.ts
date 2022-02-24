@@ -1,10 +1,10 @@
-import { list, queryField } from 'nexus';
+import { list, nonNull, queryField } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { UsersOnOrganisations } from '@/schema/schemaExports';
 
 export const usersOrganisations = queryField('usersOrganisations', {
-  type: list(UsersOnOrganisations),
+  type: nonNull(list(nonNull(UsersOnOrganisations))),
   resolve: async (_, __, context: Context) => {
     const userId = verifyAccessToken(context);
 
