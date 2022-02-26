@@ -1,24 +1,25 @@
-import { queryField, nonNull, idArg, list, inputObjectType, arg } from 'nexus';
+import { queryField, nonNull, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
+import { Defect } from '@/schema/schemaExports';
+import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
-import { TollTag } from '@/schema/schemaExports';
-import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
-export const TollTagsNotAssignedInput = inputObjectType({
-  name: 'TollTagsNotAssignedInput',
+export const DefectsForVehicleInput = inputObjectType({
+  name: 'DefectsForVehicleInput',
   definition(t) {
-    t.nonNull.id('organisationId');
+    t.nonNull.id('vehicleId');
+    t.nonNull.string('organisationId');
   },
 });
 
-export const tollTagsNotAssigned = queryField((t) => {
-  t.connectionField('tollTagsNotAssigned', {
-    type: TollTag,
+export const defectsForVehicle = queryField((t) => {
+  t.connectionField('defectsForVehicle', {
+    type: Defect,
     nullable: false,
     additionalArgs: {
       data: nonNull(
         arg({
-          type: TollTagsNotAssignedInput,
+          type: DefectsForVehicleInput,
         })
       ),
     },
@@ -54,25 +55,19 @@ export const tollTagsNotAssigned = queryField((t) => {
       }
 
       const [totalCount, items] = await Promise.all([
-        context.prisma.tollTag.count({
+        context.prisma.defect.count({
           where: {
-            AND: [
-              { vehicleId: null },
-              { organisationId: args.data.organisationId },
-            ],
+            vehicleId: args.data.vehicleId,
           },
         }),
-        context.prisma.tollTag.findMany({
+        context.prisma.defect.findMany({
           take: args.first ? args.first : undefined,
           skip: offset,
           where: {
-            AND: [
-              { vehicleId: null },
-              { organisationId: args.data.organisationId },
-            ],
+            vehicleId: args.data.vehicleId,
           },
           orderBy: {
-            tagNumber: 'asc',
+            dateReported: 'desc',
           },
         }),
       ]);
@@ -85,3 +80,27 @@ export const tollTagsNotAssigned = queryField((t) => {
     },
   });
 });
+
+// queryField('defectsForVehicles', {
+//   type: list(Defect),
+//   args: {
+//     data: nonNull(
+//       arg({
+//         type: DefectsForVehiclesInput,
+//       })
+//     ),
+//   },
+//   resolve: (_, { data }, context: Context) => {
+//     try {
+//       return context.prisma.vehicle
+//         .findUnique({
+//           where: {
+//             id: data.vehicleId,
+//           },
+//         })
+//         .defects();
+//     } catch (error) {
+//       throw new Error('Error retrieving defects');
+//     }
+//   },
+// });

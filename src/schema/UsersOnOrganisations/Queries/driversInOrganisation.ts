@@ -1,15 +1,9 @@
-import {
-  inputObjectType,
-  objectType,
-  queryField,
-  nonNull,
-  arg,
-  list,
-} from 'nexus';
+import { inputObjectType, objectType, queryField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Infringement, Depot } from '@/schema/schemaExports';
 import { Role } from '@/schema/Enum';
+import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
 const DriversInOrganisationInput = inputObjectType({
   name: 'DriversInOrganisationInput',
@@ -45,67 +39,96 @@ export const DriversInOrganisationPayload = objectType({
   },
 });
 
-export const driversInOrganisation = queryField('driversInOrganisation', {
-  type: list(DriversInOrganisationPayload),
-  args: {
-    data: nonNull(
-      arg({
-        type: DriversInOrganisationInput,
-      })
-    ),
-  },
-  resolve: async (_, args, context: Context) => {
-    const userId = verifyAccessToken(context);
+export const driversInOrganisation = queryField((t) => {
+  t.connectionField('driversInOrganisation', {
+    type: DriversInOrganisationPayload,
+    nullable: false,
+    additionalArgs: {
+      data: nonNull(
+        arg({
+          type: DriversInOrganisationInput,
+        })
+      ),
+    },
+    resolve: async (_, args, context: Context) => {
+      const userId = verifyAccessToken(context);
 
-    if (!userId) {
-      throw new Error(
-        'Unable to get organisations drivers. You are not logged in.'
-      );
-    }
+      if (!userId) {
+        throw new Error(
+          'Unable to get organisations drivers. You are not logged in.'
+        );
+      }
 
-    const isInOrganisation =
-      await context.prisma.usersOnOrganisations.findUnique({
-        where: {
-          userId_organisationId: {
-            userId,
-            organisationId: args.data.organisationId,
+      const isInOrganisation =
+        await context.prisma.usersOnOrganisations.findUnique({
+          where: {
+            userId_organisationId: {
+              userId,
+              organisationId: args.data.organisationId,
+            },
           },
-        },
-      });
+        });
 
-    if (!isInOrganisation) {
-      throw new Error(
-        'Unable to get organisations drivers. You are not a member of this organisation'
-      );
-    }
+      if (!isInOrganisation) {
+        throw new Error(
+          'Unable to get organisations drivers. You are not a member of this organisation'
+        );
+      }
 
-    return context.prisma.usersOnOrganisations.findMany({
-      where: {
-        AND: [
-          { organisationId: args.data.organisationId },
-          {
-            role: 'DRIVER',
+      const offset = args.after ? cursorToOffset(args.after) + 1 : 0;
+
+      if (Number.isNaN(offset)) {
+        throw new Error('Cursor is invalid');
+      }
+
+      const [totalCount, items] = await Promise.all([
+        context.prisma.usersOnOrganisations.count({
+          where: {
+            AND: [
+              { organisationId: args.data.organisationId },
+              {
+                role: 'DRIVER',
+              },
+            ],
           },
-        ],
-      },
-      select: {
-        role: true,
-        depot: true,
-        user: {
+        }),
+        context.prisma.usersOnOrganisations.findMany({
+          take: args.first ? args.first : undefined,
+          skip: offset,
+          where: {
+            AND: [
+              { organisationId: args.data.organisationId },
+              {
+                role: 'DRIVER',
+              },
+            ],
+          },
           select: {
-            id: true,
-            name: true,
-            email: true,
-            infringements: true,
-            organisations: false,
+            role: true,
+            depot: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                infringements: true,
+                organisations: false,
+              },
+            },
           },
-        },
-      },
-      orderBy: {
-        user: {
-          name: 'asc',
-        },
-      },
-    });
-  },
+          orderBy: {
+            user: {
+              name: 'asc',
+            },
+          },
+        }),
+      ]);
+
+      return connectionFromArraySlice(
+        items,
+        { first: args.first, after: args.after },
+        { sliceStart: offset, arrayLength: totalCount }
+      );
+    },
+  });
 });

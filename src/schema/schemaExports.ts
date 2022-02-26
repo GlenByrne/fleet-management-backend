@@ -5,7 +5,7 @@ export * from '@/schema/Defect/Defect';
 export * from '@/schema/Defect/Mutations/addDefect';
 export * from '@/schema/Defect/Mutations/deleteDefect';
 export * from '@/schema/Defect/Mutations/updateDefect';
-export * from '@/schema/Defect/Queries/defectsForVehicles';
+export * from '@/schema/Defect/Queries/defectsForVehicle';
 
 export * from '@/schema/Depot/Depot';
 export * from '@/schema/Depot/Mutations/addDepot';
@@ -68,7 +68,6 @@ export * from '@/schema/Vehicle/Mutations/updateVehicle';
 export * from '@/schema/Vehicle/Mutations/updateVehicleCVRT';
 export * from '@/schema/Vehicle/Mutations/updateVehicleTachoCalibration';
 export * from '@/schema/Vehicle/Mutations/updateVehicleThirteenWeekInspection';
-export * from '@/schema/Vehicle/Queries/defectsForVehicle';
 export * from '@/schema/Vehicle/Queries/upcomingCVRT';
 export * from '@/schema/Vehicle/Queries/upcomingTachoCalibration';
 export * from '@/schema/Vehicle/Queries/upcomingThirteenWeek';

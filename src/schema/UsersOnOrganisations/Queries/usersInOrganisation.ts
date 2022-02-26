@@ -10,6 +10,7 @@ import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Role } from '@/schema/Enum';
 import { Infringement, Depot } from '@/schema/schemaExports';
+import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
 const UsersInOrganisationInput = inputObjectType({
   name: 'UsersInOrganisationInput',
@@ -46,77 +47,115 @@ export const UsersInOrganisationPayload = objectType({
   },
 });
 
-export const usersInOrganisation = queryField('usersInOrganisation', {
-  type: list(UsersInOrganisationPayload),
-  args: {
-    data: nonNull(
-      arg({
-        type: UsersInOrganisationInput,
-      })
-    ),
-  },
-  resolve: async (_, args, context: Context) => {
-    const userId = verifyAccessToken(context);
+export const usersInOrganisation = queryField((t) => {
+  t.connectionField('usersInOrganisation', {
+    type: UsersInOrganisationPayload,
+    nullable: false,
+    additionalArgs: {
+      data: nonNull(
+        arg({
+          type: UsersInOrganisationInput,
+        })
+      ),
+    },
+    resolve: async (_, args, context: Context) => {
+      const userId = verifyAccessToken(context);
 
-    if (!userId) {
-      throw new Error(
-        'Unable to get organisations users. You are not logged in.'
-      );
-    }
+      if (!userId) {
+        throw new Error(
+          'Unable to get organisations users. You are not logged in.'
+        );
+      }
 
-    const isInOrganisation =
-      await context.prisma.usersOnOrganisations.findUnique({
-        where: {
-          userId_organisationId: {
-            userId,
-            organisationId: args.data.organisationId,
+      const isInOrganisation =
+        await context.prisma.usersOnOrganisations.findUnique({
+          where: {
+            userId_organisationId: {
+              userId,
+              organisationId: args.data.organisationId,
+            },
           },
-        },
-      });
+        });
 
-    if (!isInOrganisation) {
-      throw new Error(
-        'Unable to get organisations users. You are not a member of this organisation'
-      );
-    }
+      if (!isInOrganisation) {
+        throw new Error(
+          'Unable to get organisations users. You are not a member of this organisation'
+        );
+      }
 
-    return context.prisma.usersOnOrganisations.findMany({
-      where: {
-        AND: [
-          { organisationId: args.data.organisationId },
-          { inviteAccepted: true },
-          {
+      const offset = args.after ? cursorToOffset(args.after) + 1 : 0;
+
+      if (Number.isNaN(offset)) {
+        throw new Error('Cursor is invalid');
+      }
+
+      const [totalCount, items] = await Promise.all([
+        context.prisma.usersOnOrganisations.count({
+          where: {
+            AND: [
+              { organisationId: args.data.organisationId },
+              { inviteAccepted: true },
+              {
+                user: {
+                  name: {
+                    contains:
+                      args.data?.searchCriteria != null
+                        ? args.data.searchCriteria
+                        : undefined,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            ],
+          },
+        }),
+        context.prisma.usersOnOrganisations.findMany({
+          take: args.first ? args.first : undefined,
+          skip: offset,
+          where: {
+            AND: [
+              { organisationId: args.data.organisationId },
+              { inviteAccepted: true },
+              {
+                user: {
+                  name: {
+                    contains:
+                      args.data?.searchCriteria != null
+                        ? args.data.searchCriteria
+                        : undefined,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            ],
+          },
+          select: {
+            role: true,
+            depot: true,
             user: {
-              name: {
-                contains:
-                  args.data?.searchCriteria != null
-                    ? args.data.searchCriteria
-                    : undefined,
-                mode: 'insensitive',
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                infringements: true,
+                organisations: false,
               },
             },
           },
-        ],
-      },
-      select: {
-        role: true,
-        depot: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            infringements: true,
-            organisations: false,
-          },
-        },
-      },
 
-      orderBy: {
-        user: {
-          name: 'asc',
-        },
-      },
-    });
-  },
+          orderBy: {
+            user: {
+              name: 'asc',
+            },
+          },
+        }),
+      ]);
+
+      return connectionFromArraySlice(
+        items,
+        { first: args.first, after: args.after },
+        { sliceStart: offset, arrayLength: totalCount }
+      );
+    },
+  });
 });
