@@ -2,7 +2,6 @@ import { queryField, nonNull, list, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { FuelCard } from '@/schema/schemaExports';
-import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
 export const FuelCardsNotAssignedInput = inputObjectType({
   name: 'FuelCardsNotAssignedInput',
@@ -12,7 +11,7 @@ export const FuelCardsNotAssignedInput = inputObjectType({
 });
 
 export const fuelCardsNotAssigned = queryField('fuelCardsNotAssigned', {
-  type: list(FuelCard),
+  type: nonNull(list(nonNull(FuelCard))),
   args: {
     data: nonNull(
       arg({
