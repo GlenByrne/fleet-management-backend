@@ -7,19 +7,69 @@ import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 export const DepotsInput = inputObjectType({
   name: 'DepotsInput',
   definition(t) {
+    t.nonNull.string('organisationId');
+  },
+});
+
+export const DepotsPaginatedInput = inputObjectType({
+  name: 'DepotsPaginatedInput',
+  definition(t) {
     t.string('searchCriteria');
     t.nonNull.string('organisationId');
   },
 });
 
-export const depots = queryField((t) => {
-  t.connectionField('depots', {
+export const depots = queryField('depots', {
+  type: nonNull(list(nonNull(Depot))),
+  args: {
+    data: nonNull(
+      arg({
+        type: DepotsInput,
+      })
+    ),
+  },
+  resolve: async (_, args, context: Context) => {
+    const userId = verifyAccessToken(context);
+
+    if (!userId) {
+      throw new Error('Unable to retrieve depots. You are not logged in.');
+    }
+
+    const isInOrganisation =
+      await context.prisma.usersOnOrganisations.findUnique({
+        where: {
+          userId_organisationId: {
+            userId,
+            organisationId: args.data.organisationId,
+          },
+        },
+      });
+
+    if (!isInOrganisation) {
+      throw new Error(
+        'Unable to retrieve depots. You are not a member of this organisation'
+      );
+    }
+
+    return context.prisma.depot.findMany({
+      where: {
+        organisationId: args.data.organisationId,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  },
+});
+
+export const depotsPaginated = queryField((t) => {
+  t.connectionField('depotsPaginated', {
     type: Depot,
     nullable: false,
     additionalArgs: {
       data: nonNull(
         arg({
-          type: DepotsInput,
+          type: DepotsPaginatedInput,
         })
       ),
     },
