@@ -3,7 +3,7 @@ import { Context } from 'src/context';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { User } from '@/schema/schemaExports';
 
-export const me = queryField('me', {
+const me = queryField('me', {
   type: User,
   resolve: (_, __, context: Context) => {
     const userId = verifyAccessToken(context);
@@ -19,3 +19,5 @@ export const me = queryField('me', {
     });
   },
 });
+
+export default me;

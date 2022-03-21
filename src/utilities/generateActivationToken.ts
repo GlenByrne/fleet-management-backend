@@ -7,7 +7,7 @@ type ActivationTokenInput = {
   password: string;
 };
 
-export const generateActivationToken = ({
+const generateActivationToken = ({
   name,
   email,
   password,
@@ -26,3 +26,5 @@ export const generateActivationToken = ({
 
   return token;
 };
+
+export default generateActivationToken;

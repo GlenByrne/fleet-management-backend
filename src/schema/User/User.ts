@@ -2,7 +2,7 @@ import { objectType } from 'nexus';
 import { Context } from 'src/context';
 import { UsersOnOrganisations, Infringement } from '@/schema/schemaExports';
 
-export const User = objectType({
+const User = objectType({
   name: 'User',
   definition(t) {
     t.nonNull.id('id');
@@ -36,3 +36,5 @@ export const User = objectType({
     });
   },
 });
+
+export default User;

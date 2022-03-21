@@ -1,18 +1,11 @@
-import {
-  inputObjectType,
-  objectType,
-  queryField,
-  nonNull,
-  arg,
-  list,
-} from 'nexus';
+import { inputObjectType, objectType, queryField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
+import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Role } from '@/schema/Enum';
 import { Infringement, Depot } from '@/schema/schemaExports';
-import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
-const UsersInOrganisationInput = inputObjectType({
+export const UsersInOrganisationInput = inputObjectType({
   name: 'UsersInOrganisationInput',
   definition(t) {
     t.string('searchCriteria');

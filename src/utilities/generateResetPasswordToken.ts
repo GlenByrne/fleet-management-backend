@@ -5,7 +5,7 @@ type GenerateResetPasswordTokenInput = {
   userId: string;
 };
 
-export const generateResetPasswordToken = ({
+const generateResetPasswordToken = ({
   userId,
 }: GenerateResetPasswordTokenInput) => {
   const token = sign(
@@ -19,3 +19,5 @@ export const generateResetPasswordToken = ({
   );
   return token;
 };
+
+export default generateResetPasswordToken;

@@ -1,7 +1,7 @@
 import { sign } from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET } from '../server';
 
-export const generateAccessToken = (userId: string) => {
+const generateAccessToken = (userId: string) => {
   const token = sign(
     {
       userId,
@@ -13,3 +13,5 @@ export const generateAccessToken = (userId: string) => {
   );
   return token;
 };
+
+export default generateAccessToken;

@@ -3,7 +3,7 @@ import { Context } from 'src/context';
 import { Role } from '@/schema/Enum';
 import { User, Organisation } from '@/schema/schemaExports';
 
-export const UsersOnOrganisations = objectType({
+const UsersOnOrganisations = objectType({
   name: 'UsersOnOrganisations',
   definition(t) {
     t.nonNull.field('role', {
@@ -56,3 +56,5 @@ export const UsersOnOrganisations = objectType({
     });
   },
 });
+
+export default UsersOnOrganisations;

@@ -1,7 +1,7 @@
 import { queryField, nonNull, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
-import { Defect } from '@/schema/schemaExports';
 import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
+import { Defect } from '@/schema/schemaExports';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 
 export const DefectsForVehicleInput = inputObjectType({

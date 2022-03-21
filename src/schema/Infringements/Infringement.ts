@@ -3,7 +3,7 @@ import { Context } from 'src/context';
 import { User } from '@/schema/schemaExports';
 import { InfringementStatus } from '@/schema/Enum';
 
-export const Infringement = objectType({
+const Infringement = objectType({
   name: 'Infringement',
   definition(t) {
     t.nonNull.id('id');
@@ -24,3 +24,5 @@ export const Infringement = objectType({
     });
   },
 });
+
+export default Infringement;

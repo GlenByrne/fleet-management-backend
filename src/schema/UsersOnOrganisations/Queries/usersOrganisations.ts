@@ -1,10 +1,10 @@
 import { queryField } from 'nexus';
 import { Context } from 'src/context';
+import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { UsersOnOrganisations } from '@/schema/schemaExports';
-import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
-export const usersOrganisations = queryField((t) => {
+const usersOrganisations = queryField((t) => {
   t.connectionField('usersOrganisations', {
     type: UsersOnOrganisations,
     nullable: false,
@@ -51,3 +51,5 @@ export const usersOrganisations = queryField((t) => {
     },
   });
 });
+
+export default usersOrganisations;

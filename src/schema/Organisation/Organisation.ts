@@ -8,7 +8,7 @@ import {
   TollTag,
 } from '@/schema/schemaExports';
 
-export const Organisation = objectType({
+const Organisation = objectType({
   name: 'Organisation',
   definition(t) {
     t.nonNull.id('id');
@@ -65,3 +65,5 @@ export const Organisation = objectType({
     });
   },
 });
+
+export default Organisation;

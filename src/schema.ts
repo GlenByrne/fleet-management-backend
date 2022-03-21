@@ -31,7 +31,9 @@ const schemaWithoutPermissions = makeSchema({
   },
 }) as unknown as GraphQLSchema;
 
-export const schemaWithPermissions = applyMiddleware(
+const schemaWithPermissions = applyMiddleware(
   schemaWithoutPermissions,
   permissions
 );
+
+export default schemaWithPermissions;

@@ -1,8 +1,8 @@
-import { inputObjectType, queryField, nonNull, arg, list } from 'nexus';
+import { inputObjectType, queryField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
+import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Vehicle } from '@/schema/schemaExports';
-import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 
 export const VehiclesInput = inputObjectType({
   name: 'VehiclesInput',

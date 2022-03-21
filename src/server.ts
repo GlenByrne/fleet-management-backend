@@ -1,7 +1,3 @@
-import fastify from 'fastify';
-import fastifyCors from 'fastify-cors';
-import cookie from 'fastify-cookie';
-import AltairFastify from 'altair-fastify-plugin';
 import {
   getGraphQLParameters,
   processRequest,

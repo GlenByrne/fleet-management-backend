@@ -6,7 +6,7 @@ interface Token {
   userId: string;
 }
 
-export const getRefreshUserId = (context: Context) => {
+const getRefreshUserId = (context: Context) => {
   const { refreshToken } = context.req.cookies;
 
   if (refreshToken) {
@@ -16,3 +16,5 @@ export const getRefreshUserId = (context: Context) => {
   }
   return null;
 };
+
+export default getRefreshUserId;

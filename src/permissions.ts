@@ -19,7 +19,7 @@ const rules = {
   // }),
 };
 
-export const permissions = shield(
+const permissions = shield(
   {
     Query: {
       vehicle: rules.isAuthenticatedUser,
@@ -75,3 +75,5 @@ export const permissions = shield(
   },
   { allowExternalErrors: true }
 );
+
+export default permissions;

@@ -1,9 +1,9 @@
 import { queryField, nonNull, inputObjectType, arg } from 'nexus';
 import { Context } from 'src/context';
+import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 import { getDateTwoWeeks } from '@/utilities/getDateTwoWeeks';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Vehicle } from '@/schema/schemaExports';
-import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
 export const UpcomingCVRTInput = inputObjectType({
   name: 'UpcomingCVRTInput',

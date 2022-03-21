@@ -1,8 +1,8 @@
 import { inputObjectType, queryField, nonNull, arg, list } from 'nexus';
 import { Context } from 'src/context';
+import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Depot } from '@/schema/schemaExports';
-import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 
 export const DepotsInput = inputObjectType({
   name: 'DepotsInput',

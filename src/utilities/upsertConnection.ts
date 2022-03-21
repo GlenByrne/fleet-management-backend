@@ -1,4 +1,4 @@
-export const upsertConnection = <TName extends string>(
+const upsertConnection = <TName extends string>(
   name: TName,
   oldValue: string | undefined | null,
   newValue: string | undefined | null
@@ -15,3 +15,5 @@ export const upsertConnection = <TName extends string>(
     } as never)
   );
 };
+
+export default upsertConnection;

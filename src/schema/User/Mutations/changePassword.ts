@@ -10,7 +10,7 @@ import argon2 from 'argon2';
 import { hashPassword } from '@/utilities/hashPassword';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 
-const ChangePasswordInput = inputObjectType({
+export const ChangePasswordInput = inputObjectType({
   name: 'ChangePasswordInput',
   definition(t) {
     t.nonNull.string('currentPassword');

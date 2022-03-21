@@ -33,7 +33,7 @@ export const tollTagsNotAssigned = queryField('tollTagsNotAssigned', {
         where: {
           userId_organisationId: {
             userId,
-            organisationId: args.organisationId,
+            organisationId: args.data.organisationId,
           },
         },
       });
@@ -46,7 +46,10 @@ export const tollTagsNotAssigned = queryField('tollTagsNotAssigned', {
 
     return context.prisma.tollTag.findMany({
       where: {
-        AND: [{ vehicleId: null }, { organisationId: args.organisationId }],
+        AND: [
+          { vehicleId: null },
+          { organisationId: args.data.organisationId },
+        ],
       },
       orderBy: {
         tagNumber: 'asc',

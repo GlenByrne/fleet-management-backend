@@ -1,11 +1,11 @@
 import { inputObjectType, objectType, queryField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
+import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Infringement, Depot } from '@/schema/schemaExports';
 import { Role } from '@/schema/Enum';
-import { cursorToOffset, connectionFromArraySlice } from 'graphql-relay';
 
-const DriversInOrganisationInput = inputObjectType({
+export const DriversInOrganisationInput = inputObjectType({
   name: 'DriversInOrganisationInput',
   definition(t) {
     t.nonNull.string('organisationId');

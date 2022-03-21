@@ -13,3 +13,5 @@ export const generateRefreshToken = (userId: string) => {
   );
   return token;
 };
+
+export default generateRefreshToken;

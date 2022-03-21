@@ -1,4 +1,4 @@
-export const createConnection = <TName extends string>(
+const createConnection = <TName extends string>(
   name: TName,
   value: string | undefined | null
 ): false | Record<TName, { connect: { id: string } } | undefined> => {
@@ -10,3 +10,5 @@ export const createConnection = <TName extends string>(
     } as never)
   );
 };
+
+export default createConnection;

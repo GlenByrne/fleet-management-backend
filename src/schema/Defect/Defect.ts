@@ -1,7 +1,7 @@
 import { objectType } from 'nexus';
 import { DefectStatus } from '@/schema/Enum';
 
-export const Defect = objectType({
+const Defect = objectType({
   name: 'Defect',
   definition(t) {
     t.nonNull.id('id');
@@ -14,3 +14,5 @@ export const Defect = objectType({
     });
   },
 });
+
+export default Defect;

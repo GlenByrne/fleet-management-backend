@@ -1,10 +1,10 @@
 import { queryField } from 'nexus';
 import { Context } from 'src/context';
+import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { Infringement } from '@/schema/schemaExports';
-import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 
-export const infringements = queryField((t) => {
+const infringements = queryField((t) => {
   t.connectionField('infringements', {
     type: Infringement,
     resolve: async (_, args, context: Context) => {
@@ -41,3 +41,5 @@ export const infringements = queryField((t) => {
     },
   });
 });
+
+export default infringements;

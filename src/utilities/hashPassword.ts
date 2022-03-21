@@ -4,7 +4,9 @@ type HashPasswordInputs = {
   password: string;
 };
 
-export const hashPassword = ({ password }: HashPasswordInputs) =>
+const hashPassword = ({ password }: HashPasswordInputs) =>
   argon2.hash(password, {
     type: argon2.argon2id,
   });
+
+export default hashPassword;

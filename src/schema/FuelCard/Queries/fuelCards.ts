@@ -1,8 +1,8 @@
 import { inputObjectType, queryField, nonNull, arg } from 'nexus';
 import { Context } from 'src/context';
+import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 import { verifyAccessToken } from '@/utilities/verifyAccessToken';
 import { FuelCard } from '@/schema/schemaExports';
-import { connectionFromArraySlice, cursorToOffset } from 'graphql-relay';
 
 export const FuelCardsInput = inputObjectType({
   name: 'FuelCardsInput',

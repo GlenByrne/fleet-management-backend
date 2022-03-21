@@ -10,7 +10,7 @@ import { Context } from 'src/context';
 import { RESET_PASSWORD_TOKEN_SECRET } from 'src/server';
 import { hashPassword } from '@/utilities/hashPassword';
 
-const ResetPasswordInput = inputObjectType({
+export const ResetPasswordInput = inputObjectType({
   name: 'ResetPasswordInput',
   definition(t) {
     t.nonNull.string('resetPasswordToken');

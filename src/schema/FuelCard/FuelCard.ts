@@ -2,7 +2,7 @@ import { objectType } from 'nexus';
 import { Context } from 'src/context';
 import { Organisation, Vehicle } from '@/schema/schemaExports';
 
-export const FuelCard = objectType({
+const FuelCard = objectType({
   name: 'FuelCard',
   definition(t) {
     t.nonNull.id('id');
@@ -36,3 +36,5 @@ export const FuelCard = objectType({
     });
   },
 });
+
+export default FuelCard;

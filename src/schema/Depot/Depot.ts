@@ -2,7 +2,7 @@ import { objectType } from 'nexus';
 import { Context } from 'src/context';
 import { Organisation, Vehicle } from '@/schema/schemaExports';
 
-export const Depot = objectType({
+const Depot = objectType({
   name: 'Depot',
   definition(t) {
     t.nonNull.id('id');
@@ -35,3 +35,5 @@ export const Depot = objectType({
     });
   },
 });
+
+export default Depot;
